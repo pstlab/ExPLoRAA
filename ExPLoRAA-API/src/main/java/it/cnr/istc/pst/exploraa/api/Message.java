@@ -17,6 +17,8 @@
 package it.cnr.istc.pst.exploraa.api;
 
 import java.util.Collection;
+import javax.json.JsonObject;
+import javax.json.bind.adapter.JsonbAdapter;
 
 /**
  *
@@ -115,6 +117,19 @@ public abstract class Message {
 
         public enum StimulusType {
             TextEvent, QuestionEvent, URLEvent
+        }
+    }
+
+    public static class StimulusAdapter implements JsonbAdapter<Stimulus, JsonObject> {
+
+        @Override
+        public JsonObject adaptToJson(Stimulus obj) throws Exception {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Stimulus adaptFromJson(JsonObject obj) throws Exception {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
         }
     }
 }
