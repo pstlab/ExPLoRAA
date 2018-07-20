@@ -14,18 +14,24 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.cnr.istc.exploraa;
+package it.cnr.istc.exploraa.api;
 
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+import java.util.Collection;
+
+import retrofit2.http.GET;
+import retrofit2.http.POST;
 
 /**
  * @author Riccardo De Benedictis
  */
-public class NavigatorActivity extends AppCompatActivity {
+public interface ExPLoRAA {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-    }
+    @POST("ExPLoRA/resources/login")
+    User login(String email, String password);
+
+    @POST("ExPLoRA/resources/new_user")
+    User new_user(String email, String password, String first_name, String last_name);
+
+    @GET("ExPLoRA/resources/users")
+    Collection<User> getUsers();
 }

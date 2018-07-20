@@ -14,18 +14,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package it.cnr.istc.exploraa;
-
-import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
+package it.cnr.istc.exploraa.api;
 
 /**
  * @author Riccardo De Benedictis
  */
-public class NavigatorActivity extends AppCompatActivity {
+public class Teach {
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
+    public User user;
+    public Lesson lesson;
+
+    public Teach() {
+    }
+
+    public Teach(User user, Lesson lesson) {
+        this.user = user;
+        this.lesson = lesson;
     }
 }
