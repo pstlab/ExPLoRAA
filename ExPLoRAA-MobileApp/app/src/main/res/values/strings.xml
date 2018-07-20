@@ -5,7 +5,10 @@
     <string name="ExPLoRAA_logo">ExPLoRAA Logo</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
+    <string name="first_name">First name</string>
+    <string name="last_name">Last name</string>
     <string name="login">Login</string>
+    <string name="create">Create</string>
     <string name="create_account">No account yet? Create one</string>
     <string name="events">Events</string>
     <string name="lessons">Lessons</string>
