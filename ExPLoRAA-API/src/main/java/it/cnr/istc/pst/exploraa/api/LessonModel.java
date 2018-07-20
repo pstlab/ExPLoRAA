@@ -16,6 +16,7 @@
  */
 package it.cnr.istc.pst.exploraa.api;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
@@ -59,6 +60,63 @@ public class LessonModel {
 
         public enum StimulusTemplateType {
             Root, Text, URL, Question
+        }
+
+        public static class URLStimulusTemplate extends StimulusTemplate {
+
+            public String content;
+            public String url;
+
+            public URLStimulusTemplate() {
+            }
+
+            public URLStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations, String content, String url) {
+                super(StimulusTemplateType.URL, name, topics, trigger_condition, execution_condition, ids, relations);
+                this.content = content;
+                this.url = url;
+            }
+        }
+
+        public static class TextStimulusTemplate extends StimulusTemplate {
+
+            public String content;
+
+            public TextStimulusTemplate() {
+            }
+
+            public TextStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations, String content) {
+                super(StimulusTemplateType.Text, name, topics, trigger_condition, execution_condition, ids, relations);
+                this.content = content;
+            }
+        }
+
+        public static class QuestionStimulusTemplate extends StimulusTemplate {
+
+            public String question;
+            public ArrayList<Answer> answers;
+
+            public QuestionStimulusTemplate() {
+            }
+
+            public QuestionStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations, String question, Collection<Answer> answers) {
+                super(StimulusTemplateType.Question, name, topics, trigger_condition, execution_condition, ids, relations);
+                this.question = question;
+                this.answers = new ArrayList<>(answers);
+            }
+
+            public static class Answer {
+
+                public String answer;
+                public String event;
+
+                public Answer() {
+                }
+
+                public Answer(String answer, String event) {
+                    this.answer = answer;
+                    this.event = event;
+                }
+            }
         }
     }
 
