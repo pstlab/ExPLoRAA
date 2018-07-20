@@ -17,6 +17,7 @@
 package it.cnr.istc.pst.exploraa.api;
 
 import java.util.Collection;
+import java.util.List;
 import javax.json.JsonObject;
 import javax.json.bind.adapter.JsonbAdapter;
 
@@ -37,9 +38,15 @@ public abstract class Message {
 
     public enum MessageType {
         NewParameter,
-        LostParameter,
+        RemoveParameter,
+        NewLesson,
+        RemoveLesson,
         Token,
-        Stimulus;
+        TokenUpdate,
+        RemoveToken,
+        Stimulus,
+        Answer,
+        RemoveStimulus;
     }
 
     public static class NewParameter extends Message {
@@ -55,16 +62,42 @@ public abstract class Message {
         }
     }
 
-    public static class LostParameter extends Message {
+    public static class RemoveParameter extends Message {
 
         public Parameter parameter;
 
-        public LostParameter() {
+        public RemoveParameter() {
         }
 
-        public LostParameter(Parameter parameter) {
-            super(MessageType.NewParameter);
+        public RemoveParameter(Parameter parameter) {
+            super(MessageType.RemoveParameter);
             this.parameter = parameter;
+        }
+    }
+
+    public static class NewLesson extends Message {
+
+        public Lesson lesson;
+
+        public NewLesson() {
+        }
+
+        public NewLesson(Lesson lesson) {
+            super(MessageType.NewLesson);
+            this.lesson = lesson;
+        }
+    }
+
+    public static class RemoveLesson extends Message {
+
+        public long lesson_id;
+
+        public RemoveLesson() {
+        }
+
+        public RemoveLesson(long lesson_id) {
+            super(MessageType.RemoveLesson);
+            this.lesson_id = lesson_id;
         }
     }
 
@@ -95,6 +128,41 @@ public abstract class Message {
         }
     }
 
+    public static class TokenUpdate extends Message {
+
+        public long lesson_id;
+        public int id;
+        public Long min, max;
+        public long time;
+
+        public TokenUpdate() {
+        }
+
+        public TokenUpdate(long lesson_id, int id, Long min, Long max, long val) {
+            super(MessageType.TokenUpdate);
+            this.lesson_id = lesson_id;
+            this.id = id;
+            this.min = min;
+            this.max = max;
+            this.time = val;
+        }
+    }
+
+    public static class RemoveToken extends Message {
+
+        public long lesson_id;
+        public long event_id;
+
+        public RemoveToken() {
+        }
+
+        public RemoveToken(long lesson_id, long event_id) {
+            super(MessageType.RemoveToken);
+            this.lesson_id = lesson_id;
+            this.event_id = event_id;
+        }
+    }
+
     public abstract static class Stimulus extends Message {
 
         public StimulusType event_type;
@@ -116,7 +184,84 @@ public abstract class Message {
         }
 
         public enum StimulusType {
-            TextEvent, QuestionEvent, URLEvent
+            Text, Question, URL
+        }
+
+        public static class TextStimulus extends Stimulus {
+
+            public String content;
+
+            public TextStimulus() {
+            }
+
+            public TextStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String content) {
+                super(StimulusType.Text, lesson_id, event_id, students, time);
+                this.content = content;
+            }
+        }
+
+        public static class QuestionStimulus extends Stimulus {
+
+            public String question;
+            public List<String> answers;
+            public Integer answer;
+
+            public QuestionStimulus() {
+            }
+
+            public QuestionStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String question, List<String> answers, Integer answer) {
+                super(StimulusType.Question, lesson_id, event_id, students, time);
+                this.question = question;
+                this.answers = answers;
+                this.answer = answer;
+            }
+
+            public static class Answer extends Message {
+
+                public long lessonId;
+                public int questionId;
+                public int answer;
+
+                public Answer() {
+                }
+
+                public Answer(long lessonId, int questionId, int answer) {
+                    super(MessageType.Answer);
+                    this.lessonId = lessonId;
+                    this.questionId = questionId;
+                    this.answer = answer;
+                }
+            }
+        }
+
+        public static class URLStimulus extends Stimulus {
+
+            public String content;
+            public String url;
+
+            public URLStimulus() {
+            }
+
+            public URLStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String content, String url) {
+                super(StimulusType.URL, lesson_id, event_id, students, time);
+                this.content = content;
+                this.url = url;
+            }
+        }
+    }
+
+    public static class RemoveStimulus extends Message {
+
+        public long lesson_id;
+        public long event_id;
+
+        public RemoveStimulus() {
+        }
+
+        public RemoveStimulus(long lesson_id, long event_id) {
+            super(MessageType.RemoveStimulus);
+            this.lesson_id = lesson_id;
+            this.event_id = event_id;
         }
     }
 
