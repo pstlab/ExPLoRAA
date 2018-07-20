@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.LongSparseArray;
+import android.widget.Toast;
 
 import com.google.gson.Gson;
 
@@ -378,8 +379,13 @@ public class ExPLoRAAContext implements LocationListener {
                     }
 
                     return true;
-                } catch (IOException e) {
+                } catch (final IOException e) {
                     Log.w(TAG, "Login failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
                     return false;
                 }
             }

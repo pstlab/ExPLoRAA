@@ -19,6 +19,8 @@ package it.cnr.istc.exploraa.api;
 import java.util.Collection;
 
 import retrofit2.Call;
+import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
@@ -27,11 +29,13 @@ import retrofit2.http.POST;
  */
 public interface ExPLoRAA {
 
+    @FormUrlEncoded
     @POST("ExPLoRA/resources/login")
-    Call<User> login(String email, String password);
+    Call<User> login(@Field("email") String email, @Field("password") String password);
 
+    @FormUrlEncoded
     @POST("ExPLoRA/resources/new_user")
-    Call<User> new_user(String email, String password, String first_name, String last_name);
+    Call<User> new_user(@Field("email") String email, @Field("password") String password, @Field("first_name") String first_name, @Field("last_name") String last_name);
 
     @GET("ExPLoRA/resources/users")
     Call<Collection<User>> getUsers();
