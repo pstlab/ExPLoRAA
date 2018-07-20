@@ -17,6 +17,10 @@
 package it.cnr.istc.pst.exploraa.webapp.db;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -30,14 +34,16 @@ import javax.persistence.ManyToOne;
 @Entity
 public class FollowEntity implements Serializable {
 
-    @ManyToOne
-    private UserEntity student;
-    @ManyToOne
-    private LessonEntity lesson;
     private static final long serialVersionUID = 1L;
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    @ManyToOne
+    private UserEntity student;
+    @ManyToOne
+    private LessonEntity lesson;
+    @ElementCollection
+    private final Collection<String> interests = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -57,5 +63,17 @@ public class FollowEntity implements Serializable {
 
     public void setLesson(LessonEntity lesson) {
         this.lesson = lesson;
+    }
+
+    public Collection<String> getInterests() {
+        return Collections.unmodifiableCollection(interests);
+    }
+
+    public void addInterest(String interest) {
+        interests.add(interest);
+    }
+
+    public void removeInterest(String interest) {
+        interests.remove(interest);
     }
 }

@@ -97,4 +97,28 @@ public class UserEntity implements Serializable {
     public void removeModel(LessonModelEntity model) {
         models.remove(model);
     }
+
+    public Collection<FollowEntity> getFollowedLessons() {
+        return Collections.unmodifiableCollection(follows);
+    }
+
+    public void addFollowedLesson(FollowEntity model) {
+        follows.add(model);
+    }
+
+    public void removeFollowedLesson(FollowEntity model) {
+        follows.remove(model);
+    }
+
+    public Collection<TeachEntity> getTeachedLessons() {
+        return Collections.unmodifiableCollection(teachs);
+    }
+
+    public void addTeachedLesson(TeachEntity model) {
+        teachs.add(model);
+    }
+
+    public void removeTeachedLesson(TeachEntity model) {
+        teachs.remove(model);
+    }
 }

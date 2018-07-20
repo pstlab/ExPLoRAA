@@ -16,6 +16,8 @@
  */
 package it.cnr.istc.pst.exploraa.api;
 
+import java.util.Collection;
+
 /**
  *
  * @author Riccardo De Benedictis
@@ -25,4 +27,6 @@ public interface ExPLoRAA {
     public User login(String email, String password);
 
     public User new_user(String email, String password, String first_name, String last_name);
+
+    public Collection<User> getUsers();
 }

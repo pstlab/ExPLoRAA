@@ -32,13 +32,13 @@ import javax.persistence.OneToOne;
 public class TeachEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
     @ManyToOne
     private UserEntity teacher;
     @OneToOne(mappedBy = "teached_by")
     private LessonEntity lesson;
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
 
     public Long getId() {
         return id;

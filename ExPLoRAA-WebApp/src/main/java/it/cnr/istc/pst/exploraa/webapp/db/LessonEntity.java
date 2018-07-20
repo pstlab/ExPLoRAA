@@ -19,6 +19,7 @@ package it.cnr.istc.pst.exploraa.webapp.db;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,6 +38,7 @@ public class LessonEntity implements Serializable {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    private String name;
     @OneToMany(mappedBy = "lesson")
     private final Collection<FollowEntity> followed_by = new ArrayList<>();
     @OneToOne
@@ -44,5 +46,33 @@ public class LessonEntity implements Serializable {
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Collection<FollowEntity> getStudents() {
+        return Collections.unmodifiableCollection(followed_by);
+    }
+
+    public void addStudent(FollowEntity student) {
+        followed_by.add(student);
+    }
+
+    public void removeStudent(FollowEntity student) {
+        followed_by.remove(student);
+    }
+
+    public TeachEntity getTeachedBy() {
+        return teached_by;
+    }
+
+    public void setTeachedBy(TeachEntity teached_by) {
+        this.teached_by = teached_by;
     }
 }
