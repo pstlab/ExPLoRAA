@@ -7,22 +7,19 @@ import java.util.List;
 import java.util.Map;
 
 import it.cnr.istc.exploraa.api.Lesson;
-import it.cnr.istc.exploraa.api.LessonModel;
 import it.cnr.istc.exploraa.api.Message;
 
 public class TeachingLessonContext {
 
     private final Lesson lesson;
-    private final LessonModel model;
     private final List<TokenRow> tokens = new ArrayList<>();
     private final Map<Integer, TokenRow> id_tokens = new HashMap<>();
     private final List<TeachingLessonListener> listeners = new ArrayList<>();
     private Lesson.LessonState state = Lesson.LessonState.Stopped;
     private long time = 0;
 
-    TeachingLessonContext(Lesson lesson, LessonModel model) {
+    TeachingLessonContext(Lesson lesson) {
         this.lesson = lesson;
-        this.model = model;
         if (lesson.tokens != null) {
             for (Message.Token tk : lesson.tokens) {
                 tokens.add(new TokenRow(tk));
@@ -32,10 +29,6 @@ public class TeachingLessonContext {
 
     public Lesson getLesson() {
         return lesson;
-    }
-
-    public LessonModel getModel() {
-        return model;
     }
 
     public Lesson.LessonState getState() {

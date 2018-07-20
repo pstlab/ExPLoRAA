@@ -17,13 +17,16 @@
 package it.cnr.istc.exploraa;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -39,16 +42,22 @@ import org.eclipse.paho.client.mqttv3.MqttException;
 import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import it.cnr.istc.exploraa.api.ExPLoRAA;
+import it.cnr.istc.exploraa.api.Follow;
 import it.cnr.istc.exploraa.api.LessonModel;
 import it.cnr.istc.exploraa.api.Message;
 import it.cnr.istc.exploraa.api.Parameter;
+import it.cnr.istc.exploraa.api.Teach;
 import it.cnr.istc.exploraa.api.User;
+import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
@@ -118,7 +127,7 @@ public class ExPLoRAAContext implements LocationListener {
         return user;
     }
 
-    public void setUser(final Context ctx, User user) {
+    public void setUser(@NonNull final Context ctx, User user) {
         if (this.user != user) {
             if (this.user != null) {
                 // we clear the current data..
@@ -252,6 +261,129 @@ public class ExPLoRAAContext implements LocationListener {
             }
             this.user = user;
         }
+    }
+
+    public List<Message.Stimulus> getStimuli() {
+        return Collections.unmodifiableList(stimuli);
+    }
+
+    public List<FollowingLessonContext> getFollowingLessons() {
+        return Collections.unmodifiableList(following_lessons);
+    }
+
+    public void addFollowingLesson(FollowingLessonContext l) {
+        following_lessons.add(l);
+        id_following_lessons.put(l.getLesson().id, l);
+    }
+
+    public void removeFollowingLesson(FollowingLessonContext l) {
+        following_lessons.remove(l);
+        id_following_lessons.remove(l.getLesson().id);
+    }
+
+    public List<TeacherContext> getTeachers() {
+        return Collections.unmodifiableList(teachers);
+    }
+
+    public void addTeacher(TeacherContext t) {
+        teachers.add(t);
+        id_teachers.put(t.getTeacher().id, t);
+    }
+
+    public void removeTeacher(TeacherContext t) {
+        teachers.remove(t);
+        id_teachers.remove(t.getTeacher().id);
+    }
+
+    public List<LessonModel> getModels() {
+        return Collections.unmodifiableList(models);
+    }
+
+    public List<TeachingLessonContext> getTeachingLessons() {
+        return Collections.unmodifiableList(teaching_lessons);
+    }
+
+    public void addTeachingLesson(TeachingLessonContext l) {
+        teaching_lessons.add(l);
+        id_teaching_lessons.put(l.getLesson().id, l);
+    }
+
+    public void removeTeachingLesson(TeachingLessonContext l) {
+        teaching_lessons.remove(l);
+        id_teaching_lessons.remove(l.getLesson().id);
+    }
+
+    public List<StudentContext> getStudents() {
+        return Collections.unmodifiableList(students);
+    }
+
+    public void addStudent(StudentContext s) {
+        students.add(s);
+        id_students.put(s.getStudent().id, s);
+    }
+
+    public void removeStudent(StudentContext s) {
+        students.remove(s);
+        id_students.remove(s.getStudent().id);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public boolean login(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password) throws ExecutionException, InterruptedException {
+        return new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... strings) {
+                try {
+                    Response<User> response = resource.login(strings[0], strings[1]).execute();
+                    if (!response.isSuccessful()) return false;
+                    Log.i(TAG, "Login successful..");
+                    User user = response.body();
+
+                    // we set the parameters of init's user (these parameters will be communicated to the server..)
+                    Map<String, Parameter> c_par_types = new HashMap<>();
+                    Map<String, Map<String, String>> c_par_values = new HashMap<>();
+
+                    if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                        Parameter gps = new Parameter();
+                        gps.name = "GPS";
+                        gps.properties = new HashMap<>(2);
+                        gps.properties.put("latitude", "numeric");
+                        gps.properties.put("longitude", "numeric");
+                        c_par_types.put("GPS", gps);
+
+                        Map<String, String> gps_pos = new HashMap<>(2);
+                        final Location last_location = ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
+                        gps_pos.put("latitude", Double.toString(last_location.getLatitude()));
+                        gps_pos.put("longitude", Double.toString(last_location.getLongitude()));
+                        c_par_values.put("GPS", gps_pos);
+                    }
+
+                    user.par_types = c_par_types;
+                    user.par_values = c_par_values;
+
+                    setUser(ctx, user);
+
+                    // we add the teachers and the following lessons..
+                    for (Follow follow : user.follows.values()) {
+                        if (id_teachers.get(follow.lesson.teacher.user.id) == null)
+                            addTeacher(new TeacherContext(follow.lesson.teacher.user));
+                        addFollowingLesson(new FollowingLessonContext(follow.lesson));
+                    }
+
+                    // we add the students and the teaching lessons..
+                    for (Teach teach : user.teachs.values()) {
+                        for (Follow follow : teach.lesson.students.values())
+                            if (id_students.get(follow.user.id) == null)
+                                addStudent(new StudentContext(follow.user));
+                        addTeachingLesson(new TeachingLessonContext(teach.lesson));
+                    }
+
+                    return true;
+                } catch (IOException e) {
+                    Log.w(TAG, "Login failed..", e);
+                    return false;
+                }
+            }
+        }.execute(email, password).get();
     }
 
     @Override

@@ -18,6 +18,7 @@ package it.cnr.istc.exploraa.api;
 
 import java.util.Collection;
 
+import retrofit2.Call;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
 
@@ -27,11 +28,11 @@ import retrofit2.http.POST;
 public interface ExPLoRAA {
 
     @POST("ExPLoRA/resources/login")
-    User login(String email, String password);
+    Call<User> login(String email, String password);
 
     @POST("ExPLoRA/resources/new_user")
-    User new_user(String email, String password, String first_name, String last_name);
+    Call<User> new_user(String email, String password, String first_name, String last_name);
 
     @GET("ExPLoRA/resources/users")
-    Collection<User> getUsers();
+    Call<Collection<User>> getUsers();
 }
