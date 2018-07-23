@@ -50,13 +50,15 @@ public class FollowingLessonContext {
     }
 
     public void addStimulus(final Message.Stimulus e) {
+        int pos = stimuli.size();
         stimuli.add(e);
-        for (FollowingLessonListener l : listeners) l.addedStimulus(e);
+        for (FollowingLessonListener l : listeners) l.addedStimulus(pos, e);
     }
 
     public void removeStimulus(final Message.Stimulus e) {
-        stimuli.remove(e);
-        for (FollowingLessonListener l : listeners) l.removedStimulus(e);
+        int pos = stimuli.indexOf(e);
+        stimuli.remove(pos);
+        for (FollowingLessonListener l : listeners) l.removedStimulus(pos, e);
     }
 
     public void addListener(FollowingLessonListener l) {
@@ -73,8 +75,8 @@ public class FollowingLessonContext {
 
         void stateChanged(Lesson.LessonState state);
 
-        void addedStimulus(Message.Stimulus e);
+        void addedStimulus(int position, Message.Stimulus e);
 
-        void removedStimulus(Message.Stimulus e);
+        void removedStimulus(int position, Message.Stimulus e);
     }
 }

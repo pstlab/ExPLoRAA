@@ -114,7 +114,11 @@ public class ExPLoRAAContext implements LocationListener {
      * The current user.
      */
     private User user;
-    private final Collection<ContextListener> listeners = new ArrayList<>();
+    private final Collection<StimuliListener> stimuli_listeners = new ArrayList<>();
+    private final Collection<FollowingLessonsListener> following_lessons_listeners = new ArrayList<>();
+    private final Collection<TeachersListener> teachers_listeners = new ArrayList<>();
+    private final Collection<TeachingLessonsListener> teaching_lessons_listeners = new ArrayList<>();
+    private final Collection<StudentsListener> students_listeners = new ArrayList<>();
 
     private ExPLoRAAContext() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();
@@ -149,6 +153,7 @@ public class ExPLoRAAContext implements LocationListener {
                     par_types.clear();
                     id_par_types.clear();
                     stimuli.clear();
+                    for (StimuliListener listener : stimuli_listeners) listener.stimuliCleared();
                     if (mqtt.isConnected()) for (FollowingLessonContext l_ctx : following_lessons) {
                         // we unsubscribe from the lesson's time and state..
                         mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
@@ -156,10 +161,11 @@ public class ExPLoRAAContext implements LocationListener {
                     }
                     following_lessons.clear();
                     id_following_lessons.clear();
-                    for (ContextListener listener : listeners) listener.followingLessonsCleared();
+                    for (FollowingLessonsListener listener : following_lessons_listeners)
+                        listener.followingLessonsCleared();
                     teachers.clear();
                     id_teachers.clear();
-                    for (ContextListener listener : listeners) listener.teachersCleared();
+                    for (TeachersListener listener : teachers_listeners) listener.teachersCleared();
                     models.clear();
                     // we unsubscribe from the lesson's time and state..
                     for (TeachingLessonContext l_ctx : teaching_lessons)
@@ -169,10 +175,11 @@ public class ExPLoRAAContext implements LocationListener {
                         }
                     teaching_lessons.clear();
                     id_teaching_lessons.clear();
-                    for (ContextListener listener : listeners) listener.teachingLessonsCleared();
+                    for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                        listener.teachingLessonsCleared();
                     students.clear();
                     id_students.clear();
-                    for (ContextListener listener : listeners) listener.studentsCleared();
+                    for (StudentsListener listener : students_listeners) listener.studentsCleared();
                     if (mqtt.isConnected()) mqtt.disconnect();
                     mqtt.close();
                 } catch (MqttException ex) {
@@ -279,15 +286,19 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     private void addFollowingLesson(FollowingLessonContext l) {
+        int pos = following_lessons.size();
         following_lessons.add(l);
         id_following_lessons.put(l.getLesson().id, l);
-        for (ContextListener listener : listeners) listener.followingLessonAdded(l);
+        for (FollowingLessonsListener listener : following_lessons_listeners)
+            listener.followingLessonAdded(pos, l);
     }
 
     private void removeFollowingLesson(FollowingLessonContext l) {
-        following_lessons.remove(l);
+        int pos = following_lessons.indexOf(l);
+        following_lessons.remove(pos);
         id_following_lessons.remove(l.getLesson().id);
-        for (ContextListener listener : listeners) listener.followingLessonRemoved(l);
+        for (FollowingLessonsListener listener : following_lessons_listeners)
+            listener.followingLessonRemoved(pos, l);
     }
 
     public List<TeacherContext> getTeachers() {
@@ -295,15 +306,17 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     private void addTeacher(TeacherContext t) {
+        int pos = teachers.size();
         teachers.add(t);
         id_teachers.put(t.getTeacher().id, t);
-        for (ContextListener listener : listeners) listener.teacherAdded(t);
+        for (TeachersListener listener : teachers_listeners) listener.teacherAdded(pos, t);
     }
 
     private void removeTeacher(TeacherContext t) {
-        teachers.remove(t);
+        int pos = teachers.indexOf(t);
+        teachers.remove(pos);
         id_teachers.remove(t.getTeacher().id);
-        for (ContextListener listener : listeners) listener.teacherRemoved(t);
+        for (TeachersListener listener : teachers_listeners) listener.teacherRemoved(pos, t);
     }
 
     public List<LessonModel> getModels() {
@@ -315,15 +328,19 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     private void addTeachingLesson(TeachingLessonContext l) {
+        int pos = teachers.size();
         teaching_lessons.add(l);
         id_teaching_lessons.put(l.getLesson().id, l);
-        for (ContextListener listener : listeners) listener.teachingLessonAdded(l);
+        for (TeachingLessonsListener listener : teaching_lessons_listeners)
+            listener.teachingLessonAdded(pos, l);
     }
 
     private void removeTeachingLesson(TeachingLessonContext l) {
-        teaching_lessons.remove(l);
+        int pos = teachers.indexOf(l);
+        teaching_lessons.remove(pos);
         id_teaching_lessons.remove(l.getLesson().id);
-        for (ContextListener listener : listeners) listener.teachingLessonRemoved(l);
+        for (TeachingLessonsListener listener : teaching_lessons_listeners)
+            listener.teachingLessonRemoved(pos, l);
     }
 
     public List<StudentContext> getStudents() {
@@ -331,15 +348,17 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     private void addStudent(StudentContext s) {
+        int pos = teachers.size();
         students.add(s);
         id_students.put(s.getStudent().id, s);
-        for (ContextListener listener : listeners) listener.studentAdded(s);
+        for (StudentsListener listener : students_listeners) listener.studentAdded(pos, s);
     }
 
     private void removeStudent(StudentContext s) {
-        students.remove(s);
+        int pos = teachers.indexOf(s);
+        students.remove(pos);
         id_students.remove(s.getStudent().id);
-        for (ContextListener listener : listeners) listener.studentRemoved(s);
+        for (StudentsListener listener : students_listeners) listener.studentRemoved(pos, s);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -472,11 +491,96 @@ public class ExPLoRAAContext implements LocationListener {
     public void onProviderDisabled(String provider) {
     }
 
-    public void addListener(ContextListener l) {
-        listeners.add(l);
+    public void addStimuliListener(StimuliListener l) {
+        stimuli_listeners.add(l);
     }
 
-    public void removeListener(ContextListener l) {
-        listeners.remove(l);
+    public void removeStimuliListener(StimuliListener l) {
+        stimuli_listeners.remove(l);
+    }
+
+    public void addFollowingLessonsListener(FollowingLessonsListener l) {
+        following_lessons_listeners.add(l);
+    }
+
+    public void removeFollowingLessonsListener(FollowingLessonsListener l) {
+        following_lessons_listeners.remove(l);
+    }
+
+    public void addTeachersListener(TeachersListener l) {
+        teachers_listeners.add(l);
+    }
+
+    public void removeTeachersListener(TeachersListener l) {
+        teachers_listeners.remove(l);
+    }
+
+    public void addTeachingLessonsListener(TeachingLessonsListener l) {
+        teaching_lessons_listeners.add(l);
+    }
+
+    public void removeTeachingLessonsListener(TeachingLessonsListener l) {
+        teaching_lessons_listeners.remove(l);
+    }
+
+    public void addStudentsListener(StudentsListener l) {
+        students_listeners.add(l);
+    }
+
+    public void removeStudentsListener(StudentsListener l) {
+        students_listeners.remove(l);
+    }
+
+    public interface StimuliListener {
+
+        void stimulusAdded(int pos, Message.Stimulus stimulus);
+
+        void stimulusRemoved(int pos, Message.Stimulus stimulus);
+
+        void stimuliCleared();
+    }
+
+    public interface FollowingLessonsListener {
+
+        void followingLessonAdded(int pos, FollowingLessonContext ctx);
+
+        void followingLessonUpdated(int pos, FollowingLessonContext ctx);
+
+        void followingLessonRemoved(int pos, FollowingLessonContext ctx);
+
+        void followingLessonsCleared();
+    }
+
+    public interface TeachersListener {
+
+        void teacherAdded(int pos, TeacherContext ctx);
+
+        void teacherUpdated(int pos, TeacherContext ctx);
+
+        void teacherRemoved(int pos, TeacherContext ctx);
+
+        void teachersCleared();
+    }
+
+    public interface TeachingLessonsListener {
+
+        void teachingLessonAdded(int pos, TeachingLessonContext ctx);
+
+        void teachingLessonUpdated(int pos, TeachingLessonContext ctx);
+
+        void teachingLessonRemoved(int pos, TeachingLessonContext ctx);
+
+        void teachingLessonsCleared();
+    }
+
+    public interface StudentsListener {
+
+        void studentAdded(int pos, StudentContext ctx);
+
+        void studentUpdated(int pos, StudentContext ctx);
+
+        void studentRemoved(int pos, StudentContext ctx);
+
+        void studentsCleared();
     }
 }

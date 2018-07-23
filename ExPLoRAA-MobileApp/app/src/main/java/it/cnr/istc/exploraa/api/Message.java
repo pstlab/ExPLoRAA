@@ -162,7 +162,7 @@ public abstract class Message {
 
     public abstract static class Stimulus extends Message {
 
-        public StimulusType event_type;
+        public StimulusType stimulus_type;
         public long lesson_id;
         public int id;
         public Collection<Long> students;
@@ -171,9 +171,9 @@ public abstract class Message {
         public Stimulus() {
         }
 
-        public Stimulus(StimulusType event_type, long lesson_id, int event_id, Collection<Long> students, long time) {
+        public Stimulus(StimulusType stimulus_type, long lesson_id, int event_id, Collection<Long> students, long time) {
             super(MessageType.Stimulus);
-            this.event_type = event_type;
+            this.stimulus_type = stimulus_type;
             this.lesson_id = lesson_id;
             this.id = event_id;
             this.students = students;
