@@ -12,7 +12,6 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.EditText;
 
 import java.util.concurrent.ExecutionException;
@@ -23,16 +22,14 @@ public class LoginActivity extends AppCompatActivity {
     public static final int ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS = 123;
     private EditText email;
     private EditText password;
-    private Button btn_login;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login);
 
-        email = findViewById(R.id.input_email);
-        password = findViewById(R.id.input_password);
-        btn_login = findViewById(R.id.btn_login);
+        email = findViewById(R.id.login_input_email);
+        password = findViewById(R.id.login_input_password);
     }
 
     public void login(View v) {
@@ -58,7 +55,8 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void new_user(View v) {
-        Log.i(TAG, "new user..");
+        startActivity(new Intent(this, NewUserActivity.class));
+        finish();
     }
 
     @Override

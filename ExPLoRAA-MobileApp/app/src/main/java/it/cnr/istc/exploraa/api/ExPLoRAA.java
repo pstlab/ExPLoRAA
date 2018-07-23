@@ -30,13 +30,13 @@ import retrofit2.http.POST;
 public interface ExPLoRAA {
 
     @FormUrlEncoded
-    @POST("ExPLoRA/resources/login")
+    @POST("login")
     Call<User> login(@Field("email") String email, @Field("password") String password);
 
     @FormUrlEncoded
-    @POST("ExPLoRA/resources/new_user")
+    @POST("new_user")
     Call<User> new_user(@Field("email") String email, @Field("password") String password, @Field("first_name") String first_name, @Field("last_name") String last_name);
 
-    @GET("ExPLoRA/resources/users")
+    @GET("users")
     Call<Collection<User>> getUsers();
 }

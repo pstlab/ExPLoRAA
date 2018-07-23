@@ -115,7 +115,7 @@ public class ExPLoRAAContext implements LocationListener {
     private User user;
 
     private ExPLoRAAContext() {
-        Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT).addConverterFactory(GsonConverterFactory.create(GSON)).build();
+        Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();
         resource = retrofit.create(ExPLoRAA.class);
     }
 
@@ -340,26 +340,8 @@ public class ExPLoRAAContext implements LocationListener {
                     User user = response.body();
 
                     // we set the parameters of init's user (these parameters will be communicated to the server..)
-                    Map<String, Parameter> c_par_types = new HashMap<>();
-                    Map<String, Map<String, String>> c_par_values = new HashMap<>();
-
-                    if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                        Parameter gps = new Parameter();
-                        gps.name = "GPS";
-                        gps.properties = new HashMap<>(2);
-                        gps.properties.put("latitude", "numeric");
-                        gps.properties.put("longitude", "numeric");
-                        c_par_types.put("GPS", gps);
-
-                        Map<String, String> gps_pos = new HashMap<>(2);
-                        final Location last_location = ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
-                        gps_pos.put("latitude", Double.toString(last_location.getLatitude()));
-                        gps_pos.put("longitude", Double.toString(last_location.getLongitude()));
-                        c_par_values.put("GPS", gps_pos);
-                    }
-
-                    user.par_types = c_par_types;
-                    user.par_values = c_par_values;
+                    user.par_types = get_par_types(ctx);
+                    user.par_values = get_par_values(ctx);
 
                     setUser(ctx, user);
 
@@ -390,6 +372,64 @@ public class ExPLoRAAContext implements LocationListener {
                 }
             }
         }.execute(email, password).get();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public boolean new_user(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password, @NonNull final String first_name, @NonNull final String last_name) throws ExecutionException, InterruptedException {
+        return new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... strings) {
+                try {
+                    Response<User> response = resource.new_user(strings[0], strings[1], strings[2], strings[3]).execute();
+                    if (!response.isSuccessful()) return false;
+                    Log.i(TAG, "Login successful..");
+                    User user = response.body();
+
+                    // we set the parameters of init's user (these parameters will be communicated to the server..)
+                    user.par_types = get_par_types(ctx);
+                    user.par_values = get_par_values(ctx);
+
+                    setUser(ctx, user);
+
+                    return true;
+                } catch (final IOException e) {
+                    Log.w(TAG, "Login failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    return false;
+                }
+            }
+        }.execute(email, password, first_name, last_name).get();
+    }
+
+    private Map<String, Parameter> get_par_types(@NonNull final Context ctx) {
+        Map<String, Parameter> c_par_types = new HashMap<>();
+
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Parameter gps = new Parameter();
+            gps.name = "GPS";
+            gps.properties = new HashMap<>(2);
+            gps.properties.put("latitude", "numeric");
+            gps.properties.put("longitude", "numeric");
+            c_par_types.put("GPS", gps);
+        }
+        return c_par_types;
+    }
+
+    private Map<String, Map<String, String>> get_par_values(@NonNull final Context ctx) {
+        Map<String, Map<String, String>> c_par_values = new HashMap<>();
+
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Map<String, String> gps_pos = new HashMap<>(2);
+            final Location last_location = ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
+            gps_pos.put("latitude", Double.toString(last_location.getLatitude()));
+            gps_pos.put("longitude", Double.toString(last_location.getLongitude()));
+            c_par_values.put("GPS", gps_pos);
+        }
+        return c_par_values;
     }
 
     @Override
