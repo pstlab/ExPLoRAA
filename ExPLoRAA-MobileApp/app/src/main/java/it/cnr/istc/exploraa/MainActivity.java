@@ -6,7 +6,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ContextListener {
 
     private ViewPager pager;
 
@@ -40,10 +40,60 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
+        ExPLoRAAContext.getInstance().addListener(this);
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        ExPLoRAAContext.getInstance().removeListener(this);
+    }
+
+    @Override
+    public void teacherAdded(TeacherContext ctx) {
+    }
+
+    @Override
+    public void teacherRemoved(TeacherContext t) {
+    }
+
+    @Override
+    public void teachersCleared() {
+    }
+
+    @Override
+    public void followingLessonAdded(FollowingLessonContext ctx) {
+    }
+
+    @Override
+    public void followingLessonRemoved(FollowingLessonContext l) {
+    }
+
+    @Override
+    public void followingLessonsCleared() {
+    }
+
+    @Override
+    public void teachingLessonAdded(TeachingLessonContext ctx) {
+    }
+
+    @Override
+    public void teachingLessonRemoved(TeachingLessonContext ctx) {
+    }
+
+    @Override
+    public void teachingLessonsCleared() {
+    }
+
+    @Override
+    public void studentAdded(StudentContext ctx) {
+    }
+
+    @Override
+    public void studentRemoved(StudentContext ctx) {
+    }
+
+    @Override
+    public void studentsCleared() {
     }
 }

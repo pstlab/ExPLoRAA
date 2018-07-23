@@ -156,8 +156,10 @@ public class ExPLoRAAContext implements LocationListener {
                     }
                     following_lessons.clear();
                     id_following_lessons.clear();
+                    for (ContextListener listener : listeners) listener.followingLessonsCleared();
                     teachers.clear();
                     id_teachers.clear();
+                    for (ContextListener listener : listeners) listener.teachersCleared();
                     models.clear();
                     // we unsubscribe from the lesson's time and state..
                     for (TeachingLessonContext l_ctx : teaching_lessons)
@@ -167,8 +169,10 @@ public class ExPLoRAAContext implements LocationListener {
                         }
                     teaching_lessons.clear();
                     id_teaching_lessons.clear();
+                    for (ContextListener listener : listeners) listener.teachingLessonsCleared();
                     students.clear();
                     id_students.clear();
+                    for (ContextListener listener : listeners) listener.studentsCleared();
                     if (mqtt.isConnected()) mqtt.disconnect();
                     mqtt.close();
                 } catch (MqttException ex) {
@@ -274,28 +278,32 @@ public class ExPLoRAAContext implements LocationListener {
         return Collections.unmodifiableList(following_lessons);
     }
 
-    public void addFollowingLesson(FollowingLessonContext l) {
+    private void addFollowingLesson(FollowingLessonContext l) {
         following_lessons.add(l);
         id_following_lessons.put(l.getLesson().id, l);
+        for (ContextListener listener : listeners) listener.followingLessonAdded(l);
     }
 
-    public void removeFollowingLesson(FollowingLessonContext l) {
+    private void removeFollowingLesson(FollowingLessonContext l) {
         following_lessons.remove(l);
         id_following_lessons.remove(l.getLesson().id);
+        for (ContextListener listener : listeners) listener.followingLessonRemoved(l);
     }
 
     public List<TeacherContext> getTeachers() {
         return Collections.unmodifiableList(teachers);
     }
 
-    public void addTeacher(TeacherContext t) {
+    private void addTeacher(TeacherContext t) {
         teachers.add(t);
         id_teachers.put(t.getTeacher().id, t);
+        for (ContextListener listener : listeners) listener.teacherAdded(t);
     }
 
-    public void removeTeacher(TeacherContext t) {
+    private void removeTeacher(TeacherContext t) {
         teachers.remove(t);
         id_teachers.remove(t.getTeacher().id);
+        for (ContextListener listener : listeners) listener.teacherRemoved(t);
     }
 
     public List<LessonModel> getModels() {
@@ -306,28 +314,32 @@ public class ExPLoRAAContext implements LocationListener {
         return Collections.unmodifiableList(teaching_lessons);
     }
 
-    public void addTeachingLesson(TeachingLessonContext l) {
+    private void addTeachingLesson(TeachingLessonContext l) {
         teaching_lessons.add(l);
         id_teaching_lessons.put(l.getLesson().id, l);
+        for (ContextListener listener : listeners) listener.teachingLessonAdded(l);
     }
 
-    public void removeTeachingLesson(TeachingLessonContext l) {
+    private void removeTeachingLesson(TeachingLessonContext l) {
         teaching_lessons.remove(l);
         id_teaching_lessons.remove(l.getLesson().id);
+        for (ContextListener listener : listeners) listener.teachingLessonRemoved(l);
     }
 
     public List<StudentContext> getStudents() {
         return Collections.unmodifiableList(students);
     }
 
-    public void addStudent(StudentContext s) {
+    private void addStudent(StudentContext s) {
         students.add(s);
         id_students.put(s.getStudent().id, s);
+        for (ContextListener listener : listeners) listener.studentAdded(s);
     }
 
-    public void removeStudent(StudentContext s) {
+    private void removeStudent(StudentContext s) {
         students.remove(s);
         id_students.remove(s.getStudent().id);
+        for (ContextListener listener : listeners) listener.studentRemoved(s);
     }
 
     @SuppressLint("StaticFieldLeak")

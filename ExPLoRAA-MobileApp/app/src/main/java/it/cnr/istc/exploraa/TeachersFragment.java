@@ -14,13 +14,12 @@ public class TeachersFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_teachers, container, false);
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
+    void addTeacher(TeacherContext ctx) {
     }
 
-    @Override
-    public void onPause() {
-        super.onPause();
+    void removeTeacher(TeacherContext ctx) {
+    }
+
+    void clearTeachers() {
     }
 }
