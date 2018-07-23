@@ -11,7 +11,6 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.KeyEvent;
 import android.view.View;
 import android.widget.EditText;
 
@@ -38,12 +37,10 @@ public class NewUserActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if ((keyCode == KeyEvent.KEYCODE_BACK)) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-        }
-        return super.onKeyDown(keyCode, event);
+    public void onBackPressed() {
+        startActivity(new Intent(this, LoginActivity.class));
+        finish();
+        super.onBackPressed();
     }
 
     public void new_user(View v) {

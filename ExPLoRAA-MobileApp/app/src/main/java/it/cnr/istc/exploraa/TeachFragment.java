@@ -4,27 +4,29 @@ import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AppCompatActivity;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
-public class MainActivity extends AppCompatActivity {
+public class TeachFragment extends Fragment {
 
     private ViewPager pager;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        // Inflate the layout for this fragment
+        View v = inflater.inflate(R.layout.fragment_teach, container, false);
 
-        pager = findViewById(R.id.main_pager);
+        pager = v.findViewById(R.id.teach_pager);
 
-        pager.setAdapter(new FragmentPagerAdapter(getSupportFragmentManager()) {
+        pager.setAdapter(new FragmentPagerAdapter(getActivity().getSupportFragmentManager()) {
             @Override
             public Fragment getItem(int position) {
                 switch (position) {
                     case 0:
-                        return new LearnFragment();
+                        return new LessonsFragment();
                     case 1:
-                        return new TeachFragment();
+                        return new StudentsFragment();
                     default:
                         throw new AssertionError("Invalid position..");
                 }
@@ -35,15 +37,7 @@ public class MainActivity extends AppCompatActivity {
                 return 2;
             }
         });
-    }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
+        return v;
     }
 }

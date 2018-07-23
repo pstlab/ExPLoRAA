@@ -45,6 +45,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -113,6 +114,7 @@ public class ExPLoRAAContext implements LocationListener {
      * The current user.
      */
     private User user;
+    private final Collection<ContextListener> listeners = new ArrayList<>();
 
     private ExPLoRAAContext() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();
@@ -456,5 +458,13 @@ public class ExPLoRAAContext implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
+    }
+
+    public void addListener(ContextListener l) {
+        listeners.add(l);
+    }
+
+    public void removeListener(ContextListener l) {
+        listeners.remove(l);
     }
 }
