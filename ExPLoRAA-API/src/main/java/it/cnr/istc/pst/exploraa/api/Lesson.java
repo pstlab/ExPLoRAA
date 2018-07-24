@@ -18,6 +18,8 @@ package it.cnr.istc.pst.exploraa.api;
 
 import java.util.Collection;
 import java.util.Map;
+import javax.json.JsonObject;
+import javax.json.bind.adapter.JsonbAdapter;
 
 /**
  *
@@ -25,6 +27,7 @@ import java.util.Map;
  */
 public class Lesson {
 
+    public static final LessonAdapter ADAPTER = new LessonAdapter();
     public long id;
     public Teach teacher;
     public String name;
@@ -52,5 +55,18 @@ public class Lesson {
 
     public enum LessonState {
         Running, Paused, Stopped
+    }
+
+    public static class LessonAdapter implements JsonbAdapter<Lesson, JsonObject> {
+
+        @Override
+        public JsonObject adaptToJson(Lesson obj) throws Exception {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
+
+        @Override
+        public Lesson adaptFromJson(JsonObject obj) throws Exception {
+            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        }
     }
 }

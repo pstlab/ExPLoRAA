@@ -140,7 +140,7 @@ public class ExPLoRAABean {
                                             break;
                                         case RemoveParameter:
                                             RemoveParameter lost_parameter = JSONB.fromJson(new String(message.getPayload()), RemoveParameter.class);
-                                            removeParameter(user_id, getParType(user_id, lost_parameter.parameter.name));
+                                            removeParameter(user_id, getParType(user_id, lost_parameter.parameter));
                                             break;
                                         default:
                                             throw new AssertionError(m.message_type.name());

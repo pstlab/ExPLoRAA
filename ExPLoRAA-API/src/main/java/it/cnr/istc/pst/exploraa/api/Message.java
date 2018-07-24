@@ -16,9 +16,17 @@
  */
 package it.cnr.istc.pst.exploraa.api;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import javax.json.Json;
+import javax.json.JsonArray;
+import javax.json.JsonArrayBuilder;
+import javax.json.JsonNumber;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.json.bind.adapter.JsonbAdapter;
 
 /**
@@ -27,6 +35,7 @@ import javax.json.bind.adapter.JsonbAdapter;
  */
 public abstract class Message {
 
+    public static final MessageAdapter ADAPTER = new MessageAdapter();
     public MessageType message_type;
 
     public Message() {
@@ -64,12 +73,12 @@ public abstract class Message {
 
     public static class RemoveParameter extends Message {
 
-        public Parameter parameter;
+        public String parameter;
 
         public RemoveParameter() {
         }
 
-        public RemoveParameter(Parameter parameter) {
+        public RemoveParameter(String parameter) {
             super(MessageType.RemoveParameter);
             this.parameter = parameter;
         }
@@ -90,14 +99,14 @@ public abstract class Message {
 
     public static class RemoveLesson extends Message {
 
-        public long lesson_id;
+        public long lesson;
 
         public RemoveLesson() {
         }
 
-        public RemoveLesson(long lesson_id) {
+        public RemoveLesson(long lesson) {
             super(MessageType.RemoveLesson);
-            this.lesson_id = lesson_id;
+            this.lesson = lesson;
         }
     }
 
@@ -138,28 +147,28 @@ public abstract class Message {
         public TokenUpdate() {
         }
 
-        public TokenUpdate(long lesson_id, int id, Long min, Long max, long val) {
+        public TokenUpdate(long lesson_id, int id, Long min, Long max, long time) {
             super(MessageType.TokenUpdate);
             this.lesson_id = lesson_id;
             this.id = id;
             this.min = min;
             this.max = max;
-            this.time = val;
+            this.time = time;
         }
     }
 
     public static class RemoveToken extends Message {
 
         public long lesson_id;
-        public long event_id;
+        public long id;
 
         public RemoveToken() {
         }
 
-        public RemoveToken(long lesson_id, long event_id) {
+        public RemoveToken(long lesson_id, long id) {
             super(MessageType.RemoveToken);
             this.lesson_id = lesson_id;
-            this.event_id = event_id;
+            this.id = id;
         }
     }
 
@@ -218,17 +227,17 @@ public abstract class Message {
 
             public static class Answer extends Message {
 
-                public long lessonId;
-                public int questionId;
+                public long lesson_id;
+                public int question_id;
                 public int answer;
 
                 public Answer() {
                 }
 
-                public Answer(long lessonId, int questionId, int answer) {
+                public Answer(long lesson_id, int question_id, int answer) {
                     super(MessageType.Answer);
-                    this.lessonId = lessonId;
-                    this.questionId = questionId;
+                    this.lesson_id = lesson_id;
+                    this.question_id = question_id;
                     this.answer = answer;
                 }
             }
@@ -253,28 +262,170 @@ public abstract class Message {
     public static class RemoveStimulus extends Message {
 
         public long lesson_id;
-        public long event_id;
+        public long id;
 
         public RemoveStimulus() {
         }
 
-        public RemoveStimulus(long lesson_id, long event_id) {
+        public RemoveStimulus(long lesson_id, long id) {
             super(MessageType.RemoveStimulus);
             this.lesson_id = lesson_id;
-            this.event_id = event_id;
+            this.id = id;
         }
     }
 
-    public static class StimulusAdapter implements JsonbAdapter<Stimulus, JsonObject> {
+    public static class MessageAdapter implements JsonbAdapter<Message, JsonObject> {
 
         @Override
-        public JsonObject adaptToJson(Stimulus obj) throws Exception {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        public JsonObject adaptToJson(Message obj) throws Exception {
+            JsonObjectBuilder c_object = Json.createObjectBuilder();
+            c_object.add("message_type", obj.message_type.name());
+            switch (obj.message_type) {
+                case NewParameter:
+                    c_object.add("parameter", Parameter.ADAPTER.adaptToJson(((NewParameter) obj).parameter));
+                    break;
+                case RemoveParameter:
+                    c_object.add("parameter", ((RemoveParameter) obj).parameter);
+                    break;
+                case NewLesson:
+                    c_object.add("lesson", Lesson.ADAPTER.adaptToJson(((NewLesson) obj).lesson));
+                    break;
+                case RemoveLesson:
+                    c_object.add("lesson", ((RemoveLesson) obj).lesson);
+                    break;
+                case Token:
+                    c_object.add("lesson_id", ((Token) obj).lesson_id);
+                    c_object.add("id", ((Token) obj).id);
+                    if (((Token) obj).cause != null) {
+                        c_object.add("cause", ((Token) obj).cause);
+                    }
+                    if (((Token) obj).min != null) {
+                        c_object.add("min", ((Token) obj).min);
+                    }
+                    if (((Token) obj).max != null) {
+                        c_object.add("max", ((Token) obj).max);
+                    }
+                    c_object.add("time", ((Token) obj).time);
+                    if (((Token) obj).refEvent != null) {
+                        c_object.add("refEvent", ((Token) obj).refEvent);
+                    }
+                    if (((Token) obj).question != null) {
+                        c_object.add("question", ((Token) obj).question);
+                    }
+                    break;
+                case TokenUpdate:
+                    c_object.add("lesson_id", ((TokenUpdate) obj).lesson_id);
+                    c_object.add("id", ((TokenUpdate) obj).id);
+                    if (((TokenUpdate) obj).min != null) {
+                        c_object.add("min", ((TokenUpdate) obj).min);
+                    }
+                    if (((TokenUpdate) obj).max != null) {
+                        c_object.add("max", ((TokenUpdate) obj).max);
+                    }
+                    c_object.add("time", ((TokenUpdate) obj).time);
+                    break;
+                case RemoveToken:
+                    c_object.add("lesson_id", ((RemoveToken) obj).lesson_id);
+                    c_object.add("id", ((RemoveToken) obj).id);
+                    break;
+                case Stimulus:
+                    Stimulus st = (Stimulus) obj;
+                    c_object.add("stimulus_type", st.stimulus_type.name());
+                    c_object.add("lesson_id", st.lesson_id);
+                    c_object.add("id", st.id);
+                    JsonArrayBuilder students_builder = Json.createArrayBuilder();
+                    for (Long student : st.students) {
+                        students_builder.add(student);
+                    }
+                    c_object.add("students", students_builder);
+                    c_object.add("time", st.time);
+                    switch (st.stimulus_type) {
+                        case Text:
+                            c_object.add("content", ((Stimulus.TextStimulus) st).content);
+                            break;
+                        case Question:
+                            c_object.add("question", ((Stimulus.QuestionStimulus) st).question);
+                            JsonArrayBuilder answers_builder = Json.createArrayBuilder();
+                            for (String answer : ((Stimulus.QuestionStimulus) st).answers) {
+                                answers_builder.add(answer);
+                            }
+                            c_object.add("answers", answers_builder);
+                            if (((Stimulus.QuestionStimulus) st).answer != null) {
+                                c_object.add("answer", ((Stimulus.QuestionStimulus) st).answer);
+                            }
+                            break;
+                        case URL:
+                            c_object.add("content", ((Stimulus.URLStimulus) st).content);
+                            c_object.add("url", ((Stimulus.URLStimulus) st).url);
+                            break;
+                        default:
+                            throw new AssertionError(st.stimulus_type.name());
+                    }
+                    break;
+                case Answer:
+                    c_object.add("lesson_id", ((Stimulus.QuestionStimulus.Answer) obj).lesson_id);
+                    c_object.add("question_id", ((Stimulus.QuestionStimulus.Answer) obj).question_id);
+                    c_object.add("answer", ((Stimulus.QuestionStimulus.Answer) obj).answer);
+                    break;
+                case RemoveStimulus:
+                    c_object.add("lesson_id", ((RemoveStimulus) obj).lesson_id);
+                    c_object.add("id", ((RemoveStimulus) obj).id);
+                    break;
+                default:
+                    throw new AssertionError(obj.message_type.name());
+            }
+            return c_object.build();
         }
 
         @Override
-        public Stimulus adaptFromJson(JsonObject obj) throws Exception {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        public Message adaptFromJson(JsonObject obj) throws Exception {
+            switch (MessageType.valueOf(obj.getString("message_type"))) {
+                case NewParameter:
+                    return new NewParameter(Parameter.ADAPTER.adaptFromJson(obj.getJsonObject("parameter")));
+                case RemoveParameter:
+                    return new RemoveParameter(obj.getString("parameter"));
+                case NewLesson:
+                    return new NewLesson(Lesson.ADAPTER.adaptFromJson(obj.getJsonObject("lesson")));
+                case RemoveLesson:
+                    return new RemoveLesson(obj.getInt("lesson"));
+                case Token:
+                    return new Token(obj.getInt("lesson_id"), obj.getInt("id"), obj.containsKey("cause") ? obj.getInt("cause") : null, obj.containsKey("min") ? new Long(obj.getInt("min")) : null, obj.containsKey("max") ? new Long(obj.getInt("max")) : null, obj.getInt("time"), obj.containsKey("refEvent") ? obj.getString("refEvent") : null, obj.containsKey("question") ? obj.getInt("question") : null);
+                case TokenUpdate:
+                    return new TokenUpdate(obj.getInt("lesson_id"), obj.getInt("id"), obj.containsKey("min") ? new Long(obj.getInt("min")) : null, obj.containsKey("max") ? new Long(obj.getInt("max")) : null, obj.getInt("time"));
+                case RemoveToken:
+                    return new RemoveToken(obj.getInt("lesson_id"), obj.getInt("id"));
+                case Stimulus:
+                    long lesson_id = obj.getJsonNumber("lesson_id").longValue();
+                    int id = obj.getInt("id");
+                    JsonArray students_array = obj.getJsonArray("students");
+                    List<Long> students = new ArrayList<>(students_array.size());
+                    for (JsonValue answer_value : students_array) {
+                        students.add(((JsonNumber) answer_value).longValue());
+                    }
+                    long time = obj.getJsonNumber("time").longValue();
+                    switch (Stimulus.StimulusType.valueOf(obj.getString("stimulus_type"))) {
+                        case Text:
+                            return new Stimulus.TextStimulus(lesson_id, id, students, time, obj.getString("content"));
+                        case Question:
+                            String question = obj.getString("question");
+                            JsonArray answers_array = obj.getJsonArray("answers");
+                            List<String> answers = new ArrayList<>(answers_array.size());
+                            for (JsonValue answer_value : answers_array) {
+                                answers.add(((JsonString) answer_value).getString());
+                            }
+                            return new Stimulus.QuestionStimulus(lesson_id, id, students, time, question, answers, obj.containsKey("answer") ? obj.getInt("answer") : null);
+                        case URL:
+                            return new Stimulus.URLStimulus(lesson_id, id, students, time, obj.getString("content"), obj.getString("url"));
+                        default:
+                            throw new AssertionError(MessageType.valueOf(obj.getString("message_type")).name());
+                    }
+                case Answer:
+                    return new Stimulus.QuestionStimulus.Answer(obj.getInt("lesson_id"), obj.getInt("question_id"), obj.getInt("answer"));
+                case RemoveStimulus:
+                    return new RemoveStimulus(obj.getInt("lesson_id"), obj.getInt("id"));
+                default:
+                    throw new AssertionError(MessageType.valueOf(obj.getString("message_type")).name());
+            }
         }
     }
 }

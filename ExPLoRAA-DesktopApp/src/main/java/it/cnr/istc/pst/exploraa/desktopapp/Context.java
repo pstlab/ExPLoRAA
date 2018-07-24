@@ -47,7 +47,7 @@ import org.eclipse.paho.client.mqttv3.MqttClient;
 public class Context {
 
     private static final Logger LOG = Logger.getLogger(Context.class.getName());
-    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(new Message.StimulusAdapter()));
+    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER));
     public static final ResourceBundle LANGUAGE = ResourceBundle.getBundle("language");
     private static ScheduledExecutorService EXECUTOR;
     private static Context ctx;
