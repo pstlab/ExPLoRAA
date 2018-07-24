@@ -36,6 +36,7 @@ import javax.ejb.EJB;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
 import javax.persistence.TypedQuery;
 import javax.transaction.HeuristicMixedException;
@@ -73,27 +74,31 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public User login(@FormParam("email") String email, @FormParam("password") String password) {
-        TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email AND u.password = :password", UserEntity.class);
-        query.setParameter("email", email);
-        query.setParameter("password", password);
-        UserEntity ue = query.getSingleResult();
-        Map<Long, Follow> follows = new HashMap<>();
-        for (FollowEntity follow : ue.getFollowedLessons()) {
-            User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null);
-            Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
-            Lesson followed_lesson = new Lesson(follow.getLesson().getId(), new Teach(teacher, null), follow.getLesson().getName(), l.state, l.time, null, null, l.stimuli, null);
-            follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, follow.getInterests()));
-        }
-        Map<Long, Teach> teachs = new HashMap<>();
-        for (TeachEntity teach : ue.getTeachedLessons()) {
-            Lesson l = ctx.getLessonManager(teach.getLesson().getId()).getLesson();
-            Map<Long, Follow> students = new HashMap<>();
-            for (FollowEntity student : teach.getLesson().getStudents()) {
-                students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null), null, student.getInterests()));
+        try {
+            TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email AND u.password = :password", UserEntity.class);
+            query.setParameter("email", email);
+            query.setParameter("password", password);
+            UserEntity ue = query.getSingleResult();
+            Map<Long, Follow> follows = new HashMap<>();
+            for (FollowEntity follow : ue.getFollowedLessons()) {
+                User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null);
+                Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
+                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), new Teach(teacher, null), follow.getLesson().getName(), l.state, l.time, null, null, l.stimuli, null);
+                follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, follow.getInterests()));
             }
-            teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), null, teach.getLesson().getName(), l.state, l.time, l.model, students, null, l.tokens)));
+            Map<Long, Teach> teachs = new HashMap<>();
+            for (TeachEntity teach : ue.getTeachedLessons()) {
+                Lesson l = ctx.getLessonManager(teach.getLesson().getId()).getLesson();
+                Map<Long, Follow> students = new HashMap<>();
+                for (FollowEntity student : teach.getLesson().getStudents()) {
+                    students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null), null, student.getInterests()));
+                }
+                teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), null, teach.getLesson().getName(), l.state, l.time, l.model, students, null, l.tokens)));
+            }
+            return new User(ue.getId(), ue.getEmail(), ue.getFirstName(), ue.getLastName(), ctx.isOnline(ue.getId()), ctx.getParTypes(ue.getId()), ctx.getParValues(ue.getId()), follows, teachs);
+        } catch (NoResultException ex) {
+            throw new WebApplicationException(ex.getMessage());
         }
-        return new User(ue.getId(), ue.getEmail(), ue.getFirstName(), ue.getLastName(), ctx.isOnline(ue.getId()), ctx.getParTypes(ue.getId()), ctx.getParValues(ue.getId()), follows, teachs);
     }
 
     @POST
