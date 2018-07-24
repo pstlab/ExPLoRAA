@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import java.util.concurrent.ExecutionException;
 
@@ -75,7 +76,8 @@ public class LoginActivity extends AppCompatActivity {
 
                             startActivity(new Intent(this, MainActivity.class));
                             finish();
-                        }
+                        } else
+                            Toast.makeText(this, "Invalid email or password", Toast.LENGTH_SHORT).show();
                     } catch (ExecutionException | InterruptedException e) {
                         Log.e(TAG, "login failed..", e);
                     }

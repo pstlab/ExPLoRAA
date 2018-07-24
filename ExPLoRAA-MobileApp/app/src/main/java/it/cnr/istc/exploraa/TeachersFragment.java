@@ -24,7 +24,7 @@ public class TeachersFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        teachers_recycler_view = view.findViewById(R.id.teaching_lessons_recycler_view);
+        teachers_recycler_view = view.findViewById(R.id.teachers_recycler_view);
         teachers_adapter = new TeachersAdapter();
 
         // use this setting to improve performance if you know that changes
@@ -90,7 +90,7 @@ public class TeachersFragment extends Fragment {
 
         public TextView title;
 
-        public TeacherView(View view) {
+        private TeacherView(View view) {
             super(view);
             title = view.findViewById(R.id.teacher_name);
         }
