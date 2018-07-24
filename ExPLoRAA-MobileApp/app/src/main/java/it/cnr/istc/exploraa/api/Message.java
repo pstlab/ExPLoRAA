@@ -148,15 +148,15 @@ public abstract class Message {
     public static class RemoveToken extends Message {
 
         public long lesson_id;
-        public long event_id;
+        public int id;
 
         public RemoveToken() {
         }
 
-        public RemoveToken(long lesson_id, long event_id) {
+        public RemoveToken(long lesson_id, int id) {
             super(MessageType.RemoveToken);
             this.lesson_id = lesson_id;
-            this.event_id = event_id;
+            this.id = id;
         }
     }
 
@@ -250,15 +250,15 @@ public abstract class Message {
     public static class RemoveStimulus extends Message {
 
         public long lesson_id;
-        public long event_id;
+        public long id;
 
         public RemoveStimulus() {
         }
 
-        public RemoveStimulus(long lesson_id, long event_id) {
+        public RemoveStimulus(long lesson_id, long id) {
             super(MessageType.RemoveStimulus);
             this.lesson_id = lesson_id;
-            this.event_id = event_id;
+            this.id = id;
         }
     }
 }

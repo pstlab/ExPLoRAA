@@ -1,10 +1,10 @@
 package it.cnr.istc.exploraa;
 
+import android.util.LongSparseArray;
+
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.Message;
@@ -13,7 +13,7 @@ public class TeachingLessonContext {
 
     private final Lesson lesson;
     private final List<TokenRow> tokens = new ArrayList<>();
-    private final Map<Integer, TokenRow> id_tokens = new HashMap<>();
+    private final LongSparseArray<TokenRow> id_tokens = new LongSparseArray<>();
     private final List<TeachingLessonListener> listeners = new ArrayList<>();
     private Lesson.LessonState state = Lesson.LessonState.Stopped;
     private long time = 0;
@@ -65,9 +65,14 @@ public class TeachingLessonContext {
     }
 
     public void removeToken(final Message.Token tk) {
-        TokenRow tk_r = id_tokens.remove(tk.id);
-        tokens.remove(tk_r);
-        for (TeachingLessonListener l : listeners) l.removedToken(tk_r);
+        TokenRow tk_row = id_tokens.get(tk.id);
+        id_tokens.remove(tk.id);
+        tokens.remove(tk_row);
+        for (TeachingLessonListener l : listeners) l.removedToken(tk_row);
+    }
+
+    public TokenRow getToken(int id) {
+        return id_tokens.get(id);
     }
 
     public void addListener(TeachingLessonListener l) {
@@ -95,6 +100,34 @@ public class TeachingLessonContext {
 
         private TokenRow(Message.Token tk) {
             this.tk = tk;
+        }
+
+        public Message.Token getToken() {
+            return tk;
+        }
+
+        public long getTime() {
+            return tk.time;
+        }
+
+        public void setTime(long time) {
+            tk.time = time;
+        }
+
+        public Long getMin() {
+            return tk.min;
+        }
+
+        public void setMin(Long min) {
+            tk.min = min;
+        }
+
+        public Long getMax() {
+            return tk.max;
+        }
+
+        public void setMax(Long max) {
+            tk.max = max;
         }
     }
 }

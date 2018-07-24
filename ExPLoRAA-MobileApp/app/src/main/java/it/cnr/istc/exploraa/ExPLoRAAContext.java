@@ -26,6 +26,8 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
@@ -149,7 +151,8 @@ public class ExPLoRAAContext implements LocationListener {
                     // we broadcast the lost of a parameter..
                     if (mqtt.isConnected()) for (Parameter par : par_types)
                         mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(id_par_types.get(par.name))).getBytes(), 1, false);
-                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
                         public void run() {
                             if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                                 ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).removeUpdates(ExPLoRAAContext.this);
@@ -209,91 +212,141 @@ public class ExPLoRAAContext implements LocationListener {
                 }
             }
 
-            if (user != null) {
-                try {
-                    mqtt = new MqttClient("tcp://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, String.valueOf(user.id), new MemoryPersistence());
-                    mqtt.setCallback(new MqttCallback() {
-                        @Override
-                        public void connectionLost(Throwable cause) {
-                            Log.e(TAG, "Connection lost..", cause);
-                        }
-
-                        @Override
-                        public void messageArrived(String topic, MqttMessage message) {
-                            Log.w(TAG, "Message arrived: " + topic + " - " + message);
-                        }
-
-                        @Override
-                        public void deliveryComplete(IMqttDeliveryToken token) {
-                        }
-                    });
-
-                    MqttConnectOptions options = new MqttConnectOptions();
-                    options.setCleanSession(true);
-                    options.setAutomaticReconnect(true);
-                    mqtt.connect(options);
-                    Log.i(TAG, "Connected to the MQTT broker..");
-                    mqtt.subscribe(user.id + "/input", new IMqttMessageListener() {
-                        @Override
-                        public void messageArrived(String topic, MqttMessage message) {
-                            Log.w(TAG, "Message arrived: " + topic + " - " + message);
-                            Message m = GSON.fromJson(new String(message.getPayload()), Message.class);
-                            switch (m.message_type) {
-                                case NewLesson:
-                                    // a teacher has created a new lesson for this student..
-                                    Message.NewLesson new_lesson = GSON.fromJson(new String(message.getPayload()), Message.NewLesson.class);
-                                    break;
-                                case RemoveLesson:
-                                    // a teacher has removed a new lesson for this student..
-                                    Message.RemoveLesson lost_lesson = GSON.fromJson(new String(message.getPayload()), Message.RemoveLesson.class);
-                                    break;
-                                case Token:
-                                    // a new token has been created for a teaching lesson..
-                                    Message.Token token = GSON.fromJson(new String(message.getPayload()), Message.Token.class);
-                                    break;
-                                case TokenUpdate:
-                                    // a token of a teaching lesson has been updated..
-                                    Message.TokenUpdate token_update = GSON.fromJson(new String(message.getPayload()), Message.TokenUpdate.class);
-                                    break;
-                                case RemoveToken:
-                                    // a token of a teaching lesson has been removed..
-                                    Message.RemoveToken remove_token = GSON.fromJson(new String(message.getPayload()), Message.RemoveToken.class);
-                                    break;
-                                case Stimulus:
-                                    // a new stimulus has been created for a following lesson..
-                                    Message.Stimulus event = GSON.fromJson(new String(message.getPayload()), Message.Stimulus.class);
-                                    break;
-                                case RemoveStimulus:
-                                    // a stimulus has been removed for a following lesson..
-                                    Message.RemoveStimulus hide_event = GSON.fromJson(new String(message.getPayload()), Message.RemoveStimulus.class);
-                                    break;
-                                case Answer:
-                                    break;
-                                default:
-                                    throw new AssertionError(m.message_type.name());
-                            }
-                        }
-                    });
-
-                    for (Parameter par : user.par_types.values()) {
-                        par_types.add(par);
-                        // we broadcast the existence of a new parameter..
-                        mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
+            if (user != null) try {
+                mqtt = new MqttClient("tcp://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, String.valueOf(user.id), new MemoryPersistence());
+                mqtt.setCallback(new MqttCallback() {
+                    @Override
+                    public void connectionLost(Throwable cause) {
+                        Log.e(TAG, "Connection lost..", cause);
                     }
-                    ((Activity) ctx).runOnUiThread(new Runnable() {
-                        public void run() {
-                            if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                                ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ExPLoRAAContext.this);
-                        }
-                    });
-                    for (Map.Entry<String, Map<String, String>> par_val : user.par_values.entrySet()) {
-                        par_vals.put(par_val.getKey(), par_val.getValue());
-                        // we broadcast the the new value of the parameter..
-                        mqtt.publish(user.id + "/output/" + par_val.getKey(), GSON.toJson(par_val.getValue()).getBytes(), 1, true);
+
+                    @Override
+                    public void messageArrived(String topic, MqttMessage message) {
+                        Log.w(TAG, "Message arrived: " + topic + " - " + message);
                     }
-                } catch (MqttException e) {
-                    Log.w(TAG, "MQTT Connection failed..", e);
+
+                    @Override
+                    public void deliveryComplete(IMqttDeliveryToken token) {
+                    }
+                });
+
+                MqttConnectOptions options = new MqttConnectOptions();
+                options.setCleanSession(true);
+                options.setAutomaticReconnect(true);
+                mqtt.connect(options);
+                Log.i(TAG, "Connected to the MQTT broker..");
+                mqtt.subscribe(user.id + "/input", new IMqttMessageListener() {
+                    @Override
+                    public void messageArrived(String topic, MqttMessage message) {
+                        Log.w(TAG, "Message arrived: " + topic + " - " + message);
+                        Message m = GSON.fromJson(new String(message.getPayload()), Message.class);
+                        switch (m.message_type) {
+                            case NewLesson:
+                                // a teacher has created a new lesson for this student..
+                                final Message.NewLesson new_lesson = GSON.fromJson(new String(message.getPayload()), Message.NewLesson.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        addFollowingLesson(new FollowingLessonContext(new_lesson.lesson));
+                                    }
+                                });
+                                break;
+                            case RemoveLesson:
+                                // a teacher has removed a lesson for this student..
+                                final Message.RemoveLesson lost_lesson = GSON.fromJson(new String(message.getPayload()), Message.RemoveLesson.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson_id));
+                                    }
+                                });
+                                break;
+                            case Token:
+                                // a new token has been created for a teaching lesson..
+                                final Message.Token token = GSON.fromJson(new String(message.getPayload()), Message.Token.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        id_teaching_lessons.get(token.lesson_id).addToken(token);
+                                    }
+                                });
+                                break;
+                            case TokenUpdate:
+                                // a token of a teaching lesson has been updated..
+                                final Message.TokenUpdate token_update = GSON.fromJson(new String(message.getPayload()), Message.TokenUpdate.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        TeachingLessonContext.TokenRow tk = id_teaching_lessons.get(token_update.lesson_id).getToken(token_update.id);
+                                        tk.setTime(token_update.time);
+                                        tk.setMin(token_update.min);
+                                        tk.setMax(token_update.max);
+                                    }
+                                });
+                                break;
+                            case RemoveToken:
+                                // a token of a teaching lesson has been removed..
+                                final Message.RemoveToken remove_token = GSON.fromJson(new String(message.getPayload()), Message.RemoveToken.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        id_teaching_lessons.get(remove_token.lesson_id).removeToken(id_teaching_lessons.get(remove_token.lesson_id).getToken(remove_token.id).getToken());
+                                    }
+                                });
+                                break;
+                            case Stimulus:
+                                // a new stimulus has been created for a following lesson..
+                                final Message.Stimulus stimulus = GSON.fromJson(new String(message.getPayload()), Message.Stimulus.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        addStimulus(stimulus);
+                                    }
+                                });
+                                break;
+                            case RemoveStimulus:
+                                // a stimulus has been removed for a following lesson..
+                                final Message.RemoveStimulus hide_stimulus = GSON.fromJson(new String(message.getPayload()), Message.RemoveStimulus.class);
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        Message.Stimulus s = null;
+                                        for (Message.Stimulus c_s : stimuli)
+                                            if (c_s.lesson_id == hide_stimulus.lesson_id && c_s.id == hide_stimulus.lesson_id) {
+                                                s = c_s;
+                                                break;
+                                            }
+                                        removeStimulus(s);
+                                    }
+                                });
+                                break;
+                            case Answer:
+                                break;
+                            default:
+                                throw new AssertionError(m.message_type.name());
+                        }
+                    }
+                });
+
+                for (Parameter par : user.par_types.values()) {
+                    par_types.add(par);
+                    // we broadcast the existence of a new parameter..
+                    mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
                 }
+                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                            ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ExPLoRAAContext.this);
+                    }
+                });
+                for (Map.Entry<String, Map<String, String>> par_val : user.par_values.entrySet()) {
+                    par_vals.put(par_val.getKey(), par_val.getValue());
+                    // we broadcast the the new value of the parameter..
+                    mqtt.publish(user.id + "/output/" + par_val.getKey(), GSON.toJson(par_val.getValue()).getBytes(), 1, true);
+                }
+            } catch (MqttException e) {
+                Log.w(TAG, "MQTT Connection failed..", e);
             }
             this.user = user;
         }
@@ -301,6 +354,22 @@ public class ExPLoRAAContext implements LocationListener {
 
     public List<Message.Stimulus> getStimuli() {
         return Collections.unmodifiableList(stimuli);
+    }
+
+    private void addStimulus(@NonNull final Message.Stimulus stimulus) {
+        final int pos = stimuli.size();
+        stimuli.add(stimulus);
+        id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
+        for (StimuliListener listener : stimuli_listeners)
+            listener.stimulusAdded(pos, stimulus);
+    }
+
+    private void removeStimulus(@NonNull final Message.Stimulus stimulus) {
+        final int pos = stimuli.indexOf(stimulus);
+        stimuli.remove(pos);
+        id_following_lessons.get(stimulus.lesson_id).removeStimulus(stimulus);
+        for (StimuliListener listener : stimuli_listeners)
+            listener.stimulusRemoved(pos, stimulus);
     }
 
     public List<FollowingLessonContext> getFollowingLessons() {
