@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Menu?>
+<?import javafx.scene.control.MenuBar?>
+<?import javafx.scene.control.MenuItem?>
+<?import javafx.scene.control.SeparatorMenuItem?>
+<?import javafx.scene.layout.VBox?>
+
+<VBox prefHeight="600.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.MainController">
+    <children>
+        <MenuBar>
+            <menus>
+                <Menu mnemonicParsing="false" text="File">
+                    <items>
+                        <MenuItem fx:id="login" mnemonicParsing="false" onAction="#login" text="%LOGIN" />
+                        <MenuItem fx:id="logout" mnemonicParsing="false" onAction="#logout" text="%LOGOUT" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem fx:id="new_user" mnemonicParsing="false" onAction="#new_user" text="%NEW_USER" />
+                        <SeparatorMenuItem mnemonicParsing="false" />
+                        <MenuItem fx:id="exit" mnemonicParsing="false" onAction="#exit" text="%EXIT" />
+                    </items>
+                </Menu>
+                <Menu mnemonicParsing="false" text="%HELP">
+                    <items>
+                        <MenuItem mnemonicParsing="false" text="%ABOUT" />
+                    </items>
+                </Menu>
+            </menus>
+        </MenuBar>
+    </children>
+</VBox>
