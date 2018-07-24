@@ -69,7 +69,7 @@ public class MainController implements Initializable {
         login_dialog.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
         login_dialog.showAndWait().ifPresent(user -> {
             try {
-//                Context.getContext().login(user.getEmail(), user.getPassword());
+                Context.getContext().login(user.getEmail(), user.getPassword());
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
@@ -82,7 +82,7 @@ public class MainController implements Initializable {
 
     @FXML
     private void logout(ActionEvent event) {
-//        Context.getContext().logout();
+        Context.getContext().logout();
     }
 
     @FXML
@@ -91,7 +91,7 @@ public class MainController implements Initializable {
         new_user_dialog.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
         new_user_dialog.showAndWait().ifPresent(user -> {
             try {
-//                Context.getContext().newUser(user.getEmail(), user.getPassword(), user.getFirstName(), user.getLastName());
+                Context.getContext().new_user(user.getEmail(), user.getPassword(), user.getFirstName(), user.getLastName());
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
