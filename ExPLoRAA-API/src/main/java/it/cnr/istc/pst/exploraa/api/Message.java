@@ -183,11 +183,11 @@ public abstract class Message {
         public Stimulus() {
         }
 
-        public Stimulus(StimulusType stimulus_type, long lesson_id, int event_id, Collection<Long> students, long time) {
+        public Stimulus(StimulusType stimulus_type, long lesson_id, int id, Collection<Long> students, long time) {
             super(MessageType.Stimulus);
             this.stimulus_type = stimulus_type;
             this.lesson_id = lesson_id;
-            this.id = event_id;
+            this.id = id;
             this.students = students;
             this.time = time;
         }
@@ -203,8 +203,8 @@ public abstract class Message {
             public TextStimulus() {
             }
 
-            public TextStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String content) {
-                super(StimulusType.Text, lesson_id, event_id, students, time);
+            public TextStimulus(long lesson_id, int id, Collection<Long> students, long time, String content) {
+                super(StimulusType.Text, lesson_id, id, students, time);
                 this.content = content;
             }
         }
@@ -218,8 +218,8 @@ public abstract class Message {
             public QuestionStimulus() {
             }
 
-            public QuestionStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String question, List<String> answers, Integer answer) {
-                super(StimulusType.Question, lesson_id, event_id, students, time);
+            public QuestionStimulus(long lesson_id, int id, Collection<Long> students, long time, String question, List<String> answers, Integer answer) {
+                super(StimulusType.Question, lesson_id, id, students, time);
                 this.question = question;
                 this.answers = answers;
                 this.answer = answer;
@@ -251,8 +251,8 @@ public abstract class Message {
             public URLStimulus() {
             }
 
-            public URLStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String content, String url) {
-                super(StimulusType.URL, lesson_id, event_id, students, time);
+            public URLStimulus(long lesson_id, int id, Collection<Long> students, long time, String content, String url) {
+                super(StimulusType.URL, lesson_id, id, students, time);
                 this.content = content;
                 this.url = url;
             }
