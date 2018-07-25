@@ -20,6 +20,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -45,9 +46,9 @@ public class UserEntity implements Serializable {
     private String last_name;
     @OneToMany
     private final Collection<LessonModelEntity> models = new ArrayList<>();
-    @OneToMany(mappedBy = "student")
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
     private final Collection<FollowEntity> follows = new ArrayList<>();
-    @OneToMany(mappedBy = "teacher")
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
     private final Collection<TeachEntity> teachs = new ArrayList<>();
 
     public Long getId() {

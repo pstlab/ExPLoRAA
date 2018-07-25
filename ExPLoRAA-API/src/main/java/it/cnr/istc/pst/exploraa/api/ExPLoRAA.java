@@ -28,5 +28,25 @@ public interface ExPLoRAA {
 
     public User new_user(String email, String password, String first_name, String last_name);
 
-    public Collection<User> getUsers();
+    public void delete_user(long id);
+
+    public Collection<User> get_users();
+
+    public Lesson new_lesson(long teacher_id, String name, String model);
+
+    public Lesson new_lesson(long teacher_id, String name, long id);
+
+    public void delete_lesson(long id);
+
+    public Collection<Lesson> get_lessons();
+
+    public void solve(long id);
+
+    public void play(long id);
+
+    public void pause(long id);
+
+    public void stop(long id);
+
+    public void go_to(long id, long time);
 }

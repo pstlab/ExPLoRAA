@@ -16,6 +16,7 @@
  */
 package it.cnr.istc.pst.exploraa.desktopapp;
 
+import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Parameter;
@@ -46,12 +47,6 @@ import javafx.stage.Stage;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
 import javax.json.bind.JsonbConfig;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.Form;
-import javax.ws.rs.core.MediaType;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.MqttCallback;
 import org.eclipse.paho.client.mqttv3.MqttClient;
@@ -79,8 +74,7 @@ public class Context {
         return ctx;
     }
     private final Properties properties = new Properties();
-    private final Client client = ClientBuilder.newClient();
-    private final WebTarget target;
+    private final ExPLoRAAResource resource;
     private MqttClient mqtt;
     private Stage stage;
     /**
@@ -136,7 +130,7 @@ public class Context {
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        this.target = client.target("http://" + properties.getProperty("host") + ":" + properties.getProperty("service-port")).path("ExPLoRAA").path("resources");
+        this.resource = new ExPLoRAAResource();
         user.addListener((ObservableValue<? extends User> observable, User oldValue, User newValue) -> {
             if (oldValue != null) {
                 // we clear the current data..
@@ -284,6 +278,10 @@ public class Context {
         });
     }
 
+    public Properties getProperties() {
+        return properties;
+    }
+
     public Stage getStage() {
         return stage;
     }
@@ -324,6 +322,10 @@ public class Context {
         return teachers;
     }
 
+    public ObservableList<LessonModel> modelsProperty() {
+        return models;
+    }
+
     public ObservableList<TeachingLessonContext> teachingLessonsProperty() {
         return teaching_lessons;
     }
@@ -333,16 +335,16 @@ public class Context {
     }
 
     public void login(String email, String password) {
-        Form login_form = new Form();
-        login_form.param("email", email);
-        login_form.param("password", password);
-        User u = target.path("login").request(MediaType.APPLICATION_JSON).post(Entity.form(login_form), User.class);
+        User u = resource.login(email, password);
         u.par_types = load_pars();
         u.par_values = load_par_vals();
         user.set(u);
 
         // we add the following lessons..
         u.follows.values().forEach(follow -> following_lessons.add(new FollowingLessonContext(follow.lesson)));
+
+        // we add the available models..
+        models.addAll(u.models.values());
 
         // we add the teaching lessons..
         u.teachs.values().forEach(teach -> teaching_lessons.add(new TeachingLessonContext(teach.lesson, teach.lesson.model)));
@@ -353,15 +355,21 @@ public class Context {
     }
 
     public void new_user(String email, String password, String first_name, String last_name) {
-        Form new_user_form = new Form();
-        new_user_form.param("email", email);
-        new_user_form.param("password", password);
-        new_user_form.param("first_name", first_name);
-        new_user_form.param("last_name", last_name);
-        User u = target.path("new_user").request(MediaType.APPLICATION_JSON).post(Entity.form(new_user_form), User.class);
+        User u = resource.new_user(email, password, first_name, last_name);
         u.par_types = load_pars();
         u.par_values = load_par_vals();
         user.set(u);
+    }
+
+    public void addLesson(String name, LessonModel model) {
+        Lesson l = model.id != null ? resource.new_lesson(user.get().id, name, model.id) : resource.new_lesson(user.get().id, name, JSONB.toJson(model));
+        teaching_lessons.add(new TeachingLessonContext(l, model));
+        resource.solve(l.id);
+    }
+
+    public void removeLesson(TeachingLessonContext l_ctx) {
+        resource.delete_lesson(l_ctx.getLesson().id);
+        teaching_lessons.remove(l_ctx);
     }
 
     private static Map<String, Parameter> load_pars() {

@@ -20,10 +20,12 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
@@ -39,9 +41,11 @@ public class LessonEntity implements Serializable {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
-    @OneToMany(mappedBy = "lesson")
+    @ManyToOne
+    private LessonModelEntity model;
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
     private final Collection<FollowEntity> followed_by = new ArrayList<>();
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL)
     private TeachEntity teached_by;
 
     public Long getId() {
@@ -54,6 +58,14 @@ public class LessonEntity implements Serializable {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public LessonModelEntity getModel() {
+        return model;
+    }
+
+    public void setModel(LessonModelEntity model) {
+        this.model = model;
     }
 
     public Collection<FollowEntity> getStudents() {

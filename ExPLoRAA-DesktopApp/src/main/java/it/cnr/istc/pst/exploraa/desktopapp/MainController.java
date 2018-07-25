@@ -308,9 +308,11 @@ public class MainController implements Initializable {
 
     @FXML
     private void add_teaching_lesson(ActionEvent event) {
+        new AddLessonDialog().showAndWait().ifPresent(new_lesson -> Context.getContext().addLesson(new_lesson.getLessonName(), new_lesson.getModel()));
     }
 
     @FXML
     private void remove_selected_teaching_lessons(ActionEvent event) {
+        teaching_lessons.selectionModelProperty().get().getSelectedItems().forEach(l_ctx -> Context.getContext().removeLesson(l_ctx));
     }
 }

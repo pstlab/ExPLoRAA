@@ -17,6 +17,7 @@
 package it.cnr.istc.pst.exploraa.webapp.db;
 
 import java.io.Serializable;
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -37,7 +38,7 @@ public class TeachEntity implements Serializable {
     private Long id;
     @ManyToOne
     private UserEntity teacher;
-    @OneToOne(mappedBy = "teached_by")
+    @OneToOne(mappedBy = "teached_by", cascade = CascadeType.ALL)
     private LessonEntity lesson;
 
     public Long getId() {

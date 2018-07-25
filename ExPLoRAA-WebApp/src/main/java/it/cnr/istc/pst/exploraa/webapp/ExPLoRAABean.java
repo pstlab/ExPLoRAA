@@ -474,7 +474,7 @@ public class ExPLoRAABean {
     }
 
     @Lock(LockType.WRITE)
-    public void goTo(long lesson_id, long time) {
+    public void go_to(long lesson_id, long time) {
         lessons.get(lesson_id).goTo(time);
     }
 
