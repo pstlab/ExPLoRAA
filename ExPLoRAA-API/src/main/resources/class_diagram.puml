@@ -11,6 +11,7 @@ User "1..*" - "*" Lesson
 (User , Lesson) .. Follow
 User "1" - "*" Lesson
 (User , Lesson) .. Teach
+User "*" o--> "*" LessonModel : models
 
 class Follow
 Follow : +interests:Set<String>
@@ -104,5 +105,10 @@ NumericCondition : +variable:String
 NumericCondition : +value:double
 
 class Relation
+Relation : +from:String
+Relation : +to:String
+Relation : +lb:Long
+Relation : +ub:Long
+Relation : +unit:TimeUnit
 
 @enduml

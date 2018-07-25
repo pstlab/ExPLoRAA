@@ -44,11 +44,12 @@ public class User {
     public Map<String, Map<String, String>> par_values;
     public Map<Long, Follow> follows;
     public Map<Long, Teach> teachs;
+    public Map<Long, LessonModel> models;
 
     public User() {
     }
 
-    public User(long id, String email, String first_name, String last_name, boolean online, Map<String, Parameter> par_types, Map<String, Map<String, String>> par_values, Map<Long, Follow> follows, Map<Long, Teach> teachs) {
+    public User(long id, String email, String first_name, String last_name, boolean online, Map<String, Parameter> par_types, Map<String, Map<String, String>> par_values, Map<Long, Follow> follows, Map<Long, Teach> teachs, Map<Long, LessonModel> models) {
         this.id = id;
         this.email = email;
         this.first_name = first_name;
@@ -58,6 +59,7 @@ public class User {
         this.par_values = par_values;
         this.follows = follows;
         this.teachs = teachs;
+        this.models = models;
     }
 
     public static class UserAdapter implements JsonbAdapter<User, JsonObject> {
@@ -101,7 +103,12 @@ public class User {
                 teach_builder.add("lesson", Lesson.ADAPTER.adaptToJson(teach.lesson));
                 teachs_builder.add(teach_builder);
             }
-            user_builder.add("follows", teachs_builder);
+            user_builder.add("teachs", teachs_builder);
+            JsonArrayBuilder models_builder = Json.createArrayBuilder();
+            for (LessonModel model : obj.models.values()) {
+                models_builder.add(LessonModel.ADAPTER.adaptToJson(model));
+            }
+            user_builder.add("models", models_builder);
             return user_builder.build();
         }
 
@@ -146,7 +153,13 @@ public class User {
                 teachs.put(l.id, new Teach(null, l));
             }
 
-            return new User(id, email, first_name, last_name, online, par_types, par_values, follows, teachs);
+            Map<Long, LessonModel> models = new HashMap<>(obj.getJsonArray("models").size());
+            for (JsonValue model : obj.getJsonArray("models")) {
+                LessonModel m = LessonModel.ADAPTER.adaptFromJson(model.asJsonObject());
+                models.put(m.id, m);
+            }
+
+            return new User(id, email, first_name, last_name, online, par_types, par_values, follows, teachs, models);
         }
     }
 }
