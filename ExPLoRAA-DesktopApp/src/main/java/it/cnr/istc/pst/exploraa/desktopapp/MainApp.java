@@ -25,7 +25,7 @@ public class MainApp extends Application {
 
     @Override
     public void stop() throws Exception {
-//        Context.getContext().logout();
+        Context.getContext().logout();
     }
 
     /**

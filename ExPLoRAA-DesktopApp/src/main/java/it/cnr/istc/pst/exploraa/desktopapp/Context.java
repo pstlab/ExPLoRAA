@@ -184,7 +184,7 @@ public class Context {
             if (newValue != null) {
                 // we set up a new user..
                 try {
-                    mqtt = new MqttClient("tcp://" + properties.getProperty("lecture-host", "localhost") + ":" + properties.getProperty("mqtt-port", "1883"), String.valueOf(newValue.id), new MemoryPersistence());
+                    mqtt = new MqttClient("tcp://" + properties.getProperty("host", "localhost") + ":" + properties.getProperty("mqtt-port", "1883"), String.valueOf(newValue.id), new MemoryPersistence());
                     mqtt.setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {

@@ -1,0 +1,23 @@
+{
+    "GPS": {
+        "latitude": "41.890251",
+        "longitude": "12.492373"
+    },
+    "Steps": {
+        "per-minute": "40"
+    },
+    "Heart rate": {
+        "bpm": "55"
+    },
+    "Acceleration": {
+        "x": "0",
+        "y": "0",
+        "z": "0"
+    },
+    "Photoplethysmograph": {
+        "ppg": "160"
+    },
+    "Electrodermal activity": {
+        "muS": "12"
+    }
+}

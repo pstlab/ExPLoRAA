@@ -65,7 +65,7 @@ public class MainController implements Initializable {
         logout.disableProperty().bind(user.isNull());
 
         try {
-            if (prefs.get("email", null) == null && prefs.get("password", null) == null) {
+            if (prefs.get("email", null) != null && prefs.get("password", null) != null) {
                 Context.getContext().login(prefs.get("email", null), prefs.get("password", null));
             }
         } catch (Exception ex) {
