@@ -67,7 +67,6 @@ public class AddLessonDialog extends Dialog<AddLessonDialog.AddLessonResult> {
         lesson_types.setPromptText(Context.LANGUAGE.getString("LESSON_TYPE"));
         lesson_types.setEditable(false);
         lesson_types.setItems(Context.getContext().modelsProperty());
-        getDialogPane().lookupButton(add_button).disableProperty().bind(lesson_types.valueProperty().isNull().or(lesson_name.textProperty().isEmpty()));
 
         lesson_types.setCellFactory((ListView<LessonModel> param) -> new ListCell<LessonModel>() {
             @Override
@@ -93,19 +92,19 @@ public class AddLessonDialog extends Dialog<AddLessonDialog.AddLessonResult> {
         });
         grid.add(lesson_types, 1, 0);
         grid.add(open_button, 2, 0);
-        grid.add(new Label(Context.LANGUAGE.getString("LESSON NAME") + ":"), 0, 1);
-        lesson_name.setPromptText(Context.LANGUAGE.getString("LESSON NAME"));
+        grid.add(new Label(Context.LANGUAGE.getString("LESSON_NAME") + ":"), 0, 1);
+        lesson_name.setPromptText(Context.LANGUAGE.getString("LESSON_NAME"));
         grid.add(lesson_name, 1, 1, 2, 1);
 
         getDialogPane().setContent(grid);
 
         open_button.setOnAction((ActionEvent event) -> {
-            FILE_CHOOSER.setTitle(Context.LANGUAGE.getString("OPEN LESSON FILE"));
+            FILE_CHOOSER.setTitle(Context.LANGUAGE.getString("OPEN_LESSON_FILE"));
             FILE_CHOOSER.setInitialDirectory(new File(System.getProperty("user.home")));
             FILE_CHOOSER.getExtensionFilters().clear();
             FILE_CHOOSER.getExtensionFilters().addAll(
-                    new FileChooser.ExtensionFilter(Context.LANGUAGE.getString("LESSON"), "*.json"),
-                    new FileChooser.ExtensionFilter(Context.LANGUAGE.getString("ALL FILES"), "*.*")
+                    new FileChooser.ExtensionFilter(Context.LANGUAGE.getString("LESSON_MODEL_FILE"), "*.json"),
+                    new FileChooser.ExtensionFilter(Context.LANGUAGE.getString("ALL_FILES"), "*.*")
             );
             File lesson_file = FILE_CHOOSER.showOpenDialog(Context.getContext().getStage());
             if (lesson_file != null) {
@@ -118,7 +117,7 @@ public class AddLessonDialog extends Dialog<AddLessonDialog.AddLessonResult> {
         });
 
         getDialogPane().getButtonTypes().add(add_button);
-        getDialogPane().lookupButton(add_button).disableProperty().set(true);
+        getDialogPane().lookupButton(add_button).disableProperty().bind(lesson_types.valueProperty().isNull().or(lesson_name.textProperty().isEmpty()));
         getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         ((Stage) getDialogPane().getScene().getWindow()).getIcons().addAll(Context.getContext().getStage().getIcons());
         setResultConverter((ButtonType param) -> param == add_button ? new AddLessonResult(lesson_types.getValue(), lesson_name.getText()) : null);

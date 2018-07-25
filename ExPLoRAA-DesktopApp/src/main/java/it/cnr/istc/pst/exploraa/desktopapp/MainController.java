@@ -106,7 +106,7 @@ public class MainController implements Initializable {
         new_user.disableProperty().bind(user.isNotNull());
         logout.disableProperty().bind(user.isNull());
 
-        learn_tab.setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.BOOK).color(Color.rgb(0, 0, 102)).size(20));
+        learn_tab.setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.BOOK).size(20));
         learn_accord.setExpandedPane(learn_accord.getPanes().get(0));
 
         stimuli.setItems(new SortedList<>(Context.getContext().stimuliProperty(), (Message.Stimulus e0, Message.Stimulus e1) -> Long.compare(e0.time, e1.time)));
@@ -182,7 +182,7 @@ public class MainController implements Initializable {
         remove_selected_following_lessons_button.graphicProperty().set(new Glyph("FontAwesome", FontAwesome.Glyph.MINUS));
         remove_selected_following_lessons_button.disableProperty().bind(Bindings.isEmpty(following_lessons.selectionModelProperty().get().getSelectedItems()));
 
-        teach_tab.setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.BULLHORN).color(Color.rgb(0, 0, 102)).size(20));
+        teach_tab.setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.BULLHORN).size(20));
         teach_accord.setExpandedPane(teach_accord.getPanes().get(0));
 
         teaching_lessons.setItems(Context.getContext().teachingLessonsProperty());

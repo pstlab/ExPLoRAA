@@ -130,7 +130,7 @@ public class Context {
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-        this.resource = new ExPLoRAAResource();
+        this.resource = new ExPLoRAAResource(properties);
         user.addListener((ObservableValue<? extends User> observable, User oldValue, User newValue) -> {
             if (oldValue != null) {
                 // we clear the current data..

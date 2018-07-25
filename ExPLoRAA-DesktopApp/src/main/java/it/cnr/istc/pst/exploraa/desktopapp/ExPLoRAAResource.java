@@ -21,6 +21,7 @@ import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.User;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Properties;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -38,8 +39,8 @@ class ExPLoRAAResource implements ExPLoRAA {
     private final Client client = ClientBuilder.newClient();
     private final WebTarget target;
 
-    ExPLoRAAResource() {
-        this.target = client.target("http://" + Context.getContext().getProperties().getProperty("host") + ":" + Context.getContext().getProperties().getProperty("service-port")).path("ExPLoRAA").path("resources");
+    ExPLoRAAResource(final Properties properties) {
+        this.target = client.target("http://" + properties.getProperty("host") + ":" + properties.getProperty("service-port")).path("ExPLoRAA").path("resources");
     }
 
     @Override
