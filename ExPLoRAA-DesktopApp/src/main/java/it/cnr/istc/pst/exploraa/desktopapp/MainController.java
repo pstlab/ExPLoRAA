@@ -99,6 +99,8 @@ public class MainController implements Initializable {
     @FXML
     private void logout(ActionEvent event) {
         Context.getContext().logout();
+        prefs.remove("email");
+        prefs.remove("password");
     }
 
     @FXML
