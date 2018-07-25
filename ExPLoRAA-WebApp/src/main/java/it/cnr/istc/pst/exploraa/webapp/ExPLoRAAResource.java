@@ -74,6 +74,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public User login(@FormParam("email") String email, @FormParam("password") String password) {
+        LOG.log(Level.INFO, "Logging user: {0}", email);
         try {
             TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email AND u.password = :password", UserEntity.class);
             query.setParameter("email", email);
@@ -106,6 +107,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public User new_user(@FormParam("email") String email, @FormParam("password") String password, @FormParam("first_name") String first_name, @FormParam("last_name") String last_name) {
+        LOG.log(Level.INFO, "Creating new user: {0}", email);
         try {
             utx.begin();
             UserEntity u = new UserEntity();
@@ -132,6 +134,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Produces(MediaType.APPLICATION_JSON)
     @Override
     public Collection<User> getUsers() {
+        LOG.info("retrieving all users..");
         List<UserEntity> user_entities = em.createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
         Collection<User> users = new ArrayList<>();
         for (UserEntity ue : user_entities) {

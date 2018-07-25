@@ -48,6 +48,7 @@ import javax.ejb.Singleton;
 import javax.ejb.Startup;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
 import javax.ws.rs.core.UriBuilder;
@@ -76,7 +77,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class ExPLoRAABean {
 
     private static final Logger LOG = Logger.getLogger(ExPLoRAABean.class.getName());
-    public static final Jsonb JSONB = JsonbBuilder.create();
+    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER));
     @Resource(name = "java:app/config")
     private Properties properties;
     private BrokerService broker;
