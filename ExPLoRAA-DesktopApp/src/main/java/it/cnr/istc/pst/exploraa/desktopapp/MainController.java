@@ -19,6 +19,7 @@ package it.cnr.istc.pst.exploraa.desktopapp;
 import it.cnr.istc.pst.exploraa.api.User;
 import java.net.URL;
 import java.util.ResourceBundle;
+import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -41,6 +42,7 @@ public class MainController implements Initializable {
     private MenuItem logout;
     @FXML
     private MenuItem new_user;
+    private final Preferences prefs = Preferences.userNodeForPackage(MainController.class);
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
@@ -61,6 +63,18 @@ public class MainController implements Initializable {
         login.disableProperty().bind(user.isNotNull());
         new_user.disableProperty().bind(user.isNotNull());
         logout.disableProperty().bind(user.isNull());
+
+        try {
+            if (prefs.get("email", null) == null && prefs.get("password", null) == null) {
+                Context.getContext().login(prefs.get("email", null), prefs.get("password", null));
+            }
+        } catch (Exception ex) {
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
+            alert.setTitle(Context.LANGUAGE.getString("EXCEPTION"));
+            alert.setHeaderText(ex.getMessage());
+            alert.showAndWait();
+        }
     }
 
     @FXML
@@ -70,6 +84,8 @@ public class MainController implements Initializable {
         login_dialog.showAndWait().ifPresent(user -> {
             try {
                 Context.getContext().login(user.getEmail(), user.getPassword());
+                prefs.put("email", user.getEmail());
+                prefs.put("password", user.getPassword());
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
@@ -92,6 +108,8 @@ public class MainController implements Initializable {
         new_user_dialog.showAndWait().ifPresent(user -> {
             try {
                 Context.getContext().new_user(user.getEmail(), user.getPassword(), user.getFirstName(), user.getLastName());
+                prefs.put("email", user.getEmail());
+                prefs.put("password", user.getPassword());
             } catch (Exception e) {
                 Alert alert = new Alert(Alert.AlertType.ERROR);
                 alert.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
