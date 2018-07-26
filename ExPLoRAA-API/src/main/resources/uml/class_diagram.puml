@@ -2,16 +2,22 @@
 skinparam monochrome true
 skinparam handwritten true
 
+class Parameter
+Parameter : +name:String
+Parameter : +properties:Map<String, String>
+
 class User
 User : +email:String
 User : +password:String
 User : +first_name:String
 User : +last_name:String
+User : +par_values:Map<String, Map<String, String>>
 User "1..*" - "*" Lesson
 (User , Lesson) .. Follow
 User "1" - "*" Lesson
 (User , Lesson) .. Teach
 User "*" o--> "*" LessonModel : models
+User "1" *--> "*" Parameter : par_types
 
 class Follow
 Follow : +interests:Set<String>
@@ -32,6 +38,25 @@ LessonModel "1" *--> "*" StimulusTemplate : stimuli
 LessonModel "1" *--> "*" Relation : relations
 
 class Message
+
+class NewParameter
+Message <|-- NewParameter
+NewParameter *--> Relation : parameter
+
+class RemoveParameter
+Message <|-- RemoveParameter
+RemoveParameter : +parameter:String
+
+class FollowLesson
+Message <|-- FollowLesson
+FollowLesson : +lesson:long
+FollowLesson : +interests:Set<String>
+FollowLesson *--> User : student
+
+class UnfollowLesson
+Message <|-- UnfollowLesson
+UnfollowLesson : +student:long
+UnfollowLesson : +lesson:long
 
 class Stimulus
 note bottom: Created at execution time
