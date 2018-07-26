@@ -1,0 +1,34 @@
+{
+    "name": "Test lesson",
+    "stimuli": [{
+            "type": "Text",
+            "name": "st_0",
+            "topics": ["Art", "History"],
+            "ids": [],
+            "relations": [],
+            "content": "This is a first stimulus about art and history."
+        }, {
+            "type": "Text",
+            "name": "st_1",
+            "topics": ["Religion"],
+            "ids": [],
+            "relations": [],
+            "content": "This is a first stimulus about religion."
+        }],
+    "ids": ["st_0", "st_1"],
+    "relations": [
+        {
+            "from": "this",
+            "to": "st_0",
+            "lb": 6,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_0",
+            "to": "st_1",
+            "lb": 4,
+            "ub": 10,
+            "unit": "SECONDS"
+        }]
+}

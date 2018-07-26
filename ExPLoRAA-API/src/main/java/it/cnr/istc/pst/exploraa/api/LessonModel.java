@@ -270,7 +270,9 @@ public class LessonModel {
         @Override
         public JsonObject adaptToJson(LessonModel obj) throws Exception {
             JsonObjectBuilder lesson_model_builder = Json.createObjectBuilder();
-            lesson_model_builder.add("id", obj.id);
+            if (obj.id != null) {
+                lesson_model_builder.add("id", obj.id);
+            }
             lesson_model_builder.add("name", obj.name);
             JsonArrayBuilder stimuli_builder = Json.createArrayBuilder();
             for (StimulusTemplate stimulus_template : obj.stimuli.values()) {

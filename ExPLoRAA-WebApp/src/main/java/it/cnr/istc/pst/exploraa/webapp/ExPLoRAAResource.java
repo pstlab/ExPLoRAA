@@ -20,6 +20,7 @@ import it.cnr.istc.pst.exploraa.api.ExPLoRAA;
 import it.cnr.istc.pst.exploraa.api.Follow;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
+import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Teach;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.webapp.db.FollowEntity;
@@ -39,6 +40,7 @@ import javax.annotation.Resource;
 import javax.ejb.EJB;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
+import javax.json.bind.JsonbConfig;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -68,7 +70,7 @@ import javax.ws.rs.core.MediaType;
 public class ExPLoRAAResource implements ExPLoRAA {
 
     private static final Logger LOG = Logger.getLogger(ExPLoRAAResource.class.getName());
-    private static final Jsonb JSONB = JsonbBuilder.create();
+    private static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER, LessonModel.ADAPTER));
     @PersistenceContext
     private EntityManager em;
     @Resource
@@ -204,7 +206,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
             utx.begin();
             UserEntity teacher = em.find(UserEntity.class, teacher_id);
             LessonModelEntity lme = new LessonModelEntity();
-            lme.setModel(JSONB.toJson(model));
+            lme.setModel(model);
             em.persist(lme);
             teacher.addModel(lme);
             LessonEntity le = new LessonEntity();

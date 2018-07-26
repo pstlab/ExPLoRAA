@@ -421,7 +421,7 @@ public class ExPLoRAABean {
         });
 
         // we notify all the students that a new lesson has been created..
-        for (Long student_id : lesson.students.keySet()) {
+        for (Long student_id : online.keySet()) {
             try {
                 mqtt.publish(student_id + "/input", JSONB.toJson(new Message.NewLesson(lesson)).getBytes(), 1, false);
             } catch (MqttException ex) {

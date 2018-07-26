@@ -109,7 +109,9 @@ public class AddLessonDialog extends Dialog<AddLessonDialog.AddLessonResult> {
             File lesson_file = FILE_CHOOSER.showOpenDialog(Context.getContext().getStage());
             if (lesson_file != null) {
                 try {
-                    lesson_types.setValue(Context.JSONB.fromJson(new FileInputStream(lesson_file), LessonModel.class));
+                    LessonModel model = Context.JSONB.fromJson(new FileInputStream(lesson_file), LessonModel.class);
+                    Context.getContext().modelsProperty().add(model);
+                    lesson_types.setValue(model);
                 } catch (IOException ex) {
                     Logger.getLogger(AddLessonDialog.class.getName()).log(Level.SEVERE, null, ex);
                 }

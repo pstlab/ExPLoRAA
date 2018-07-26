@@ -62,7 +62,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class Context {
 
     private static final Logger LOG = Logger.getLogger(Context.class.getName());
-    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER));
+    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER, LessonModel.ADAPTER));
     public static final ResourceBundle LANGUAGE = ResourceBundle.getBundle("language");
     private static ScheduledExecutorService EXECUTOR;
     private static Context ctx;
@@ -182,7 +182,7 @@ public class Context {
                     mqtt.setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {
-                            LOG.log(Level.SEVERE, null, cause);
+                            LOG.log(Level.SEVERE, "Connection lost..", cause);
                             Platform.runLater(() -> user.set(null));
                         }
 
@@ -211,7 +211,7 @@ public class Context {
                                 Platform.runLater(() -> following_lessons.add(new FollowingLessonContext(new_lesson.lesson)));
                                 break;
                             case RemoveLesson:
-                                // a teacher has removed a new lesson for this student..
+                                // a teacher has removed a lesson for this student..
                                 Message.RemoveLesson remove_lesson = (Message.RemoveLesson) m;
                                 Platform.runLater(() -> following_lessons.remove(id_following_lessons.get(remove_lesson.lesson)));
                                 break;
