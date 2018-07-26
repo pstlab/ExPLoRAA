@@ -21,11 +21,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import javax.persistence.ElementCollection;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
 
 /**
  *
@@ -35,18 +35,24 @@ import javax.persistence.ManyToOne;
 public class FollowEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
-    @ManyToOne
+    @EmbeddedId
+    private FollowId id;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("user_id")
     private UserEntity student;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("lesson_id")
     private LessonEntity lesson;
     @ElementCollection
     private final Collection<String> interests = new ArrayList<>();
 
-    public Long getId() {
-        return id;
+    public FollowEntity() {
+    }
+
+    public FollowEntity(UserEntity student, LessonEntity lesson) {
+        this.id = new FollowId(student.getId(), lesson.getId());
+        this.student = student;
+        this.lesson = lesson;
     }
 
     public UserEntity getStudent() {

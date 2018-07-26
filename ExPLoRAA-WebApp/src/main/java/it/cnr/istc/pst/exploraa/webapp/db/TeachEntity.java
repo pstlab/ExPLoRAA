@@ -18,10 +18,8 @@ package it.cnr.istc.pst.exploraa.webapp.db;
 
 import java.io.Serializable;
 import javax.persistence.CascadeType;
+import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToOne;
 
@@ -33,16 +31,20 @@ import javax.persistence.OneToOne;
 public class TeachEntity implements Serializable {
 
     private static final long serialVersionUID = 1L;
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private Long id;
+    @EmbeddedId
+    private TeachId id;
     @ManyToOne
     private UserEntity teacher;
     @OneToOne(mappedBy = "teached_by", cascade = CascadeType.ALL)
     private LessonEntity lesson;
 
-    public Long getId() {
-        return id;
+    public TeachEntity() {
+    }
+
+    public TeachEntity(UserEntity teacher, LessonEntity lesson) {
+        this.id = new TeachId(teacher.getId(), lesson.getId());
+        this.teacher = teacher;
+        this.lesson = lesson;
     }
 
     public UserEntity getTeacher() {

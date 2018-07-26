@@ -43,9 +43,9 @@ public class LessonEntity implements Serializable {
     private String name;
     @ManyToOne
     private LessonModelEntity model;
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Collection<FollowEntity> followed_by = new ArrayList<>();
-    @OneToOne(cascade = CascadeType.ALL)
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     private TeachEntity teached_by;
 
     public Long getId() {

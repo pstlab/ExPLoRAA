@@ -46,9 +46,9 @@ public class UserEntity implements Serializable {
     private String last_name;
     @OneToMany
     private final Collection<LessonModelEntity> models = new ArrayList<>();
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Collection<FollowEntity> follows = new ArrayList<>();
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private final Collection<TeachEntity> teachs = new ArrayList<>();
 
     public Long getId() {
