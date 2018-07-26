@@ -45,7 +45,6 @@ public class LessonManager implements TemporalListener {
     private static final Logger LOG = Logger.getLogger(LessonManager.class.getName());
     public static final String THIS = "this";
     private final Lesson lesson;
-    private final LessonModel lesson_model;
     public final TemporalNetwork network = new TemporalNetwork(16);
     private final Map<String, LessonModel.StimulusTemplate> event_templates = new HashMap<>();
     /**
@@ -70,9 +69,8 @@ public class LessonManager implements TemporalListener {
     private int idx = 0;
     private final Collection<LessonManagerListener> listeners = new ArrayList<>();
 
-    public LessonManager(Lesson lesson, LessonModel lesson_model) {
+    public LessonManager(Lesson lesson) {
         this.lesson = lesson;
-        this.lesson_model = lesson_model;
         network.addTemporalListener(this);
     }
 
@@ -81,7 +79,7 @@ public class LessonManager implements TemporalListener {
     }
 
     public void solve() {
-        for (LessonModel.StimulusTemplate event_template : lesson_model.stimuli.values()) {
+        for (LessonModel.StimulusTemplate event_template : lesson.model.stimuli.values()) {
             if (event_templates.containsKey(event_template.name)) {
                 LOG.log(Level.WARNING, "Renaming event {0}", event_template.name);
             }
@@ -90,7 +88,7 @@ public class LessonManager implements TemporalListener {
 
         Map<String, SolverToken> c_tks = new HashMap<>();
         // we create the tokens..
-        for (String id : lesson_model.ids) {
+        for (String id : lesson.model.ids) {
             SolverToken tk = new SolverToken(null, network.newTimePoint(), event_templates.get(id), null);
             tokens.add(tk);
             listeners.forEach(l -> l.newToken(tk));
@@ -99,7 +97,7 @@ public class LessonManager implements TemporalListener {
         }
 
         // we enforce the temporal relations..
-        for (LessonModel.Relation rel : lesson_model.relations) {
+        for (LessonModel.Relation rel : lesson.model.relations) {
             double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
             double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
             if (rel.from.equals(THIS)) {

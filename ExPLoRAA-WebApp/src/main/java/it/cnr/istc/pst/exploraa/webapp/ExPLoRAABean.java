@@ -306,8 +306,8 @@ public class ExPLoRAABean {
     }
 
     @Lock(LockType.WRITE)
-    public void newLesson(Lesson lesson, LessonModel model) {
-        LessonManager manager = new LessonManager(lesson, model);
+    public void newLesson(Lesson lesson) {
+        LessonManager manager = new LessonManager(lesson);
         lessons.put(lesson.id, manager);
         manager.addSolverListener(new LessonManagerListener() {
             @Override

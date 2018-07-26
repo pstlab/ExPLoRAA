@@ -18,7 +18,11 @@ package it.cnr.istc.pst.exploraa.api;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
+import javax.json.Json;
+import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
+import javax.json.JsonObjectBuilder;
 import javax.json.bind.adapter.JsonbAdapter;
 
 /**
@@ -29,28 +33,30 @@ public class Lesson {
 
     public static final LessonAdapter ADAPTER = new LessonAdapter();
     public long id;
-    public Teach teacher;
     public String name;
-    public LessonState state;
-    public long time;
     public LessonModel model;
-    public Map<Long, Follow> students;
+    public Set<String> topics;
     public Collection<Message.Stimulus> stimuli;
     public Collection<Message.Token> tokens;
+    public Teach teacher;
+    public Map<Long, Follow> students;
+    public LessonState state;
+    public long time;
 
     public Lesson() {
     }
 
-    public Lesson(long id, Teach teacher, String name, LessonState state, long time, LessonModel model, Map<Long, Follow> students, Collection<Message.Stimulus> stimuli, Collection<Message.Token> tokens) {
+    public Lesson(long id, String name, LessonModel model, Set<String> topics, Collection<Message.Stimulus> stimuli, Collection<Message.Token> tokens, Teach teacher, Map<Long, Follow> students, LessonState state, long time) {
         this.id = id;
-        this.teacher = teacher;
         this.name = name;
-        this.state = state;
-        this.time = time;
         this.model = model;
-        this.students = students;
+        this.topics = topics;
         this.stimuli = stimuli;
         this.tokens = tokens;
+        this.teacher = teacher;
+        this.students = students;
+        this.state = state;
+        this.time = time;
     }
 
     public enum LessonState {
@@ -61,7 +67,67 @@ public class Lesson {
 
         @Override
         public JsonObject adaptToJson(Lesson obj) throws Exception {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            JsonObjectBuilder lesson_builder = Json.createObjectBuilder();
+            lesson_builder.add("id", obj.id);
+            lesson_builder.add("name", obj.name);
+
+            if (obj.model != null) {
+                lesson_builder.add("model", LessonModel.ADAPTER.adaptToJson(obj.model));
+            }
+
+            JsonArrayBuilder topics_builder = Json.createArrayBuilder();
+            for (String topic : obj.topics) {
+                topics_builder.add(topic);
+            }
+            lesson_builder.add("topics", topics_builder);
+
+            if (obj.stimuli != null) {
+                JsonArrayBuilder stimuli_builder = Json.createArrayBuilder();
+                for (Message.Stimulus stimulus : obj.stimuli) {
+                    stimuli_builder.add(Message.ADAPTER.adaptToJson(stimulus));
+                }
+                lesson_builder.add("stimuli", stimuli_builder);
+            }
+            if (obj.tokens != null) {
+                JsonArrayBuilder stimuli_builder = Json.createArrayBuilder();
+                for (Message.Token token : obj.tokens) {
+                    stimuli_builder.add(Message.ADAPTER.adaptToJson(token));
+                }
+                lesson_builder.add("tokens", stimuli_builder);
+            }
+
+            JsonObjectBuilder teacher_builder = Json.createObjectBuilder();
+            if (obj.teacher.user != null) {
+                teacher_builder.add("user", User.ADAPTER.adaptToJson(obj.teacher.user));
+            }
+            if (obj.teacher.lesson != null) {
+                teacher_builder.add("lesson", Lesson.ADAPTER.adaptToJson(obj.teacher.lesson));
+            }
+            lesson_builder.add("teacher", teacher_builder);
+
+            if (obj.students != null) {
+                JsonArrayBuilder students_builder = Json.createArrayBuilder();
+                for (Follow follow : obj.students.values()) {
+                    JsonObjectBuilder follow_builder = Json.createObjectBuilder();
+                    if (follow.user != null) {
+                        follow_builder.add("user", User.ADAPTER.adaptToJson(follow.user));
+                    }
+                    if (follow.lesson != null) {
+                        follow_builder.add("lesson", Lesson.ADAPTER.adaptToJson(follow.lesson));
+                    }
+                    JsonArrayBuilder interests_builder = Json.createArrayBuilder();
+                    for (String interest : follow.interests) {
+                        interests_builder.add(interest);
+                    }
+                    follow_builder.add("interests", interests_builder);
+                    students_builder.add(follow_builder);
+                }
+                lesson_builder.add("students", students_builder);
+            }
+
+            lesson_builder.add("state", obj.state.name());
+            lesson_builder.add("time", obj.time);
+            return lesson_builder.build();
         }
 
         @Override

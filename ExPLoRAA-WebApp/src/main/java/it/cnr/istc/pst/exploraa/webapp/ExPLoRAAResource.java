@@ -34,6 +34,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -91,7 +92,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
             for (FollowEntity follow : ue.getFollowedLessons()) {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
-                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), new Teach(teacher, null), follow.getLesson().getName(), l.state, l.time, null, null, l.stimuli, null);
+                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, l.stimuli, null, new Teach(teacher, null), null, l.state, l.time);
                 follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
@@ -101,7 +102,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
                 for (FollowEntity student : teach.getLesson().getStudents()) {
                     students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null, null), null, new HashSet<>(student.getInterests())));
                 }
-                teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), null, teach.getLesson().getName(), l.state, l.time, l.model, students, null, l.tokens)));
+                teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), teach.getLesson().getName(), l.model, null, null, l.tokens, null, students, l.state, l.time)));
             }
             Map<Long, LessonModel> models = ue.getModels().stream().map(model -> ExPLoRAABean.JSONB.fromJson(model.getModel(), LessonModel.class)).collect(Collectors.toMap(m -> m.id, m -> m));
             return new User(ue.getId(), ue.getEmail(), ue.getFirstName(), ue.getLastName(), ctx.isOnline(ue.getId()), ctx.getParTypes(ue.getId()), ctx.getParValues(ue.getId()), follows, teachs, models);
@@ -175,7 +176,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
             for (FollowEntity follow : ue.getFollowedLessons()) {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
-                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), new Teach(teacher, null), follow.getLesson().getName(), l.state, l.time, null, null, l.stimuli, null);
+                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, l.stimuli, null, new Teach(teacher, null), null, l.state, l.time);
                 follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
@@ -185,7 +186,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
                 for (FollowEntity student : teach.getLesson().getStudents()) {
                     students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null, null), null, new HashSet<>(student.getInterests())));
                 }
-                teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), null, teach.getLesson().getName(), l.state, l.time, l.model, students, null, l.tokens)));
+                teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), teach.getLesson().getName(), l.model, null, null, l.tokens, null, students, l.state, l.time)));
             }
             Map<Long, LessonModel> models = ue.getModels().stream().map(model -> ExPLoRAABean.JSONB.fromJson(model.getModel(), LessonModel.class)).collect(Collectors.toMap(m -> m.id, m -> m));
             users.add(new User(ue.getId(), ue.getEmail(), ue.getFirstName(), ue.getLastName(), ctx.isOnline(ue.getId()), ctx.getParTypes(ue.getId()), ctx.getParValues(ue.getId()), follows, teachs, models));
@@ -222,11 +223,17 @@ public class ExPLoRAAResource implements ExPLoRAA {
             teacher.addTeachedLesson(te);
             em.merge(teacher);
 
-            Lesson l = new Lesson(le.getId(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), name, Lesson.LessonState.Stopped, 0, null, null, null, null);
-            ctx.newLesson(l, ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class));
+            LessonModel c_model = ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class);
+            Set<String> topics = new HashSet<>();
+            for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
+                topics.addAll(template.topics);
+            }
+
+            Lesson l = new Lesson(le.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
+            ctx.newLesson(l);
 
             utx.commit();
-            return l;
+            return new Lesson(l.id, name, null, topics, null, null, null, null, l.state, l.time);
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             try {
                 utx.rollback();
@@ -262,11 +269,17 @@ public class ExPLoRAAResource implements ExPLoRAA {
             teacher.addTeachedLesson(te);
             em.merge(teacher);
 
-            Lesson l = new Lesson(le.getId(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), name, Lesson.LessonState.Stopped, 0, null, null, null, null);
-            ctx.newLesson(l, ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class));
+            LessonModel c_model = ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class);
+            Set<String> topics = new HashSet<>();
+            for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
+                topics.addAll(template.topics);
+            }
+
+            Lesson l = new Lesson(le.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
+            ctx.newLesson(l);
 
             utx.commit();
-            return l;
+            return new Lesson(l.id, name, null, topics, null, null, null, null, l.state, l.time);
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             try {
                 utx.rollback();
