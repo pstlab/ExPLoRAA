@@ -39,7 +39,7 @@ public class LoginDialog extends Dialog<LoginDialog.LoginResult> {
     private final ButtonType login_button = new ButtonType(Context.LANGUAGE.getString("LOGIN"), ButtonBar.ButtonData.OK_DONE);
 
     public LoginDialog() {
-        setTitle("Login");
+        setTitle(Context.LANGUAGE.getString("LOGIN"));
 
         grid.setHgap(10);
         grid.setVgap(10);

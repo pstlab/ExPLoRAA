@@ -19,6 +19,7 @@ package it.cnr.istc.pst.exploraa.desktopapp;
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.User;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
@@ -294,16 +295,23 @@ public class MainController implements Initializable {
 
     @FXML
     private void exit(ActionEvent event) {
-//        random_data_generator.shutdown();
         Platform.exit();
     }
 
     @FXML
     private void add_following_lessons(ActionEvent event) {
+        EnrollDialog enroll_dialog = new EnrollDialog();
+        enroll_dialog.getDialogPane().getStylesheets().addAll(Context.getContext().getStage().getScene().getStylesheets());
+        enroll_dialog.showAndWait().ifPresent(enroll_lesson -> {
+            Context.getContext().followLesson(enroll_lesson.getLesson(), enroll_lesson.getInterests());
+        });
     }
 
     @FXML
     private void remove_selected_following_lessons(ActionEvent event) {
+        for (FollowingLessonContext lesson : new ArrayList<>(following_lessons.getSelectionModel().getSelectedItems())) {
+            Context.getContext().unfollowLesson(lesson.getLesson());
+        }
     }
 
     @FXML
