@@ -203,33 +203,37 @@ public class ExPLoRAAResource implements ExPLoRAA {
         LOG.info("creating a new lesson by new model..");
         try {
             utx.begin();
-            UserEntity teacher = em.find(UserEntity.class, teacher_id);
-            LessonModelEntity lme = new LessonModelEntity();
-            lme.setModel(model);
-            em.persist(lme);
-            teacher.addModel(lme);
-            LessonEntity le = new LessonEntity();
-            le.setName(name);
-            le.setModel(lme);
+            UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+            LessonModelEntity model_entity = new LessonModelEntity();
+            em.persist(model_entity);
 
-            TeachEntity te = new TeachEntity();
-            te.setLesson(le);
-            te.setTeacher(teacher);
+            // we set the id of the model..
+            LessonModel c_model = ExPLoRAABean.JSONB.fromJson(model, LessonModel.class);
+            c_model.id = model_entity.getId();
+            model_entity.setModel(ExPLoRAABean.JSONB.toJson(c_model));
+            em.merge(model_entity);
+
+            teacher_entity.addModel(model_entity);
+            LessonEntity lesson_entity = new LessonEntity();
+            lesson_entity.setName(name);
+            lesson_entity.setModel(model_entity);
+            em.persist(lesson_entity);
+
+            TeachEntity te = new TeachEntity(teacher_entity, lesson_entity);
             em.persist(te);
 
-            le.setTeachedBy(te);
-            em.persist(le);
+            lesson_entity.setTeachedBy(te);
+            em.merge(lesson_entity);
 
-            teacher.addTeachedLesson(te);
-            em.merge(teacher);
+            teacher_entity.addTeachedLesson(te);
+            em.merge(teacher_entity);
 
-            LessonModel c_model = ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class);
             Set<String> topics = new HashSet<>();
             for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
                 topics.addAll(template.topics);
             }
 
-            Lesson l = new Lesson(le.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
+            Lesson l = new Lesson(lesson_entity.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher_entity.getEmail(), teacher_entity.getFirstName(), teacher_entity.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
             ctx.newLesson(l);
 
             utx.commit();
@@ -248,34 +252,33 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Path("new_lesson_by_model_id")
     @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public Lesson new_lesson(@FormParam("teacher_id") long teacher_id, @FormParam("name") String name, @FormParam("id") long id) {
+    public Lesson new_lesson(@FormParam("teacher_id") long teacher_id, @FormParam("name") String name, @FormParam("model_id") long model_id) {
         LOG.info("creating a new lesson by existing model..");
         try {
             utx.begin();
-            UserEntity teacher = em.find(UserEntity.class, teacher_id);
-            LessonModelEntity lme = em.find(LessonModelEntity.class, id);
-            LessonEntity le = new LessonEntity();
-            le.setName(name);
-            le.setModel(lme);
+            UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+            LessonModelEntity model_entity = em.find(LessonModelEntity.class, model_id);
+            LessonEntity lesson_entity = new LessonEntity();
+            lesson_entity.setName(name);
+            lesson_entity.setModel(model_entity);
+            em.persist(lesson_entity);
 
-            TeachEntity te = new TeachEntity();
-            te.setLesson(le);
-            te.setTeacher(teacher);
+            TeachEntity te = new TeachEntity(teacher_entity, lesson_entity);
             em.persist(te);
 
-            le.setTeachedBy(te);
-            em.persist(le);
+            lesson_entity.setTeachedBy(te);
+            em.merge(lesson_entity);
 
-            teacher.addTeachedLesson(te);
-            em.merge(teacher);
+            teacher_entity.addTeachedLesson(te);
+            em.merge(teacher_entity);
 
-            LessonModel c_model = ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class);
+            LessonModel c_model = ExPLoRAABean.JSONB.fromJson(model_entity.getModel(), LessonModel.class);
             Set<String> topics = new HashSet<>();
             for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
                 topics.addAll(template.topics);
             }
 
-            Lesson l = new Lesson(le.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
+            Lesson l = new Lesson(lesson_entity.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher_entity.getEmail(), teacher_entity.getFirstName(), teacher_entity.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
             ctx.newLesson(l);
 
             utx.commit();

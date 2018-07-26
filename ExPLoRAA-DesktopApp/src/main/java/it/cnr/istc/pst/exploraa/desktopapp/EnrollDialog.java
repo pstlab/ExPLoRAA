@@ -56,7 +56,7 @@ public class EnrollDialog extends Dialog<EnrollDialog.EnrollResult> {
         grid.add(new Label(Context.LANGUAGE.getString("LESSONS")), 0, 0);
         grid.add(lessons_list_view, 0, 1, 1, 1);
         grid.add(new Label(Context.LANGUAGE.getString("LESSONS")), 1, 0);
-        grid.add(lessons_list_view, 1, 1, 1, 1);
+        grid.add(topics_list_view, 1, 1, 1, 1);
         getDialogPane().setContent(grid);
 
         lessons_list_view.selectionModelProperty().get().selectedItemProperty().addListener((ObservableValue<? extends Lesson> observable, Lesson oldValue, Lesson newValue) -> {

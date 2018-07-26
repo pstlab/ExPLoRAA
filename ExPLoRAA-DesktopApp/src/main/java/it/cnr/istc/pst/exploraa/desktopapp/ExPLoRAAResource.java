@@ -82,11 +82,11 @@ class ExPLoRAAResource implements ExPLoRAA {
     }
 
     @Override
-    public Lesson new_lesson(long teacher_id, String name, long id) {
+    public Lesson new_lesson(long teacher_id, String name, long model_id) {
         Form new_lesson_form = new Form();
         new_lesson_form.param("teacher_id", Long.toString(teacher_id));
         new_lesson_form.param("name", name);
-        new_lesson_form.param("id", Long.toString(id));
+        new_lesson_form.param("model_id", Long.toString(model_id));
         return target.path("new_lesson_by_model_id").request(MediaType.APPLICATION_JSON).post(Entity.form(new_lesson_form), Lesson.class);
     }
 

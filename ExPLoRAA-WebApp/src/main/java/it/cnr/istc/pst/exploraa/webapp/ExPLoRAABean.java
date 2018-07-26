@@ -23,6 +23,7 @@ import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Message.RemoveParameter;
 import it.cnr.istc.pst.exploraa.api.Message.NewParameter;
 import it.cnr.istc.pst.exploraa.api.Parameter;
+import it.cnr.istc.pst.exploraa.api.Teach;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.webapp.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.webapp.db.UserEntity;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
@@ -200,10 +202,17 @@ public class ExPLoRAABean {
         List<LessonEntity> c_lessons = em.createQuery("SELECT l FROM LessonEntity l", LessonEntity.class).getResultList();
         for (LessonEntity l_entity : c_lessons) {
             // warning! we do not store the current time of the lesson, nor its state.. if the service is restarted, the lesson is not lost, yet its state is!
-//            Lesson l = new Lesson(l_entity.getId(), l_entity.getTeacher().getId(), l_entity.getName(), Lesson.LessonState.Stopped, 0, l_entity.getModel().getId(), l_entity.getRoles().stream().collect(Collectors.toMap(r -> r.getName(), r -> r.getStudent().getId())), Collections.emptyList(), Collections.emptyList());
-//            LessonModel lm = JSONB.fromJson(l_entity.getModel().getModel(), LessonModel.class);
-//            newLesson(l, lm);
-//            solveLesson(l.id);
+            LessonModel lm = JSONB.fromJson(l_entity.getModel().getModel(), LessonModel.class);
+
+            Set<String> topics = new HashSet<>();
+            for (LessonModel.StimulusTemplate template : lm.stimuli.values()) {
+                topics.addAll(template.topics);
+            }
+
+            Lesson l = new Lesson(l_entity.getId(), l_entity.getName(), lm, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(l_entity.getTeachedBy().getTeacher().getId(), l_entity.getTeachedBy().getTeacher().getEmail(), l_entity.getTeachedBy().getTeacher().getFirstName(), l_entity.getTeachedBy().getTeacher().getLastName(), online.get(l_entity.getTeachedBy().getTeacher().getId()), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
+
+            newLesson(l);
+            solveLesson(l.id);
         }
     }
 

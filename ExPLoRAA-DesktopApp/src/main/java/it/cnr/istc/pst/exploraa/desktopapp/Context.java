@@ -45,6 +45,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.control.Alert;
 import javafx.stage.Stage;
 import javax.json.bind.Jsonb;
 import javax.json.bind.JsonbBuilder;
@@ -184,7 +185,10 @@ public class Context {
                     mqtt.setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {
-                            LOG.log(Level.SEVERE, "Connection lost..", cause);
+                            Alert alert = new Alert(Alert.AlertType.ERROR);
+                            alert.setTitle(Context.LANGUAGE.getString("EXCEPTION"));
+                            alert.setHeaderText(cause.getMessage());
+                            alert.showAndWait();
                             Platform.runLater(() -> user.set(null));
                         }
 
