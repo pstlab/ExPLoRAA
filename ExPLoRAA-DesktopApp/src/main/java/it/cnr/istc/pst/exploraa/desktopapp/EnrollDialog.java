@@ -29,11 +29,15 @@ import javafx.scene.control.ButtonBar;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Region;
+import javafx.scene.paint.Color;
 import javafx.stage.Stage;
 import org.controlsfx.control.CheckListView;
+import org.controlsfx.glyphfont.FontAwesome;
+import org.controlsfx.glyphfont.Glyph;
 
 /**
  *
@@ -55,10 +59,37 @@ public class EnrollDialog extends Dialog<EnrollDialog.EnrollResult> {
         grid.setVgap(10);
         grid.add(new Label(Context.LANGUAGE.getString("LESSONS")), 0, 0);
         grid.add(lessons_list_view, 0, 1, 1, 1);
-        grid.add(new Label(Context.LANGUAGE.getString("LESSONS")), 1, 0);
+        grid.add(new Label(Context.LANGUAGE.getString("TOPICS")), 1, 0);
         grid.add(topics_list_view, 1, 1, 1, 1);
         getDialogPane().setContent(grid);
 
+        lessons.setAll(Context.getContext().getLessons());
+
+        lessons_list_view.setCellFactory((ListView<Lesson> param) -> new ListCell<Lesson>() {
+            @Override
+            protected void updateItem(Lesson l, boolean empty) {
+                super.updateItem(l, empty);
+                if (empty) {
+                    setText(null);
+                    setGraphic(null);
+                } else {
+                    setText(l.name);
+                    switch (l.state) {
+                        case Running:
+                            setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.PLAY).color(Color.INDIGO));
+                            break;
+                        case Paused:
+                            setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.PAUSE).color(Color.INDIGO));
+                            break;
+                        case Stopped:
+                            setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.STOP).color(Color.INDIGO));
+                            break;
+                        default:
+                            throw new AssertionError(l.state.name());
+                    }
+                }
+            }
+        });
         lessons_list_view.selectionModelProperty().get().selectedItemProperty().addListener((ObservableValue<? extends Lesson> observable, Lesson oldValue, Lesson newValue) -> {
             if (newValue != null) {
                 topics.setAll(newValue.topics);
