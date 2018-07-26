@@ -38,7 +38,7 @@ public class FollowEntity implements Serializable {
     @EmbeddedId
     private FollowId id;
     @ManyToOne(fetch = FetchType.LAZY)
-    @MapsId("user_id")
+    @MapsId("student_id")
     private UserEntity student;
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("lesson_id")

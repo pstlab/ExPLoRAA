@@ -26,19 +26,19 @@ import javax.persistence.Embeddable;
 @Embeddable
 public class TeachId implements Serializable {
 
-    private Long user_id;
+    private Long teacher_id;
     private Long lesson_id;
 
     public TeachId() {
     }
 
-    public TeachId(Long user_id, Long lesson_id) {
-        this.user_id = user_id;
+    public TeachId(Long teacher_id, Long lesson_id) {
+        this.teacher_id = teacher_id;
         this.lesson_id = lesson_id;
     }
 
-    public Long getUserId() {
-        return user_id;
+    public Long getTeacherId() {
+        return teacher_id;
     }
 
     public Long getLessonId() {

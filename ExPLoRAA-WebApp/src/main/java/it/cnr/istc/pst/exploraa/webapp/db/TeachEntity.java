@@ -20,7 +20,9 @@ import java.io.Serializable;
 import javax.persistence.CascadeType;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
+import javax.persistence.MapsId;
 import javax.persistence.OneToOne;
 
 /**
@@ -33,7 +35,8 @@ public class TeachEntity implements Serializable {
     private static final long serialVersionUID = 1L;
     @EmbeddedId
     private TeachId id;
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("teacher_id")
     private UserEntity teacher;
     @OneToOne(mappedBy = "teached_by", cascade = CascadeType.ALL)
     private LessonEntity lesson;
