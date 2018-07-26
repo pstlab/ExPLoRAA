@@ -20,10 +20,10 @@ import it.cnr.istc.pst.exploraa.api.ExPLoRAA;
 import it.cnr.istc.pst.exploraa.api.Follow;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
-import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Teach;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.webapp.db.FollowEntity;
+import it.cnr.istc.pst.exploraa.webapp.db.FollowId;
 import it.cnr.istc.pst.exploraa.webapp.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.webapp.db.LessonModelEntity;
 import it.cnr.istc.pst.exploraa.webapp.db.TeachEntity;
@@ -31,6 +31,7 @@ import it.cnr.istc.pst.exploraa.webapp.db.UserEntity;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -38,9 +39,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.annotation.Resource;
 import javax.ejb.EJB;
-import javax.json.bind.Jsonb;
-import javax.json.bind.JsonbBuilder;
-import javax.json.bind.JsonbConfig;
+import javax.json.bind.JsonbException;
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
 import javax.persistence.PersistenceContext;
@@ -70,7 +69,6 @@ import javax.ws.rs.core.MediaType;
 public class ExPLoRAAResource implements ExPLoRAA {
 
     private static final Logger LOG = Logger.getLogger(ExPLoRAAResource.class.getName());
-    private static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER, LessonModel.ADAPTER));
     @PersistenceContext
     private EntityManager em;
     @Resource
@@ -94,18 +92,18 @@ public class ExPLoRAAResource implements ExPLoRAA {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
                 Lesson followed_lesson = new Lesson(follow.getLesson().getId(), new Teach(teacher, null), follow.getLesson().getName(), l.state, l.time, null, null, l.stimuli, null);
-                follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, follow.getInterests()));
+                follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
             for (TeachEntity teach : ue.getTeachedLessons()) {
                 Lesson l = ctx.getLessonManager(teach.getLesson().getId()).getLesson();
                 Map<Long, Follow> students = new HashMap<>();
                 for (FollowEntity student : teach.getLesson().getStudents()) {
-                    students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null, null), null, student.getInterests()));
+                    students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null, null), null, new HashSet<>(student.getInterests())));
                 }
                 teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), null, teach.getLesson().getName(), l.state, l.time, l.model, students, null, l.tokens)));
             }
-            Map<Long, LessonModel> models = ue.getModels().stream().map(model -> JSONB.fromJson(model.getModel(), LessonModel.class)).collect(Collectors.toMap(m -> m.id, m -> m));
+            Map<Long, LessonModel> models = ue.getModels().stream().map(model -> ExPLoRAABean.JSONB.fromJson(model.getModel(), LessonModel.class)).collect(Collectors.toMap(m -> m.id, m -> m));
             return new User(ue.getId(), ue.getEmail(), ue.getFirstName(), ue.getLastName(), ctx.isOnline(ue.getId()), ctx.getParTypes(ue.getId()), ctx.getParValues(ue.getId()), follows, teachs, models);
         } catch (NoResultException ex) {
             throw new WebApplicationException(ex.getMessage());
@@ -178,18 +176,18 @@ public class ExPLoRAAResource implements ExPLoRAA {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
                 Lesson followed_lesson = new Lesson(follow.getLesson().getId(), new Teach(teacher, null), follow.getLesson().getName(), l.state, l.time, null, null, l.stimuli, null);
-                follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, follow.getInterests()));
+                follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
             for (TeachEntity teach : ue.getTeachedLessons()) {
                 Lesson l = ctx.getLessonManager(teach.getLesson().getId()).getLesson();
                 Map<Long, Follow> students = new HashMap<>();
                 for (FollowEntity student : teach.getLesson().getStudents()) {
-                    students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null, null), null, student.getInterests()));
+                    students.put(student.getStudent().getId(), new Follow(new User(student.getStudent().getId(), student.getStudent().getEmail(), student.getStudent().getFirstName(), student.getStudent().getLastName(), ctx.isOnline(student.getStudent().getId()), ctx.getParTypes(student.getStudent().getId()), ctx.getParValues(student.getStudent().getId()), null, null, null), null, new HashSet<>(student.getInterests())));
                 }
                 teachs.put(teach.getLesson().getId(), new Teach(null, new Lesson(teach.getLesson().getId(), null, teach.getLesson().getName(), l.state, l.time, l.model, students, null, l.tokens)));
             }
-            Map<Long, LessonModel> models = ue.getModels().stream().map(model -> JSONB.fromJson(model.getModel(), LessonModel.class)).collect(Collectors.toMap(m -> m.id, m -> m));
+            Map<Long, LessonModel> models = ue.getModels().stream().map(model -> ExPLoRAABean.JSONB.fromJson(model.getModel(), LessonModel.class)).collect(Collectors.toMap(m -> m.id, m -> m));
             users.add(new User(ue.getId(), ue.getEmail(), ue.getFirstName(), ue.getLastName(), ctx.isOnline(ue.getId()), ctx.getParTypes(ue.getId()), ctx.getParValues(ue.getId()), follows, teachs, models));
         }
         LOG.log(Level.INFO, "found {0} users", users.size());
@@ -225,7 +223,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
             em.merge(teacher);
 
             Lesson l = new Lesson(le.getId(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), name, Lesson.LessonState.Stopped, 0, null, null, null, null);
-            ctx.newLesson(l, JSONB.fromJson(lme.getModel(), LessonModel.class));
+            ctx.newLesson(l, ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class));
 
             utx.commit();
             return l;
@@ -265,7 +263,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
             em.merge(teacher);
 
             Lesson l = new Lesson(le.getId(), new Teach(new User(teacher_id, teacher.getEmail(), teacher.getFirstName(), teacher.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), name, Lesson.LessonState.Stopped, 0, null, null, null, null);
-            ctx.newLesson(l, JSONB.fromJson(lme.getModel(), LessonModel.class));
+            ctx.newLesson(l, ExPLoRAABean.JSONB.fromJson(lme.getModel(), LessonModel.class));
 
             utx.commit();
             return l;
@@ -315,6 +313,72 @@ public class ExPLoRAAResource implements ExPLoRAA {
         List<Lesson> lessons = ctx.getLessonManagers().stream().map(lm -> lm.getLesson()).collect(Collectors.toList());
         LOG.log(Level.INFO, "found {0} lessons", lessons.size());
         return lessons;
+    }
+
+    @PUT
+    @Path("follow")
+    @Override
+    public void follow(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id, @FormParam("interests") String interests) {
+        try {
+            utx.begin();
+            UserEntity student = em.find(UserEntity.class, user_id);
+            LessonEntity lesson = em.find(LessonEntity.class, lesson_id);
+            ArrayList<String> c_interests = ExPLoRAABean.JSONB.fromJson(interests, new ArrayList<String>() {
+            }.getClass().getGenericSuperclass());
+
+            FollowEntity follow = new FollowEntity();
+            follow.setStudent(student);
+            follow.setLesson(lesson);
+            for (String c_interest : c_interests) {
+                follow.addInterest(c_interest);
+            }
+            em.persist(follow);
+
+            student.addFollowedLesson(follow);
+            em.merge(student);
+            lesson.addStudent(follow);
+            em.merge(lesson);
+
+            ctx.follow(new User(student.getId(), student.getEmail(), student.getFirstName(), student.getLastName(), ctx.isOnline(student.getId()), ctx.getParTypes(student.getId()), ctx.getParValues(student.getId()), null, null, null), lesson_id, new HashSet<>(c_interests));
+            utx.commit();
+        } catch (IllegalStateException | SecurityException | JsonbException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException ex) {
+            try {
+                utx.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                LOG.log(Level.SEVERE, null, ex1);
+            }
+            throw new WebApplicationException(ex.getMessage());
+        }
+    }
+
+    @PUT
+    @Path("unfollow")
+    @Override
+    public void unfollow(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id) {
+        try {
+            utx.begin();
+            UserEntity student = em.find(UserEntity.class, user_id);
+            LessonEntity lesson = em.find(LessonEntity.class, lesson_id);
+
+            FollowEntity follow = em.find(FollowEntity.class, new FollowId(user_id, lesson_id));
+
+            student.removeFollowedLesson(follow);
+            em.merge(student);
+            lesson.removeStudent(follow);
+            em.merge(lesson);
+
+            em.remove(follow);
+
+            ctx.unfollow(user_id, lesson_id);
+            utx.commit();
+        } catch (IllegalStateException | SecurityException | JsonbException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException ex) {
+            try {
+                utx.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                LOG.log(Level.SEVERE, null, ex1);
+            }
+            throw new WebApplicationException(ex.getMessage());
+        }
     }
 
     @PUT

@@ -19,6 +19,7 @@ package it.cnr.istc.pst.exploraa.api;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
@@ -48,7 +49,8 @@ public abstract class Message {
     public enum MessageType {
         NewParameter,
         RemoveParameter,
-        NewLesson,
+        FollowLesson,
+        UnfollowLesson,
         RemoveLesson,
         Token,
         TokenUpdate,
@@ -84,15 +86,34 @@ public abstract class Message {
         }
     }
 
-    public static class NewLesson extends Message {
+    public static class FollowLesson extends Message {
 
-        public Lesson lesson;
+        public User student;
+        public long lesson;
+        public Set<String> interests;
 
-        public NewLesson() {
+        public FollowLesson() {
         }
 
-        public NewLesson(Lesson lesson) {
-            super(MessageType.NewLesson);
+        public FollowLesson(User student, long lesson, Set<String> interests) {
+            super(MessageType.FollowLesson);
+            this.student = student;
+            this.lesson = lesson;
+            this.interests = interests;
+        }
+    }
+
+    public static class UnfollowLesson extends Message {
+
+        public long student;
+        public long lesson;
+
+        public UnfollowLesson() {
+        }
+
+        public UnfollowLesson(long student, long lesson) {
+            super(MessageType.UnfollowLesson);
+            this.student = student;
             this.lesson = lesson;
         }
     }
@@ -287,9 +308,6 @@ public abstract class Message {
                 case RemoveParameter:
                     c_object.add("parameter", ((RemoveParameter) obj).parameter);
                     break;
-                case NewLesson:
-                    c_object.add("lesson", Lesson.ADAPTER.adaptToJson(((NewLesson) obj).lesson));
-                    break;
                 case RemoveLesson:
                     c_object.add("lesson", ((RemoveLesson) obj).lesson);
                     break;
@@ -384,8 +402,6 @@ public abstract class Message {
                     return new NewParameter(Parameter.ADAPTER.adaptFromJson(obj.getJsonObject("parameter")));
                 case RemoveParameter:
                     return new RemoveParameter(obj.getString("parameter"));
-                case NewLesson:
-                    return new NewLesson(Lesson.ADAPTER.adaptFromJson(obj.getJsonObject("lesson")));
                 case RemoveLesson:
                     return new RemoveLesson(obj.getInt("lesson"));
                 case Token:

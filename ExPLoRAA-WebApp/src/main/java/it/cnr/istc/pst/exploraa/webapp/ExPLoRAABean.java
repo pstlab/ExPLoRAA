@@ -23,6 +23,7 @@ import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Message.RemoveParameter;
 import it.cnr.istc.pst.exploraa.api.Message.NewParameter;
 import it.cnr.istc.pst.exploraa.api.Parameter;
+import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.webapp.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.webapp.db.UserEntity;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -77,7 +79,7 @@ import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 public class ExPLoRAABean {
 
     private static final Logger LOG = Logger.getLogger(ExPLoRAABean.class.getName());
-    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER));
+    public static final Jsonb JSONB = JsonbBuilder.create(new JsonbConfig().withAdapters(Message.ADAPTER, LessonModel.ADAPTER));
     @Resource(name = "java:app/config")
     private Properties properties;
     private BrokerService broker;
@@ -419,14 +421,40 @@ public class ExPLoRAABean {
                 }
             }
         });
+    }
 
-        // we notify all the students that a new lesson has been created..
-        for (Long student_id : online.keySet()) {
-            try {
-                mqtt.publish(student_id + "/input", JSONB.toJson(new Message.NewLesson(lesson)).getBytes(), 1, false);
-            } catch (MqttException ex) {
-                LOG.log(Level.SEVERE, null, ex);
+    @Lock(LockType.WRITE)
+    public void follow(User student, long lesson, Set<String> interests) {
+        lessons.get(lesson).getLesson().students.put(student.id, new Follow(student, lessons.get(lesson).getLesson(), interests));
+        try {
+            // we notify the teacher of a new user following a lesson..
+            mqtt.publish(lessons.get(lesson).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.FollowLesson(student, lesson, interests)).getBytes(), 1, false);
+            // we notify other students that have a new classmate..
+            User classmate = new User(student.id, student.email, student.first_name, student.last_name, student.online, null, null, null, null, null);
+            for (Long student_id : lessons.get(lesson).getLesson().students.keySet()) {
+                if (student_id != student.id) {
+                    mqtt.publish(student_id + "/input", JSONB.toJson(new Message.FollowLesson(classmate, lesson, interests)).getBytes(), 1, false);
+                }
             }
+        } catch (MqttException ex) {
+            LOG.log(Level.SEVERE, null, ex);
+        }
+    }
+
+    @Lock(LockType.WRITE)
+    public void unfollow(long student, long lesson) {
+        lessons.get(lesson).getLesson().students.remove(student);
+        try {
+            // we notify the teacher of a user unfollowing a lesson..
+            mqtt.publish(lessons.get(lesson).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.UnfollowLesson(student, lesson)).getBytes(), 1, false);
+            // we notify other students that have lost a classmate..
+            for (Long student_id : lessons.get(lesson).getLesson().students.keySet()) {
+                if (student_id != student) {
+                    mqtt.publish(student_id + "/input", JSONB.toJson(new Message.UnfollowLesson(student, lesson)).getBytes(), 1, false);
+                }
+            }
+        } catch (MqttException ex) {
+            LOG.log(Level.SEVERE, null, ex);
         }
     }
 

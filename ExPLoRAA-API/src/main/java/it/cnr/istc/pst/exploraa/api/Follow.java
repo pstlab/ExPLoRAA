@@ -16,7 +16,7 @@
  */
 package it.cnr.istc.pst.exploraa.api;
 
-import java.util.Collection;
+import java.util.Set;
 
 /**
  *
@@ -26,12 +26,12 @@ public class Follow {
 
     public User user;
     public Lesson lesson;
-    public Collection<String> interests;
+    public Set<String> interests;
 
     public Follow() {
     }
 
-    public Follow(User user, Lesson lesson, Collection<String> interests) {
+    public Follow(User user, Lesson lesson, Set<String> interests) {
         this.user = user;
         this.lesson = lesson;
         this.interests = interests;

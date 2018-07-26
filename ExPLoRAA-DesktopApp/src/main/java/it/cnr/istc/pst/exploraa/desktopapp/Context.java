@@ -205,11 +205,6 @@ public class Context {
                         LOG.log(Level.INFO, "message arrived: {0} - {1}", new Object[]{topic, message});
                         Message m = JSONB.fromJson(new String(message.getPayload()), Message.class);
                         switch (m.message_type) {
-                            case NewLesson:
-                                // a teacher has created a new lesson for this student..
-                                Message.NewLesson new_lesson = (Message.NewLesson) m;
-                                Platform.runLater(() -> following_lessons.add(new FollowingLessonContext(new_lesson.lesson)));
-                                break;
                             case RemoveLesson:
                                 // a teacher has removed a lesson for this student..
                                 Message.RemoveLesson remove_lesson = (Message.RemoveLesson) m;
