@@ -18,7 +18,6 @@ package it.cnr.istc.pst.exploraa.api;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -45,12 +44,12 @@ public class LessonModel {
     public String name;
     public Map<String, StimulusTemplate> stimuli;
     public Set<String> ids;
-    public Collection<Relation> relations;
+    public List<Relation> relations;
 
     public LessonModel() {
     }
 
-    public LessonModel(Long id, String name, Map<String, StimulusTemplate> stimuli, Set<String> ids, Collection<Relation> relations) {
+    public LessonModel(Long id, String name, Map<String, StimulusTemplate> stimuli, Set<String> ids, List<Relation> relations) {
         this.id = id;
         this.name = name;
         this.stimuli = stimuli;
@@ -67,12 +66,12 @@ public class LessonModel {
         public Condition trigger_condition;
         public Condition execution_condition;
         public Set<String> ids;
-        public Collection<Relation> relations;
+        public List<Relation> relations;
 
         public StimulusTemplate() {
         }
 
-        public StimulusTemplate(StimulusTemplateType type, String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations) {
+        public StimulusTemplate(StimulusTemplateType type, String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations) {
             this.type = type;
             this.name = name;
             this.topics = topics;
@@ -94,7 +93,7 @@ public class LessonModel {
             public URLStimulusTemplate() {
             }
 
-            public URLStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations, String content, String url) {
+            public URLStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String content, String url) {
                 super(StimulusTemplateType.URL, name, topics, trigger_condition, execution_condition, ids, relations);
                 this.content = content;
                 this.url = url;
@@ -108,7 +107,7 @@ public class LessonModel {
             public TextStimulusTemplate() {
             }
 
-            public TextStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations, String content) {
+            public TextStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String content) {
                 super(StimulusTemplateType.Text, name, topics, trigger_condition, execution_condition, ids, relations);
                 this.content = content;
             }
@@ -117,15 +116,15 @@ public class LessonModel {
         public static class QuestionStimulusTemplate extends StimulusTemplate {
 
             public String question;
-            public ArrayList<Answer> answers;
+            public List<Answer> answers;
 
             public QuestionStimulusTemplate() {
             }
 
-            public QuestionStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, Collection<Relation> relations, String question, Collection<Answer> answers) {
+            public QuestionStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String question, List<Answer> answers) {
                 super(StimulusTemplateType.Question, name, topics, trigger_condition, execution_condition, ids, relations);
                 this.question = question;
-                this.answers = new ArrayList<>(answers);
+                this.answers = answers;
             }
 
             public static class Answer {
@@ -162,7 +161,7 @@ public class LessonModel {
 
         public static class AndCondition extends Condition {
 
-            public Collection<Condition> conditions;
+            public List<Condition> conditions;
 
             public AndCondition() {
             }
@@ -171,7 +170,7 @@ public class LessonModel {
                 this(Arrays.asList(conditions));
             }
 
-            public AndCondition(Collection<Condition> conditions) {
+            public AndCondition(List<Condition> conditions) {
                 super(ConditionType.And);
                 this.conditions = conditions;
             }
@@ -179,7 +178,7 @@ public class LessonModel {
 
         public static class OrCondition extends Condition {
 
-            public Collection<Condition> conditions;
+            public List<Condition> conditions;
 
             public OrCondition() {
             }
@@ -188,7 +187,7 @@ public class LessonModel {
                 this(Arrays.asList(conditions));
             }
 
-            public OrCondition(Collection<Condition> conditions) {
+            public OrCondition(List<Condition> conditions) {
                 super(ConditionType.And);
                 this.conditions = conditions;
             }
@@ -355,14 +354,14 @@ public class LessonModel {
             switch (Condition.ConditionType.valueOf(obj.getString("type"))) {
                 case And:
                     JsonArray and_conditions_array = obj.getJsonArray("conditions");
-                    Collection<Condition> and_conditions = new ArrayList<>(and_conditions_array.size());
+                    List<Condition> and_conditions = new ArrayList<>(and_conditions_array.size());
                     for (JsonValue cond_value : and_conditions_array) {
                         and_conditions.add(Condition.ADAPTER.adaptFromJson(cond_value.asJsonObject()));
                     }
                     return new Condition.AndCondition(and_conditions);
                 case Or:
                     JsonArray or_conditions_array = obj.getJsonArray("conditions");
-                    Collection<Condition> or_conditions = new ArrayList<>(or_conditions_array.size());
+                    List<Condition> or_conditions = new ArrayList<>(or_conditions_array.size());
                     for (JsonValue cond_value : or_conditions_array) {
                         or_conditions.add(Condition.ADAPTER.adaptFromJson(cond_value.asJsonObject()));
                     }

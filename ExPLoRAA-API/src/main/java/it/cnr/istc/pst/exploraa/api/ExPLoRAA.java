@@ -34,7 +34,7 @@ public interface ExPLoRAA {
 
     public Lesson new_lesson(long teacher_id, String name, String model);
 
-    public Lesson new_lesson(long teacher_id, String name, long id);
+    public Lesson new_lesson(long teacher_id, String name, long model_id);
 
     public void delete_lesson(long id);
 

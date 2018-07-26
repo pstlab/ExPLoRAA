@@ -16,14 +16,21 @@
  */
 package it.cnr.istc.pst.exploraa.api;
 
-import java.util.Collection;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.json.Json;
+import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import javax.json.JsonString;
+import javax.json.JsonValue;
 import javax.json.bind.adapter.JsonbAdapter;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 /**
  *
@@ -36,8 +43,9 @@ public class Lesson {
     public String name;
     public LessonModel model;
     public Set<String> topics;
-    public Collection<Message.Stimulus> stimuli;
-    public Collection<Message.Token> tokens;
+    @JsonbTypeAdapter(Lesson.StimulusListAdapter.class)
+    public List<Message.Stimulus> stimuli;
+    public List<Message.Token> tokens;
     public Teach teacher;
     public Map<Long, Follow> students;
     public LessonState state;
@@ -46,7 +54,7 @@ public class Lesson {
     public Lesson() {
     }
 
-    public Lesson(long id, String name, LessonModel model, Set<String> topics, Collection<Message.Stimulus> stimuli, Collection<Message.Token> tokens, Teach teacher, Map<Long, Follow> students, LessonState state, long time) {
+    public Lesson(long id, String name, LessonModel model, Set<String> topics, List<Message.Stimulus> stimuli, List<Message.Token> tokens, Teach teacher, Map<Long, Follow> students, LessonState state, long time) {
         this.id = id;
         this.name = name;
         this.model = model;
@@ -61,6 +69,27 @@ public class Lesson {
 
     public enum LessonState {
         Running, Paused, Stopped
+    }
+
+    public class StimulusListAdapter implements JsonbAdapter<List<Message.Stimulus>, JsonArray> {
+
+        @Override
+        public JsonArray adaptToJson(List<Message.Stimulus> obj) throws Exception {
+            JsonArrayBuilder es_builder = Json.createArrayBuilder();
+            for (Message.Stimulus stimulus : obj) {
+                es_builder.add(Message.ADAPTER.adaptToJson(stimulus));
+            }
+            return es_builder.build();
+        }
+
+        @Override
+        public List<Message.Stimulus> adaptFromJson(JsonArray obj) throws Exception {
+            List<Message.Stimulus> es = new ArrayList<>(obj.size());
+            for (JsonValue e_value : obj) {
+                es.add((Message.Stimulus) Message.ADAPTER.adaptFromJson(e_value.asJsonObject()));
+            }
+            return es;
+        }
     }
 
     public static class LessonAdapter implements JsonbAdapter<Lesson, JsonObject> {
@@ -132,7 +161,53 @@ public class Lesson {
 
         @Override
         public Lesson adaptFromJson(JsonObject obj) throws Exception {
-            throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+            int id = obj.getInt("id");
+            String name = obj.getString("name");
+            LessonModel model = obj.containsKey("model") ? LessonModel.ADAPTER.adaptFromJson(obj.getJsonObject("model")) : null;
+            Set<String> topics = new HashSet<>();
+            for (JsonValue topic : obj.getJsonArray("topics")) {
+                topics.add(((JsonString) topic).getString());
+            }
+
+            List<Message.Stimulus> stimuli = null;
+            if (obj.containsKey("stimuli")) {
+                stimuli = new ArrayList<>(obj.getJsonArray("stimuli").size());
+                for (JsonValue stimulus : obj.getJsonArray("stimuli")) {
+                    stimuli.add((Message.Stimulus) Message.ADAPTER.adaptFromJson(stimulus.asJsonObject()));
+                }
+            }
+            List<Message.Token> tokens = null;
+            if (obj.containsKey("tokens")) {
+                tokens = new ArrayList<>(obj.getJsonArray("tokens").size());
+                for (JsonValue token : obj.getJsonArray("tokens")) {
+                    tokens.add((Message.Token) Message.ADAPTER.adaptFromJson(token.asJsonObject()));
+                }
+            }
+            Teach teacher = null;
+            if (obj.containsKey("teacher")) {
+                JsonObject teacher_object = obj.getJsonObject("teacher");
+                User t = teacher_object.containsKey("user") ? User.ADAPTER.adaptFromJson(teacher_object.getJsonObject("user")) : null;
+                Lesson l = teacher_object.containsKey("lesson") ? Lesson.ADAPTER.adaptFromJson(teacher_object.getJsonObject("lesson")) : null;
+                teacher = new Teach(t, l);
+            }
+            Map<Long, Follow> students = null;
+            if (obj.containsKey("students")) {
+                students = new HashMap<>(obj.getJsonArray("students").size());
+                for (JsonValue student : obj.getJsonArray("students")) {
+                    JsonObject student_object = student.asJsonObject();
+                    User t = student_object.containsKey("user") ? User.ADAPTER.adaptFromJson(student_object.getJsonObject("user")) : null;
+                    Lesson l = student_object.containsKey("lesson") ? Lesson.ADAPTER.adaptFromJson(student_object.getJsonObject("lesson")) : null;
+                    Set<String> interests = new HashSet<>();
+                    for (JsonValue interest : obj.getJsonArray("interests")) {
+                        interests.add(((JsonString) interest).getString());
+                    }
+                    students.put(t.id, new Follow(t, l, interests));
+                }
+            }
+
+            LessonState state = LessonState.valueOf(obj.getString("state"));
+            long time = obj.getInt("time");
+            return new Lesson(id, name, model, topics, stimuli, tokens, teacher, students, state, time);
         }
     }
 }
