@@ -71,7 +71,7 @@ public class Lesson {
         Running, Paused, Stopped
     }
 
-    public class StimulusListAdapter implements JsonbAdapter<List<Message.Stimulus>, JsonArray> {
+    public static class StimulusListAdapter implements JsonbAdapter<List<Message.Stimulus>, JsonArray> {
 
         @Override
         public JsonArray adaptToJson(List<Message.Stimulus> obj) throws Exception {
