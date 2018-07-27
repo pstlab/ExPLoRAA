@@ -185,10 +185,12 @@ public class Context {
                     mqtt.setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle(Context.LANGUAGE.getString("EXCEPTION"));
-                            alert.setHeaderText(cause.getMessage());
-                            alert.showAndWait();
+                            Platform.runLater(() -> {
+                                Alert alert = new Alert(Alert.AlertType.ERROR);
+                                alert.setTitle(Context.LANGUAGE.getString("EXCEPTION"));
+                                alert.setHeaderText(cause.getMessage());
+                                alert.showAndWait();
+                            });
                             Platform.runLater(() -> user.set(null));
                         }
 
@@ -215,6 +217,15 @@ public class Context {
                                 // a teacher has removed a lesson for this student..
                                 Message.RemoveLesson remove_lesson = (Message.RemoveLesson) m;
                                 Platform.runLater(() -> following_lessons.remove(id_following_lessons.get(remove_lesson.lesson)));
+                                break;
+                            case FollowLesson:
+                                // a new student is following a lesson of this teacher..
+                                Message.FollowLesson follow_lesson = (Message.FollowLesson) m;
+                                Platform.runLater(() -> id_teaching_lessons.get(follow_lesson.lesson).studentsProperty().add(new StudentContext(follow_lesson.student)));
+                                break;
+                            case UnfollowLesson:
+                                Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
+                                Platform.runLater(() -> id_teaching_lessons.get(unfollow_lesson.lesson).studentsProperty().remove(id_students.get(unfollow_lesson.student)));
                                 break;
                             case Token:
                                 // a new token has been created for a teaching lesson..
@@ -500,6 +511,10 @@ public class Context {
 
     public ObservableList<StudentContext> studentsProperty() {
         return students;
+    }
+
+    public StudentContext getStudent(final long id) {
+        return id_students.get(id);
     }
 
     public void login(String email, String password) {

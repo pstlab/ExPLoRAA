@@ -47,19 +47,37 @@ public class TeachingLessonContext {
     private final LongProperty time = new SimpleLongProperty(0);
     private final ObservableList<TokenRow> tokens = FXCollections.observableArrayList((TokenRow tk) -> new Observable[]{tk.timeProperty()});
     private final Map<Integer, TokenRow> id_tokens = new HashMap<>();
+    private final ObservableList<StudentContext> students = FXCollections.observableArrayList(std_ctx -> new Observable[]{std_ctx.onlineProperty()});
+    private final Map<Long, StudentContext> id_students = new HashMap<>();
 
     TeachingLessonContext(Lesson lesson, LessonModel model) {
         this.lesson = lesson;
         this.model = model;
         tokens.addListener((ListChangeListener.Change<? extends TokenRow> c) -> {
             while (c.next()) {
-                c.getAddedSubList().forEach((tk) -> id_tokens.put(tk.getId(), tk));
-                c.getRemoved().forEach((tk) -> id_tokens.remove(tk.getId()));
+                c.getAddedSubList().forEach(tk -> id_tokens.put(tk.getId(), tk));
+                c.getRemoved().forEach(tk -> id_tokens.remove(tk.getId()));
             }
         });
         if (lesson.tokens != null) {
             tokens.addAll(lesson.tokens.stream().map(token -> new TeachingLessonContext.TokenRow(token.id, time, token.min, token.max, token.time, token.refEvent)).collect(Collectors.toList()));
         }
+        students.addListener((ListChangeListener.Change<? extends StudentContext> c) -> {
+            while (c.next()) {
+                c.getAddedSubList().forEach(s_ctx -> {
+                    id_students.put(s_ctx.getStudent().id, s_ctx);
+                    if (Context.getContext().getStudent(s_ctx.getStudent().id) == null) {
+                        Context.getContext().studentsProperty().add(s_ctx);
+                    }
+                });
+                c.getRemoved().forEach(s_ctx -> {
+                    id_students.remove(s_ctx.getStudent().id);
+                    if (Context.getContext().getStudent(s_ctx.getStudent().id) != null) {
+                        Context.getContext().studentsProperty().remove(s_ctx);
+                    }
+                });
+            }
+        });
     }
 
     public Lesson getLesson() {
@@ -84,6 +102,14 @@ public class TeachingLessonContext {
 
     public TokenRow getToken(final int id) {
         return id_tokens.get(id);
+    }
+
+    public ObservableList<StudentContext> studentsProperty() {
+        return students;
+    }
+
+    public StudentContext getStudent(final long id) {
+        return id_students.get(id);
     }
 
     public static class TokenRow {

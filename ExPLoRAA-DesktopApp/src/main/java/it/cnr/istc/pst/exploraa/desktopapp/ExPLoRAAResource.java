@@ -107,7 +107,7 @@ class ExPLoRAAResource implements ExPLoRAA {
         follow_form.param("user_id", Long.toString(user_id));
         follow_form.param("lesson_id", Long.toString(lesson_id));
         follow_form.param("interests", interests);
-        target.path("follow").request(MediaType.APPLICATION_JSON).post(Entity.form(follow_form));
+        target.path("follow").request(MediaType.APPLICATION_JSON).put(Entity.form(follow_form));
     }
 
     @Override
@@ -115,14 +115,14 @@ class ExPLoRAAResource implements ExPLoRAA {
         Form follow_form = new Form();
         follow_form.param("user_id", Long.toString(user_id));
         follow_form.param("lesson_id", Long.toString(lesson_id));
-        target.path("unfollow").request(MediaType.APPLICATION_JSON).post(Entity.form(follow_form));
+        target.path("unfollow").request(MediaType.APPLICATION_JSON).put(Entity.form(follow_form));
     }
 
     @Override
     public void solve(long id) {
         Form solve_form = new Form();
         solve_form.param("id", Long.toString(id));
-        target.path("solve").path(Long.toString(id)).request().post(Entity.form(solve_form));
+        target.path("solve").path(Long.toString(id)).request().put(Entity.form(solve_form));
     }
 
     @Override

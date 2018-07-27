@@ -85,36 +85,42 @@ public class User {
                 }
             }
             user_builder.add("par_values", par_values_builder);
-            JsonArrayBuilder follows_builder = Json.createArrayBuilder();
-            for (Follow follow : obj.follows.values()) {
-                JsonObjectBuilder follow_builder = Json.createObjectBuilder();
-                follow_builder.add("lesson", Lesson.ADAPTER.adaptToJson(follow.lesson));
-                JsonArrayBuilder interests_builder = Json.createArrayBuilder();
-                for (String interest : follow.interests) {
-                    interests_builder.add(interest);
+            if (obj.follows != null) {
+                JsonArrayBuilder follows_builder = Json.createArrayBuilder();
+                for (Follow follow : obj.follows.values()) {
+                    JsonObjectBuilder follow_builder = Json.createObjectBuilder();
+                    follow_builder.add("lesson", Lesson.ADAPTER.adaptToJson(follow.lesson));
+                    JsonArrayBuilder interests_builder = Json.createArrayBuilder();
+                    for (String interest : follow.interests) {
+                        interests_builder.add(interest);
+                    }
+                    user_builder.add("interests", interests_builder);
+                    follows_builder.add(follow_builder);
                 }
-                user_builder.add("interests", interests_builder);
-                follows_builder.add(follow_builder);
+                user_builder.add("follows", follows_builder);
             }
-            user_builder.add("follows", follows_builder);
-            JsonArrayBuilder teachs_builder = Json.createArrayBuilder();
-            for (Teach teach : obj.teachs.values()) {
-                JsonObjectBuilder teach_builder = Json.createObjectBuilder();
-                teach_builder.add("lesson", Lesson.ADAPTER.adaptToJson(teach.lesson));
-                teachs_builder.add(teach_builder);
+            if (obj.teachs != null) {
+                JsonArrayBuilder teachs_builder = Json.createArrayBuilder();
+                for (Teach teach : obj.teachs.values()) {
+                    JsonObjectBuilder teach_builder = Json.createObjectBuilder();
+                    teach_builder.add("lesson", Lesson.ADAPTER.adaptToJson(teach.lesson));
+                    teachs_builder.add(teach_builder);
+                }
+                user_builder.add("teachs", teachs_builder);
             }
-            user_builder.add("teachs", teachs_builder);
-            JsonArrayBuilder models_builder = Json.createArrayBuilder();
-            for (LessonModel model : obj.models.values()) {
-                models_builder.add(LessonModel.ADAPTER.adaptToJson(model));
+            if (obj.models != null) {
+                JsonArrayBuilder models_builder = Json.createArrayBuilder();
+                for (LessonModel model : obj.models.values()) {
+                    models_builder.add(LessonModel.ADAPTER.adaptToJson(model));
+                }
+                user_builder.add("models", models_builder);
             }
-            user_builder.add("models", models_builder);
             return user_builder.build();
         }
 
         @Override
         public User adaptFromJson(JsonObject obj) throws Exception {
-            int id = obj.getInt("email");
+            int id = obj.getInt("id");
             String email = obj.getString("email");
             String first_name = obj.getString("first_name");
             String last_name = obj.getString("last_name");
@@ -135,28 +141,37 @@ public class User {
                 par_values.put(entry.getKey(), par_val);
             }
 
-            Map<Long, Follow> follows = new HashMap<>(obj.getJsonArray("follows").size());
-            for (JsonValue follow : obj.getJsonArray("follows")) {
-                JsonObject follow_object = follow.asJsonObject();
-                Lesson l = Lesson.ADAPTER.adaptFromJson(follow_object.getJsonObject("lesson"));
-                Set<String> interests = new HashSet<>(obj.getJsonArray("interests").size());
-                for (JsonValue interest : obj.getJsonArray("interests")) {
-                    interests.add(((JsonString) interest).getString());
+            Map<Long, Follow> follows = null;
+            if (obj.containsKey("follows")) {
+                follows = new HashMap<>(obj.getJsonArray("follows").size());
+                for (JsonValue follow : obj.getJsonArray("follows")) {
+                    JsonObject follow_object = follow.asJsonObject();
+                    Lesson l = Lesson.ADAPTER.adaptFromJson(follow_object.getJsonObject("lesson"));
+                    Set<String> interests = new HashSet<>(obj.getJsonArray("interests").size());
+                    for (JsonValue interest : obj.getJsonArray("interests")) {
+                        interests.add(((JsonString) interest).getString());
+                    }
+                    follows.put(l.id, new Follow(null, l, interests));
                 }
-                follows.put(l.id, new Follow(null, l, interests));
             }
 
-            Map<Long, Teach> teachs = new HashMap<>(obj.getJsonArray("teachs").size());
-            for (JsonValue teach : obj.getJsonArray("teachs")) {
-                JsonObject teach_object = teach.asJsonObject();
-                Lesson l = Lesson.ADAPTER.adaptFromJson(teach_object.getJsonObject("lesson"));
-                teachs.put(l.id, new Teach(null, l));
+            Map<Long, Teach> teachs = null;
+            if (obj.containsKey("teachs")) {
+                teachs = new HashMap<>(obj.getJsonArray("teachs").size());
+                for (JsonValue teach : obj.getJsonArray("teachs")) {
+                    JsonObject teach_object = teach.asJsonObject();
+                    Lesson l = Lesson.ADAPTER.adaptFromJson(teach_object.getJsonObject("lesson"));
+                    teachs.put(l.id, new Teach(null, l));
+                }
             }
 
-            Map<Long, LessonModel> models = new HashMap<>(obj.getJsonArray("models").size());
-            for (JsonValue model : obj.getJsonArray("models")) {
-                LessonModel m = LessonModel.ADAPTER.adaptFromJson(model.asJsonObject());
-                models.put(m.id, m);
+            Map<Long, LessonModel> models = null;
+            if (obj.containsKey("models")) {
+                models = new HashMap<>(obj.getJsonArray("models").size());
+                for (JsonValue model : obj.getJsonArray("models")) {
+                    LessonModel m = LessonModel.ADAPTER.adaptFromJson(model.asJsonObject());
+                    models.put(m.id, m);
+                }
             }
 
             return new User(id, email, first_name, last_name, online, par_types, par_values, follows, teachs, models);

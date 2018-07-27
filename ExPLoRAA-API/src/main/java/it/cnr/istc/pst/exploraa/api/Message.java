@@ -18,6 +18,7 @@ package it.cnr.istc.pst.exploraa.api;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.json.Json;
@@ -29,6 +30,7 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.bind.adapter.JsonbAdapter;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 /**
  *
@@ -88,6 +90,7 @@ public abstract class Message {
 
     public static class FollowLesson extends Message {
 
+        @JsonbTypeAdapter(User.UserAdapter.class)
         public User student;
         public long lesson;
         public Set<String> interests;
@@ -308,6 +311,19 @@ public abstract class Message {
                 case RemoveParameter:
                     c_object.add("parameter", ((RemoveParameter) obj).parameter);
                     break;
+                case FollowLesson:
+                    c_object.add("student", User.ADAPTER.adaptToJson(((FollowLesson) obj).student));
+                    c_object.add("lesson", ((FollowLesson) obj).lesson);
+                    JsonArrayBuilder interests_builder = Json.createArrayBuilder();
+                    for (String interest : ((FollowLesson) obj).interests) {
+                        interests_builder.add(interest);
+                    }
+                    c_object.add("interests", interests_builder);
+                    break;
+                case UnfollowLesson:
+                    c_object.add("student", ((UnfollowLesson) obj).student);
+                    c_object.add("lesson", ((UnfollowLesson) obj).lesson);
+                    break;
                 case RemoveLesson:
                     c_object.add("lesson", ((RemoveLesson) obj).lesson);
                     break;
@@ -402,6 +418,15 @@ public abstract class Message {
                     return new NewParameter(Parameter.ADAPTER.adaptFromJson(obj.getJsonObject("parameter")));
                 case RemoveParameter:
                     return new RemoveParameter(obj.getString("parameter"));
+                case FollowLesson:
+                    JsonArray interests_array = obj.getJsonArray("interests");
+                    Set<String> interests = new HashSet<>(interests_array.size());
+                    for (JsonValue answer_value : interests_array) {
+                        interests.add(((JsonString) answer_value).getString());
+                    }
+                    return new FollowLesson(User.ADAPTER.adaptFromJson(obj.getJsonObject("student")), obj.getInt("lesson"), interests);
+                case UnfollowLesson:
+                    return new UnfollowLesson(obj.getInt("student"), obj.getInt("lesson"));
                 case RemoveLesson:
                     return new RemoveLesson(obj.getInt("lesson"));
                 case Token:
