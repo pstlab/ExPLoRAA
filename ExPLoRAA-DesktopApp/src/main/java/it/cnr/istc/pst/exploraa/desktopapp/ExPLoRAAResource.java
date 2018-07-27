@@ -103,12 +103,19 @@ class ExPLoRAAResource implements ExPLoRAA {
 
     @Override
     public void follow(long user_id, long lesson_id, String interests) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Form follow_form = new Form();
+        follow_form.param("user_id", Long.toString(user_id));
+        follow_form.param("lesson_id", Long.toString(lesson_id));
+        follow_form.param("interests", interests);
+        target.path("follow").request(MediaType.APPLICATION_JSON).post(Entity.form(follow_form));
     }
 
     @Override
     public void unfollow(long user_id, long lesson_id) {
-        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+        Form follow_form = new Form();
+        follow_form.param("user_id", Long.toString(user_id));
+        follow_form.param("lesson_id", Long.toString(lesson_id));
+        target.path("unfollow").request(MediaType.APPLICATION_JSON).post(Entity.form(follow_form));
     }
 
     @Override

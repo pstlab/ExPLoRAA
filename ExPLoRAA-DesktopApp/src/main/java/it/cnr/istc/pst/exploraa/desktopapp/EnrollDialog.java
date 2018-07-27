@@ -98,7 +98,7 @@ public class EnrollDialog extends Dialog<EnrollDialog.EnrollResult> {
 
         getDialogPane().getButtonTypes().add(enroll_button);
         SimpleListProperty<Integer> selected_indices = new SimpleListProperty<>(topics_list_view.getCheckModel().getCheckedIndices());
-        getDialogPane().lookupButton(enroll_button).disableProperty().bind(Bindings.or(lessons_list_view.getSelectionModel().selectedItemProperty().isNotNull(), selected_indices.emptyProperty()));
+        getDialogPane().lookupButton(enroll_button).disableProperty().bind(Bindings.or(lessons_list_view.getSelectionModel().selectedItemProperty().isNull(), selected_indices.emptyProperty()));
         getDialogPane().setMinHeight(Region.USE_PREF_SIZE);
         ((Stage) getDialogPane().getScene().getWindow()).getIcons().addAll(Context.getContext().getStage().getIcons());
         setResultConverter((ButtonType param) -> param == enroll_button ? new EnrollResult(lessons_list_view.getSelectionModel().getSelectedItem(), selected_indices.stream().map(i -> topics.get(i)).collect(Collectors.toSet())) : null);
