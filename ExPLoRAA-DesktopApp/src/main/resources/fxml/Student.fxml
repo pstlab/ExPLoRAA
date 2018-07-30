@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TableColumn?>
+<?import javafx.scene.control.TableView?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.ColumnConstraints?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.RowConstraints?>
+<?import javafx.scene.layout.StackPane?>
+
+<GridPane hgap="10.0" vgap="10.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.StudentController">
+    <rowConstraints>
+        <RowConstraints />
+        <RowConstraints vgrow="ALWAYS" />
+    </rowConstraints>
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS" />
+        <ColumnConstraints hgrow="ALWAYS" />
+    </columnConstraints>
+    <children>
+        <TextField fx:id="first_name" editable="false" promptText="%FIRST_NAME" />
+        <TextField fx:id="last_name" editable="false" promptText="%LAST_NAME" GridPane.columnIndex="1" />
+        <TabPane tabClosingPolicy="UNAVAILABLE" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1" GridPane.vgrow="ALWAYS">
+            <tabs>
+                <Tab text="%TIMELINES">
+                    <content>
+                        <StackPane fx:id="student_chart_pane" prefHeight="150.0" prefWidth="200.0" />
+                    </content>
+                </Tab>
+                <Tab text="%TABLE">
+                    <content>
+                        <TableView fx:id="parameters_table_view">
+                            <columns>
+                                <TableColumn fx:id="name_column" editable="false" prefWidth="75.0" text="%NAME" />
+                                <TableColumn fx:id="value_column" editable="false" prefWidth="75.0" text="%VALUE" />
+                            </columns>
+                            <padding>
+                                <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+                            </padding>
+                            <columnResizePolicy>
+                                <TableView fx:constant="CONSTRAINED_RESIZE_POLICY" />
+                            </columnResizePolicy>
+                        </TableView>
+                    </content>
+                </Tab>
+            </tabs>
+        </TabPane>
+    </children>
+    <padding>
+        <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
+    </padding>
+</GridPane>

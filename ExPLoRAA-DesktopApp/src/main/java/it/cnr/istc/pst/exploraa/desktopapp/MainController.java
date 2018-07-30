@@ -279,6 +279,35 @@ public class MainController implements Initializable {
         });
 
         try {
+            FXMLLoader student_pane_loader = new FXMLLoader(getClass().getResource("/fxml/Student.fxml"), Context.LANGUAGE);
+            student_pane = student_pane_loader.load();
+            student_controller = student_pane_loader.getController();
+        } catch (IOException ex) {
+            Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        students.getSelectionModel().selectedItemProperty().addListener((ObservableValue<? extends StudentContext> observable, StudentContext oldValue, StudentContext newValue) -> {
+            student_controller.studentContextProperty().set(newValue);
+            if (newValue != null) {
+                if (teaching_pane.getChildren().isEmpty()) {
+                    teaching_pane.getChildren().add(student_pane);
+                } else if (teaching_pane.getChildren().get(0) != student_pane) {
+                    teaching_pane.getChildren().set(0, student_pane);
+                }
+            }
+        });
+        students.setOnMouseClicked((MouseEvent event) -> {
+            student_controller.studentContextProperty().set(students.getSelectionModel().getSelectedItem());
+            if (students.getSelectionModel().getSelectedItem() != null) {
+                if (teaching_pane.getChildren().isEmpty()) {
+                    teaching_pane.getChildren().add(student_pane);
+                } else if (teaching_pane.getChildren().get(0) != student_pane) {
+                    teaching_pane.getChildren().set(0, student_pane);
+                }
+            }
+        });
+
+        try {
             if (prefs.get("email", null) != null && prefs.get("password", null) != null) {
                 Context.getContext().login(prefs.get("email", null), prefs.get("password", null));
             }
