@@ -126,6 +126,15 @@ class ExPLoRAAResource implements ExPLoRAA {
     }
 
     @Override
+    public void set_time(long lesson_id, int token_id, long time) {
+        Form form = new Form();
+        form.param("lesson_id", Long.toString(lesson_id));
+        form.param("token_id", Integer.toString(token_id));
+        form.param("time", Long.toString(time));
+        target.path("set_time").request().put(Entity.form(form));
+    }
+
+    @Override
     public void play(long id) {
         Form form = new Form();
         form.param("id", Long.toString(id));

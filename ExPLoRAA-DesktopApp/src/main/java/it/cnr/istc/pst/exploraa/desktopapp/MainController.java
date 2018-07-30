@@ -18,9 +18,12 @@ package it.cnr.istc.pst.exploraa.desktopapp;
 
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.User;
+import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.prefs.Preferences;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -29,7 +32,9 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
 import javafx.collections.transformation.SortedList;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Accordion;
 import javafx.scene.control.Alert;
@@ -38,6 +43,8 @@ import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.Tab;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -85,6 +92,10 @@ public class MainController implements Initializable {
     private ListView<StudentContext> students;
     @FXML
     private StackPane teaching_pane;
+    private Pane lesson_pane;
+    private LessonController lesson_controller;
+    private Pane student_pane;
+    private StudentController student_controller;
     private final Preferences prefs = Preferences.userNodeForPackage(MainController.class);
 
     @Override
@@ -216,6 +227,35 @@ public class MainController implements Initializable {
         add_teaching_lesson_button.disableProperty().bind(user.isNull());
         remove_selected_teaching_lessons_button.graphicProperty().set(new Glyph("FontAwesome", FontAwesome.Glyph.MINUS));
         remove_selected_teaching_lessons_button.disableProperty().bind(Bindings.isEmpty(teaching_lessons.selectionModelProperty().get().getSelectedItems()));
+
+        try {
+            FXMLLoader lesson_pane_loader = new FXMLLoader(getClass().getResource("/fxml/Lesson.fxml"), Context.LANGUAGE);
+            lesson_pane = lesson_pane_loader.load();
+            lesson_controller = lesson_pane_loader.getController();
+        } catch (IOException ex) {
+            Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        teaching_lessons.getSelectionModel().selectedItemProperty().addListener((ObservableValue<? extends TeachingLessonContext> observable, TeachingLessonContext oldValue, TeachingLessonContext newValue) -> {
+            lesson_controller.teachingLessonContextProperty().set(newValue);
+            if (newValue != null) {
+                if (teaching_pane.getChildren().isEmpty()) {
+                    teaching_pane.getChildren().add(lesson_pane);
+                } else if (teaching_pane.getChildren().get(0) != lesson_pane) {
+                    teaching_pane.getChildren().set(0, lesson_pane);
+                }
+            }
+        });
+        teaching_lessons.setOnMouseClicked((MouseEvent event) -> {
+            lesson_controller.teachingLessonContextProperty().set(teaching_lessons.getSelectionModel().getSelectedItem());
+            if (teaching_lessons.getSelectionModel().getSelectedItem() != null) {
+                if (teaching_pane.getChildren().isEmpty()) {
+                    teaching_pane.getChildren().add(lesson_pane);
+                } else if (teaching_pane.getChildren().get(0) != lesson_pane) {
+                    teaching_pane.getChildren().set(0, lesson_pane);
+                }
+            }
+        });
 
         students.setItems(Context.getContext().studentsProperty());
         students.setCellFactory((ListView<StudentContext> param) -> new ListCell<StudentContext>() {

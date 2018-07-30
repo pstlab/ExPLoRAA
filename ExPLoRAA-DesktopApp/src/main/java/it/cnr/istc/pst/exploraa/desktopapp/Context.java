@@ -569,6 +569,26 @@ public class Context {
         following_lessons.remove(id_following_lessons.get(lesson.id));
     }
 
+    public void setTime(Lesson lesson, TeachingLessonContext.TokenRow row, long time) {
+        resource.set_time(lesson.id, row.getId(), time);
+    }
+
+    public void play(Lesson lesson) {
+        resource.play(lesson.id);
+    }
+
+    public void pause(Lesson lesson) {
+        resource.pause(lesson.id);
+    }
+
+    public void stop(Lesson lesson) {
+        resource.stop(lesson.id);
+    }
+
+    public void goTo(Lesson lesson, long time) {
+        resource.go_to(lesson.id, time);
+    }
+
     private static Map<String, Parameter> load_pars() {
         Collection<Parameter> pars = JSONB.fromJson(Context.class.getResourceAsStream("/parameters/types.json"), new ArrayList<Parameter>() {
         }.getClass().getGenericSuperclass());

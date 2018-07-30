@@ -46,6 +46,8 @@ public interface ExPLoRAA {
 
     public void solve(long id);
 
+    public void set_time(long lesson_id, int token_id, long time);
+
     public void play(long id);
 
     public void pause(long id);

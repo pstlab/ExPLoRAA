@@ -417,6 +417,25 @@ public class ExPLoRAAResource implements ExPLoRAA {
     }
 
     @PUT
+    @Path("set_time")
+    @Override
+    public void set_time(@FormParam("lesson_id") long lesson_id, @FormParam("token_id") int token_id, @FormParam("time") long time) {
+        LOG.log(Level.INFO, "setting time of token {0} of lesson {1} to {2}", new Object[]{token_id, lesson_id, time});
+        try {
+            utx.begin();
+            ctx.setTime(lesson_id, token_id, time);
+            utx.commit();
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            try {
+                utx.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                LOG.log(Level.SEVERE, null, ex1);
+            }
+            throw new WebApplicationException(ex.getMessage());
+        }
+    }
+
+    @PUT
     @Path("play")
     @Override
     public void play(@FormParam("id") long id) {
