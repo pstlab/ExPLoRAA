@@ -148,13 +148,13 @@ public class MainController implements Initializable {
                 for (Message.Stimulus event : c.getAddedSubList()) {
                     switch (event.stimulus_type) {
                         case Text:
-                            Platform.runLater(() -> Notifications.create().title(Context.LANGUAGE.getString("EVENT")).text(((Message.Stimulus.TextStimulus) event).content).show());
+                            Platform.runLater(() -> Notifications.create().title(Context.LANGUAGE.getString("STIMULUS")).text(((Message.Stimulus.TextStimulus) event).content).show());
                             break;
                         case Question:
                             Platform.runLater(() -> Notifications.create().title(Context.LANGUAGE.getString("QUESTION")).text(((Message.Stimulus.QuestionStimulus) event).question).show());
                             break;
                         case URL:
-                            Platform.runLater(() -> Notifications.create().title(Context.LANGUAGE.getString("EVENT")).text(((Message.Stimulus.URLStimulus) event).content).show());
+                            Platform.runLater(() -> Notifications.create().title(Context.LANGUAGE.getString("STIMULUS")).text(((Message.Stimulus.URLStimulus) event).content).show());
                             break;
                         default:
                             throw new AssertionError(event.stimulus_type.name());

@@ -201,13 +201,13 @@ public abstract class Message {
         public StimulusType stimulus_type;
         public long lesson_id;
         public int id;
-        public Collection<Long> students;
+        public Set<Long> students;
         public long time;
 
         public Stimulus() {
         }
 
-        public Stimulus(StimulusType stimulus_type, long lesson_id, int id, Collection<Long> students, long time) {
+        public Stimulus(StimulusType stimulus_type, long lesson_id, int id, Set<Long> students, long time) {
             super(MessageType.Stimulus);
             this.stimulus_type = stimulus_type;
             this.lesson_id = lesson_id;
@@ -227,7 +227,7 @@ public abstract class Message {
             public TextStimulus() {
             }
 
-            public TextStimulus(long lesson_id, int id, Collection<Long> students, long time, String content) {
+            public TextStimulus(long lesson_id, int id, Set<Long> students, long time, String content) {
                 super(StimulusType.Text, lesson_id, id, students, time);
                 this.content = content;
             }
@@ -242,7 +242,7 @@ public abstract class Message {
             public QuestionStimulus() {
             }
 
-            public QuestionStimulus(long lesson_id, int id, Collection<Long> students, long time, String question, List<String> answers, Integer answer) {
+            public QuestionStimulus(long lesson_id, int id, Set<Long> students, long time, String question, List<String> answers, Integer answer) {
                 super(StimulusType.Question, lesson_id, id, students, time);
                 this.question = question;
                 this.answers = answers;
@@ -275,7 +275,7 @@ public abstract class Message {
             public URLStimulus() {
             }
 
-            public URLStimulus(long lesson_id, int id, Collection<Long> students, long time, String content, String url) {
+            public URLStimulus(long lesson_id, int id, Set<Long> students, long time, String content, String url) {
                 super(StimulusType.URL, lesson_id, id, students, time);
                 this.content = content;
                 this.url = url;
@@ -439,7 +439,7 @@ public abstract class Message {
                     long lesson_id = obj.getJsonNumber("lesson_id").longValue();
                     int id = obj.getInt("id");
                     JsonArray students_array = obj.getJsonArray("students");
-                    List<Long> students = new ArrayList<>(students_array.size());
+                    Set<Long> students = new HashSet<>(students_array.size());
                     for (JsonValue answer_value : students_array) {
                         students.add(((JsonNumber) answer_value).longValue());
                     }
