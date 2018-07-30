@@ -398,6 +398,24 @@ public class ExPLoRAAResource implements ExPLoRAA {
     }
 
     @PUT
+    @Path("answer_question")
+    @Override
+    public void answer_question(@FormParam("lesson_id") long lesson_id, @FormParam("question_id") int question_id, @FormParam("answer_id") int answer_id) {
+        try {
+            utx.begin();
+            ctx.answerQuestion(lesson_id, question_id, answer_id);
+            utx.commit();
+        } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
+            try {
+                utx.rollback();
+            } catch (IllegalStateException | SecurityException | SystemException ex1) {
+                LOG.log(Level.SEVERE, null, ex1);
+            }
+            throw new WebApplicationException(ex.getMessage());
+        }
+    }
+
+    @PUT
     @Path("solve")
     @Override
     public void solve(@FormParam("id") long id) {

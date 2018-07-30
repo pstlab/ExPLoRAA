@@ -44,6 +44,8 @@ public interface ExPLoRAA {
 
     public void unfollow(long user_id, long lesson_id);
 
+    public void answer_question(long lesson_id, int question_id, int answer_id);
+
     public void solve(long id);
 
     public void set_time(long lesson_id, int token_id, long time);

@@ -620,6 +620,10 @@ public class Context {
         following_lessons.remove(id_following_lessons.get(lesson.id));
     }
 
+    public void answerQuestion(Message.Stimulus.QuestionStimulus question, int answer) {
+        resource.answer_question(question.lesson_id, question.id, answer);
+    }
+
     public void setTime(Lesson lesson, TeachingLessonContext.TokenRow row, long time) {
         resource.set_time(lesson.id, row.getId(), time);
     }

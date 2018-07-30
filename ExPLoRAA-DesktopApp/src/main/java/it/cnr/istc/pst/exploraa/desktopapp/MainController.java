@@ -78,6 +78,12 @@ public class MainController implements Initializable {
     private Button remove_selected_following_lessons_button;
     @FXML
     private StackPane learning_pane;
+    private Pane text_stimulus_pane;
+    private TextStimulusController text_stimulus_controller;
+    private Pane question_stimulus_pane;
+    private QuestionStimulusController question_stimulus_controller;
+    private Pane url_stimulus_pane;
+    private URLStimulusController url_stimulus_controller;
     @FXML
     private Tab teach_tab;
     @FXML
@@ -193,6 +199,49 @@ public class MainController implements Initializable {
         add_following_lessons_button.disableProperty().bind(user.isNull());
         remove_selected_following_lessons_button.graphicProperty().set(new Glyph("FontAwesome", FontAwesome.Glyph.MINUS));
         remove_selected_following_lessons_button.disableProperty().bind(Bindings.isEmpty(following_lessons.selectionModelProperty().get().getSelectedItems()));
+
+        try {
+            FXMLLoader text_stimulus_pane_loader = new FXMLLoader(getClass().getResource("/fxml/TextStimulus.fxml"));
+            text_stimulus_pane = text_stimulus_pane_loader.load();
+            text_stimulus_controller = text_stimulus_pane_loader.getController();
+            FXMLLoader question_stimulus_pane_loader = new FXMLLoader(getClass().getResource("/fxml/QuestionStimulus.fxml"));
+            question_stimulus_pane = question_stimulus_pane_loader.load();
+            question_stimulus_controller = question_stimulus_pane_loader.getController();
+            FXMLLoader url_stimulus_pane_loader = new FXMLLoader(getClass().getResource("/fxml/URLStimulus.fxml"));
+            url_stimulus_pane = url_stimulus_pane_loader.load();
+            url_stimulus_controller = url_stimulus_pane_loader.getController();
+        } catch (IOException ex) {
+            Logger.getLogger(MainController.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        stimuli.getSelectionModel().selectedItemProperty().addListener((ObservableValue<? extends Message.Stimulus> observable, Message.Stimulus oldValue, Message.Stimulus newValue) -> {
+            if (newValue != null) {
+                Pane c_pane = null;
+                switch (newValue.stimulus_type) {
+                    case Text:
+                        c_pane = text_stimulus_pane;
+                        text_stimulus_controller.stimulusProperty().set((Message.Stimulus.TextStimulus) newValue);
+                        break;
+                    case Question:
+                        c_pane = question_stimulus_pane;
+                        question_stimulus_controller.stimulusProperty().set((Message.Stimulus.QuestionStimulus) newValue);
+                        break;
+                    case URL:
+                        c_pane = url_stimulus_pane;
+                        url_stimulus_controller.stimulusProperty().set((Message.Stimulus.URLStimulus) newValue);
+                        break;
+                    default:
+                        throw new AssertionError(newValue.stimulus_type.name());
+                }
+                if (learning_pane.getChildren().isEmpty()) {
+                    learning_pane.getChildren().add(c_pane);
+                } else if (learning_pane.getChildren().get(0) != c_pane) {
+                    learning_pane.getChildren().set(0, c_pane);
+                }
+            } else {
+                text_stimulus_controller.stimulusProperty().set(null);
+                url_stimulus_controller.stimulusProperty().set(null);
+            }
+        });
 
         teach_tab.setGraphic(new Glyph("FontAwesome", FontAwesome.Glyph.BULLHORN).size(20));
         teach_accord.setExpandedPane(teach_accord.getPanes().get(0));
