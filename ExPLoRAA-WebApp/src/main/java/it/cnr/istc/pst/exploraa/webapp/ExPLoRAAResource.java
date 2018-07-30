@@ -326,7 +326,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Override
     public Collection<Lesson> get_lessons() {
         LOG.info("retrieving all lessons..");
-        List<Lesson> lessons = ctx.getLessonManagers().stream().map(lm -> lm.getLesson()).collect(Collectors.toList());
+        List<Lesson> lessons = ctx.getLessonManagers().stream().map(lm -> lm.getLesson()).map(l -> new Lesson(l.id, l.name, l.model, l.topics, l.stimuli, l.tokens, new Teach(l.teacher.user, null), l.students.values().stream().collect(Collectors.toMap(s -> s.user.id, s -> new Follow(s.user, null, s.interests))), l.state, l.time)).collect(Collectors.toList());
         LOG.log(Level.INFO, "found {0} lessons", lessons.size());
         return lessons;
     }

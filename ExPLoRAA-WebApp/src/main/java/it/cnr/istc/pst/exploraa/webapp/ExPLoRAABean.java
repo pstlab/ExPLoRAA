@@ -200,6 +200,7 @@ public class ExPLoRAABean {
         }
 
         // we create a solver for each of the already created lessons..
+        LOG.info("Loading lessons..");
         List<LessonEntity> c_lessons = em.createQuery("SELECT l FROM LessonEntity l", LessonEntity.class).getResultList();
         for (LessonEntity l_entity : c_lessons) {
             // warning! we do not store the current time of the lesson, nor its state.. if the service is restarted, the lesson is not lost, yet its state is!

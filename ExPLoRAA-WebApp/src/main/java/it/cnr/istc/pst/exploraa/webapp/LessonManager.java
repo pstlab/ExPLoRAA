@@ -206,6 +206,7 @@ public class LessonManager implements TemporalListener {
      * @param t the relative current time.
      */
     public void goTo(final long t) {
+        lesson.time = t;
         if (t > t_now && idx < lesson_timeline_pulses.size()) {
             // we are moving forward..
             long next_pulse = lesson_timeline_pulses.get(idx);
