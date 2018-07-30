@@ -59,6 +59,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import javax.swing.UIManager;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 import org.jfree.chart.JFreeChart;
@@ -273,7 +274,7 @@ public class LessonController implements Initializable {
         plot.addDomainMarker(t_now);
 
         JFreeChart chart = new JFreeChart(null, JFreeChart.DEFAULT_TITLE_FONT, plot, false);
-        chart.setBackgroundPaint(java.awt.Color.WHITE);
+        chart.setBackgroundPaint(new java.awt.Color(244, 244, 244));
 
         t_now_property.addListener((ObservableValue<? extends Number> observable, Number oldValue, Number newValue) -> t_now.setValue(newValue.longValue()));
 

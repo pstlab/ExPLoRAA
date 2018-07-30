@@ -12,9 +12,9 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10.0" xmlns="http://javafx.com/javafx/8.0.171" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.LessonController">
+<VBox spacing="10.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.LessonController">
     <children>
-        <GridPane hgap="10.0">
+        <GridPane hgap="10.0" VBox.vgrow="NEVER">
             <columnConstraints>
                 <ColumnConstraints hgrow="NEVER" />
                 <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
@@ -25,7 +25,7 @@
                 <ColumnConstraints hgrow="NEVER" minWidth="50.0" prefWidth="120.0" />
             </columnConstraints>
             <rowConstraints>
-                <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+                <RowConstraints vgrow="NEVER" />
             </rowConstraints>
             <children>
                 <Label fx:id="lesson_name_label" text="%LESSON_NAME" />

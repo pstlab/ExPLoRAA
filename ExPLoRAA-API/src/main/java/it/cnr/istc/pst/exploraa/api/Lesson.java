@@ -41,6 +41,7 @@ public class Lesson {
     public static final LessonAdapter ADAPTER = new LessonAdapter();
     public long id;
     public String name;
+    @JsonbTypeAdapter(LessonModel.LessonModelAdapter.class)
     public LessonModel model;
     public Set<String> topics;
     @JsonbTypeAdapter(Lesson.StimulusListAdapter.class)

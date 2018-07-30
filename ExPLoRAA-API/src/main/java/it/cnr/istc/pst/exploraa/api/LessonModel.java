@@ -32,6 +32,7 @@ import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
 import javax.json.JsonValue;
 import javax.json.bind.adapter.JsonbAdapter;
+import javax.json.bind.annotation.JsonbTypeAdapter;
 
 /**
  *
@@ -42,6 +43,7 @@ public class LessonModel {
     public static final LessonModelAdapter ADAPTER = new LessonModelAdapter();
     public Long id;
     public String name;
+    @JsonbTypeAdapter(StimuliTemplateAdapter.class)
     public Map<String, StimulusTemplate> stimuli;
     public Set<String> ids;
     public List<Relation> relations;
@@ -375,6 +377,28 @@ public class LessonModel {
                 default:
                     throw new AssertionError(Condition.ConditionType.valueOf(obj.getString("type")).name());
             }
+        }
+    }
+
+    public static class StimuliTemplateAdapter implements JsonbAdapter<Map<String, StimulusTemplate>, JsonArray> {
+
+        @Override
+        public JsonArray adaptToJson(Map<String, StimulusTemplate> obj) throws Exception {
+            JsonArrayBuilder stimuli_builder = Json.createArrayBuilder();
+            for (StimulusTemplate st : obj.values()) {
+                stimuli_builder.add(StimulusTemplate.ADAPTER.adaptToJson(st));
+            }
+            return stimuli_builder.build();
+        }
+
+        @Override
+        public Map<String, StimulusTemplate> adaptFromJson(JsonArray obj) throws Exception {
+            Map<String, StimulusTemplate> stimuli = new HashMap<>(obj.size());
+            for (JsonValue st : obj) {
+                StimulusTemplate template = StimulusTemplate.ADAPTER.adaptFromJson(st.asJsonObject());
+                stimuli.put(template.name, template);
+            }
+            return stimuli;
         }
     }
 

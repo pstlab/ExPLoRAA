@@ -227,8 +227,20 @@ public class Context {
                                 Platform.runLater(() -> id_teaching_lessons.get(follow_lesson.lesson).studentsProperty().add(new StudentContext(follow_lesson.student)));
                                 break;
                             case UnfollowLesson:
+                                // a student is not following a lesson of this user anymore..
                                 Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
-                                Platform.runLater(() -> id_teaching_lessons.get(unfollow_lesson.lesson).studentsProperty().remove(id_students.get(unfollow_lesson.student)));
+                                Platform.runLater(() -> {
+                                    id_teaching_lessons.get(unfollow_lesson.lesson).studentsProperty().remove(id_students.get(unfollow_lesson.student));
+                                    Set<Long> c_students = new HashSet<>();
+                                    for (TeachingLessonContext l : teaching_lessons) {
+                                        for (Follow follow : l.getLesson().students.values()) {
+                                            c_students.add(follow.user.id);
+                                        }
+                                    }
+                                    if (!c_students.contains(unfollow_lesson.student)) {
+                                        students.remove(id_students.get(unfollow_lesson.student));
+                                    }
+                                });
                                 break;
                             case Token:
                                 // a new token has been created for a teaching lesson..
@@ -443,9 +455,7 @@ public class Context {
                     long student_id = std_ctx.getStudent().id;
                     try {
                         // we subscribe to be notified whether the student gets online/offline..
-                        mqtt.subscribe(student_id + "/output/on-line", (String topic, MqttMessage message) -> Platform.runLater(()
-                                -> std_ctx.onlineProperty().set(Boolean.parseBoolean(new String(message.getPayload())))
-                        ));
+                        mqtt.subscribe(student_id + "/output/on-line", (String topic, MqttMessage message) -> Platform.runLater(() -> std_ctx.onlineProperty().set(Boolean.parseBoolean(new String(message.getPayload())))));
                         // we subscribe/unsubscribe to the student's added/removed parameters..
                         std_ctx.parameterTypesProperty().addListener((ListChangeListener.Change<? extends Parameter> c1) -> {
                             while (c1.next()) {

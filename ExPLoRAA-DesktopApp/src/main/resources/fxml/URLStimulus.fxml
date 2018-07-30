@@ -6,7 +6,7 @@
 <?import javafx.scene.layout.RowConstraints?>
 <?import javafx.scene.web.WebView?>
 
-<GridPane xmlns="http://javafx.com/javafx/8.0.162" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.lecture.desktopapp.URLEventController">
+<GridPane xmlns="http://javafx.com/javafx/8.0.162" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.URLStimulusController">
     <children>
         <WebView fx:id="web_view" GridPane.hgrow="ALWAYS" GridPane.vgrow="ALWAYS">
             <GridPane.margin>
