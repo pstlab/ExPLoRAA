@@ -90,7 +90,12 @@ public class User {
                 JsonArrayBuilder follows_builder = Json.createArrayBuilder();
                 for (Follow follow : obj.follows.values()) {
                     JsonObjectBuilder follow_builder = Json.createObjectBuilder();
-                    follow_builder.add("lesson", Lesson.ADAPTER.adaptToJson(follow.lesson));
+                    if (follow.user != null) {
+                        follow_builder.add("user", User.ADAPTER.adaptToJson(follow.user));
+                    }
+                    if (follow.lesson != null) {
+                        follow_builder.add("lesson", Lesson.ADAPTER.adaptToJson(follow.lesson));
+                    }
                     JsonArrayBuilder interests_builder = Json.createArrayBuilder();
                     for (String interest : follow.interests) {
                         interests_builder.add(interest);
@@ -104,7 +109,12 @@ public class User {
                 JsonArrayBuilder teachs_builder = Json.createArrayBuilder();
                 for (Teach teach : obj.teachs.values()) {
                     JsonObjectBuilder teach_builder = Json.createObjectBuilder();
-                    teach_builder.add("lesson", Lesson.ADAPTER.adaptToJson(teach.lesson));
+                    if (teach.user != null) {
+                        teach_builder.add("user", User.ADAPTER.adaptToJson(teach.user));
+                    }
+                    if (teach.lesson != null) {
+                        teach_builder.add("lesson", Lesson.ADAPTER.adaptToJson(teach.lesson));
+                    }
                     teachs_builder.add(teach_builder);
                 }
                 user_builder.add("teachs", teachs_builder);
