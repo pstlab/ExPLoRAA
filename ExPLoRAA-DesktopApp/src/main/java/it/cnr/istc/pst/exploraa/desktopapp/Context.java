@@ -182,6 +182,7 @@ public class Context {
             }
             if (newValue != null) {
                 // we set up a new user..
+
                 try {
                     mqtt = new MqttClient("tcp://" + properties.getProperty("host", "localhost") + ":" + properties.getProperty("mqtt-port", "1883"), String.valueOf(newValue.id), new MemoryPersistence());
                     mqtt.setCallback(new MqttCallback() {
@@ -265,6 +266,21 @@ public class Context {
                         }
                     });
 
+                    if (newValue.follows != null) {
+                        // we add the following lessons..
+                        newValue.follows.values().forEach(follow -> following_lessons.add(new FollowingLessonContext(follow.lesson)));
+                    }
+
+                    if (newValue.models != null) {
+                        // we add the available models..
+                        models.addAll(newValue.models.values());
+                    }
+
+                    if (newValue.teachs != null) {
+                        // we add the teaching lessons..
+                        newValue.teachs.values().forEach(teach -> teaching_lessons.add(new TeachingLessonContext(teach.lesson, teach.lesson.model)));
+                    }
+
                     for (Parameter par : newValue.par_types.values()) {
                         par_types.add(par);
                         // we broadcast the existence of a new parameter..
@@ -316,11 +332,11 @@ public class Context {
                     id_following_lessons.remove(flc.getLesson().id);
                     stimuli.removeAll(flc.stimuliProperty());
                     flc.stimuliProperty().clear();
-                    if (user.isNotNull().get() && mqtt.isConnected()) {
+                    if (mqtt.isConnected()) {
                         try {
                             // we subscribe from the lesson's time and state..
-                            mqtt.unsubscribe(user.get().id + "/input/lesson-" + flc.getLesson().id + "/time");
-                            mqtt.unsubscribe(user.get().id + "/input/lesson-" + flc.getLesson().id + "/state");
+                            mqtt.unsubscribe(flc.getLesson().teacher.user.id + "/input/lesson-" + flc.getLesson().id + "/time");
+                            mqtt.unsubscribe(flc.getLesson().teacher.user.id + "/input/lesson-" + flc.getLesson().id + "/state");
                         } catch (MqttException ex) {
                             LOG.log(Level.SEVERE, null, ex);
                         }
@@ -427,7 +443,9 @@ public class Context {
                     long student_id = std_ctx.getStudent().id;
                     try {
                         // we subscribe to be notified whether the student gets online/offline..
-                        mqtt.subscribe(student_id + "/output/on-line", (String topic, MqttMessage message) -> Platform.runLater(() -> std_ctx.onlineProperty().set(Boolean.parseBoolean(new String(message.getPayload())))));
+                        mqtt.subscribe(student_id + "/output/on-line", (String topic, MqttMessage message) -> Platform.runLater(()
+                                -> std_ctx.onlineProperty().set(Boolean.parseBoolean(new String(message.getPayload())))
+                        ));
                         // we subscribe/unsubscribe to the student's added/removed parameters..
                         std_ctx.parameterTypesProperty().addListener((ListChangeListener.Change<? extends Parameter> c1) -> {
                             while (c1.next()) {
@@ -564,15 +582,6 @@ public class Context {
         u.par_types = load_pars();
         u.par_values = load_par_vals();
         user.set(u);
-
-        // we add the following lessons..
-        u.follows.values().forEach(follow -> following_lessons.add(new FollowingLessonContext(follow.lesson)));
-
-        // we add the available models..
-        models.addAll(u.models.values());
-
-        // we add the teaching lessons..
-        u.teachs.values().forEach(teach -> teaching_lessons.add(new TeachingLessonContext(teach.lesson, teach.lesson.model)));
     }
 
     public void logout() {
