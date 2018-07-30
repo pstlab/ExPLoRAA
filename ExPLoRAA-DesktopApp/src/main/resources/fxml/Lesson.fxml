@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox spacing="10.0" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.LessonController">
+<VBox spacing="10.0" style="-fx-background-color: #f4f4f4;" xmlns="http://javafx.com/javafx/8.0.181" xmlns:fx="http://javafx.com/fxml/1" fx:controller="it.cnr.istc.pst.exploraa.desktopapp.LessonController">
     <children>
         <GridPane hgap="10.0" VBox.vgrow="NEVER">
             <columnConstraints>
