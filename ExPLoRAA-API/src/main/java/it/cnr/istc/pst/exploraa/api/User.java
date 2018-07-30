@@ -83,6 +83,7 @@ public class User {
                 for (Map.Entry<String, String> sub_par_val : entry.getValue().entrySet()) {
                     par_val_builder.add(sub_par_val.getKey(), sub_par_val.getValue());
                 }
+                par_values_builder.add(entry.getKey(), par_val_builder);
             }
             user_builder.add("par_values", par_values_builder);
             if (obj.follows != null) {
