@@ -212,7 +212,7 @@ public class ExPLoRAABean {
 
             Lesson l = new Lesson(l_entity.getId(), l_entity.getName(), lm, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(l_entity.getTeachedBy().getTeacher().getId(), l_entity.getTeachedBy().getTeacher().getEmail(), l_entity.getTeachedBy().getTeacher().getFirstName(), l_entity.getTeachedBy().getTeacher().getLastName(), online.get(l_entity.getTeachedBy().getTeacher().getId()), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
             for (FollowEntity follow : l_entity.getStudents()) {
-                l.students.put(follow.getStudent().getId(), new Follow(new User(follow.getStudent().getId(), follow.getStudent().getEmail(), follow.getStudent().getFirstName(), follow.getStudent().getLastName(), isOnline(follow.getStudent().getId()), getParTypes(follow.getStudent().getId()), getParValues(follow.getStudent().getId()), null, null, null), l, new HashSet<>(follow.getInterests())));
+                l.students.put(follow.getStudent().getId(), new Follow(new User(follow.getStudent().getId(), follow.getStudent().getEmail(), follow.getStudent().getFirstName(), follow.getStudent().getLastName(), isOnline(follow.getStudent().getId()), getParTypes(follow.getStudent().getId()), getParValues(follow.getStudent().getId()), null, null, null), null, new HashSet<>(follow.getInterests())));
             }
 
             newLesson(l);
