@@ -16,6 +16,7 @@
  */
 package it.cnr.istc.pst.exploraa.desktopapp;
 
+import it.cnr.istc.pst.exploraa.api.Follow;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.api.Message;
@@ -25,6 +26,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -294,6 +296,9 @@ public class Context {
                 c.getAddedSubList().forEach(flc -> {
                     id_following_lessons.put(flc.getLesson().id, flc);
                     flc.stimuliProperty().addAll(flc.getLesson().stimuli);
+                    if (!id_teachers.containsKey(flc.getLesson().teacher.user.id)) {
+                        teachers.add(new TeacherContext(flc.getLesson().teacher.user));
+                    }
                     try {
                         // we subscribe to the lesson's time..
                         mqtt.subscribe(flc.getLesson().teacher.user.id + "/input/lesson-" + flc.getLesson().id + "/time", (String topic, MqttMessage message) -> {
@@ -321,6 +326,21 @@ public class Context {
                         }
                     }
                 });
+                if (!c.getRemoved().isEmpty()) {
+                    Set<Long> c_teachers = new HashSet<>();
+                    for (FollowingLessonContext l : following_lessons) {
+                        c_teachers.add(l.getLesson().teacher.user.id);
+                    }
+                    Set<Long> to_remove_teachers = new HashSet<>();
+                    for (Long teacher_id : id_teachers.keySet()) {
+                        if (!c_teachers.contains(teacher_id)) {
+                            to_remove_teachers.add(teacher_id);
+                        }
+                    }
+                    for (Long to_remove_student : to_remove_teachers) {
+                        teachers.remove(id_teachers.get(to_remove_student));
+                    }
+                }
             }
         });
 
@@ -351,6 +371,11 @@ public class Context {
             while (c.next()) {
                 c.getAddedSubList().forEach(tlc -> {
                     id_teaching_lessons.put(tlc.getLesson().id, tlc);
+                    for (Follow follow : tlc.getLesson().students.values()) {
+                        if (!id_students.containsKey(follow.user.id)) {
+                            students.add(new StudentContext(follow.user));
+                        }
+                    }
                     try {
                         // we subscribe to the lesson's time..
                         mqtt.subscribe(user.get().id + "/input/lesson-" + tlc.getLesson().id + "/time", (String topic, MqttMessage message) -> {
@@ -376,6 +401,23 @@ public class Context {
                         }
                     }
                 });
+                if (!c.getRemoved().isEmpty()) {
+                    Set<Long> c_students = new HashSet<>();
+                    for (TeachingLessonContext l : teaching_lessons) {
+                        for (Follow follow : l.getLesson().students.values()) {
+                            c_students.add(follow.user.id);
+                        }
+                    }
+                    Set<Long> to_remove_students = new HashSet<>();
+                    for (Long student_id : id_students.keySet()) {
+                        if (!c_students.contains(student_id)) {
+                            to_remove_students.add(student_id);
+                        }
+                    }
+                    for (Long to_remove_student : to_remove_students) {
+                        students.remove(id_students.get(to_remove_student));
+                    }
+                }
             }
         });
 
