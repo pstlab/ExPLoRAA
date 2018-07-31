@@ -28,7 +28,7 @@ public class LearnFragment extends Fragment {
                     case 0:
                         return new StimuliFragment();
                     case 1:
-                        return new TeachersFragment();
+                        return new FollowingLessonsFragment();
                     default:
                         throw new AssertionError("Invalid position..");
                 }

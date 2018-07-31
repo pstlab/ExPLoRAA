@@ -26,7 +26,7 @@ public class TeachFragment extends Fragment {
             public Fragment getItem(int position) {
                 switch (position) {
                     case 0:
-                        return new LessonsFragment();
+                        return new TeachingLessonsFragment();
                     case 1:
                         return new StudentsFragment();
                     default:

@@ -11,7 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-public class LessonsFragment extends Fragment {
+public class TeachingLessonsFragment extends Fragment {
 
     private RecyclerView teaching_lessons_recycler_view;
     private TeachingLessonsAdapter teaching_lessons_adapter;
@@ -19,7 +19,7 @@ public class LessonsFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_lessons, container, false);
+        return inflater.inflate(R.layout.fragment_teaching_lessons, container, false);
     }
 
     @Override
@@ -46,16 +46,16 @@ public class LessonsFragment extends Fragment {
         ExPLoRAAContext.getInstance().removeTeachingLessonsListener(teaching_lessons_adapter);
     }
 
-    private static class TeachingLessonsAdapter extends RecyclerView.Adapter<LessonView> implements ExPLoRAAContext.TeachingLessonsListener {
+    private static class TeachingLessonsAdapter extends RecyclerView.Adapter<TeachingLessonView> implements ExPLoRAAContext.TeachingLessonsListener {
 
         @NonNull
         @Override
-        public LessonView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new LessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.lesson_row, parent));
+        public TeachingLessonView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new TeachingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.teaching_lesson_row, parent));
         }
 
         @Override
-        public void onBindViewHolder(@NonNull LessonView holder, int position) {
+        public void onBindViewHolder(@NonNull TeachingLessonView holder, int position) {
             TeachingLessonContext lesson = ExPLoRAAContext.getInstance().getTeachingLessons().get(position);
             holder.title.setText(lesson.getLesson().name);
         }
@@ -86,13 +86,13 @@ public class LessonsFragment extends Fragment {
         }
     }
 
-    private static class LessonView extends RecyclerView.ViewHolder {
+    private static class TeachingLessonView extends RecyclerView.ViewHolder {
 
         public TextView title;
 
-        public LessonView(View view) {
+        public TeachingLessonView(View view) {
             super(view);
-            title = view.findViewById(R.id.lesson_title);
+            title = view.findViewById(R.id.teaching_lesson_name);
         }
     }
 }
