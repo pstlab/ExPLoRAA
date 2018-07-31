@@ -290,7 +290,7 @@ public class Context {
 
                     if (newValue.teachs != null) {
                         // we add the teaching lessons..
-                        newValue.teachs.values().forEach(teach -> teaching_lessons.add(new TeachingLessonContext(teach.lesson, teach.lesson.model)));
+                        newValue.teachs.values().forEach(teach -> teaching_lessons.add(new TeachingLessonContext(teach.lesson)));
                     }
 
                     for (Parameter par : newValue.par_types.values()) {
@@ -607,7 +607,8 @@ public class Context {
 
     public void addLesson(String name, LessonModel model) {
         Lesson l = model.id != null ? resource.new_lesson(user.get().id, name, model.id) : resource.new_lesson(user.get().id, name, JSONB.toJson(model));
-        teaching_lessons.add(new TeachingLessonContext(l, model));
+        l.model = model;
+        teaching_lessons.add(new TeachingLessonContext(l));
         resource.solve(l.id);
     }
 

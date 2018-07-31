@@ -59,7 +59,6 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import javax.swing.UIManager;
 import org.controlsfx.glyphfont.FontAwesome;
 import org.controlsfx.glyphfont.Glyph;
 import org.jfree.chart.JFreeChart;
@@ -325,7 +324,7 @@ public class LessonController implements Initializable {
                     setStyle("");
                 } else {
                     TokenRow row = getTableView().getItems().get(getIndex());
-                    setText(l_ctx.get().getModel().stimuli.get(row.getName()).topics.stream().collect(Collectors.joining(", ")));
+                    setText(l_ctx.get().getLesson().model.stimuli.get(row.getName()).topics.stream().collect(Collectors.joining(", ")));
 
                     styleProperty().bind(Bindings.createStringBinding(() -> {
                         if (row.getExecuted()) {
@@ -348,7 +347,7 @@ public class LessonController implements Initializable {
                     setStyle("");
                 } else {
                     TokenRow row = getTableView().getItems().get(getIndex());
-                    LessonModel.StimulusTemplate st = l_ctx.get().getModel().stimuli.get(row.getName());
+                    LessonModel.StimulusTemplate st = l_ctx.get().getLesson().model.stimuli.get(row.getName());
                     if (st instanceof LessonModel.StimulusTemplate.TextStimulusTemplate) {
                         setText(((LessonModel.StimulusTemplate.TextStimulusTemplate) st).content);
                     } else if (st instanceof LessonModel.StimulusTemplate.URLStimulusTemplate) {

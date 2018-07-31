@@ -18,7 +18,6 @@ package it.cnr.istc.pst.exploraa.desktopapp;
 
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.Lesson.LessonState;
-import it.cnr.istc.pst.exploraa.api.LessonModel;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -42,7 +41,6 @@ import javafx.collections.ObservableList;
 public class TeachingLessonContext {
 
     private final Lesson lesson;
-    private final LessonModel model;
     private final ObjectProperty<LessonState> state = new SimpleObjectProperty<>(LessonState.Stopped);
     private final LongProperty time = new SimpleLongProperty(0);
     private final ObservableList<TokenRow> tokens = FXCollections.observableArrayList((TokenRow tk) -> new Observable[]{tk.timeProperty()});
@@ -50,9 +48,8 @@ public class TeachingLessonContext {
     private final ObservableList<StudentContext> students = FXCollections.observableArrayList(std_ctx -> new Observable[]{std_ctx.onlineProperty()});
     private final Map<Long, StudentContext> id_students = new HashMap<>();
 
-    TeachingLessonContext(Lesson lesson, LessonModel model) {
+    TeachingLessonContext(Lesson lesson) {
         this.lesson = lesson;
-        this.model = model;
         tokens.addListener((ListChangeListener.Change<? extends TokenRow> c) -> {
             while (c.next()) {
                 c.getAddedSubList().forEach(tk -> id_tokens.put(tk.getId(), tk));
@@ -82,10 +79,6 @@ public class TeachingLessonContext {
 
     public Lesson getLesson() {
         return lesson;
-    }
-
-    public LessonModel getModel() {
-        return model;
     }
 
     public ObjectProperty<LessonState> stateProperty() {
