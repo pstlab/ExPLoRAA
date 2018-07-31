@@ -53,7 +53,7 @@ public class StimuliFragment extends Fragment {
         @NonNull
         @Override
         public StimulusView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new StimulusView(LayoutInflater.from(parent.getContext()).inflate(R.layout.stimulus_row, parent));
+            return new StimulusView(LayoutInflater.from(parent.getContext()).inflate(R.layout.stimulus_row, parent, false));
         }
 
         @Override

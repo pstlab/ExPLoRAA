@@ -51,18 +51,18 @@ public class StudentsFragment extends Fragment {
         @NonNull
         @Override
         public StudentView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new StudentView(LayoutInflater.from(parent.getContext()).inflate(R.layout.student_row, parent));
+            return new StudentView(LayoutInflater.from(parent.getContext()).inflate(R.layout.student_row, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull StudentView holder, int position) {
-            TeachingLessonContext lesson = ExPLoRAAContext.getInstance().getTeachingLessons().get(position);
-            holder.title.setText(lesson.getLesson().name);
+            final StudentContext student = ExPLoRAAContext.getInstance().getStudents().get(position);
+            holder.title.setText(student.getStudent().first_name + " " + student.getStudent().last_name);
         }
 
         @Override
         public int getItemCount() {
-            return ExPLoRAAContext.getInstance().getTeachingLessons().size();
+            return ExPLoRAAContext.getInstance().getStudents().size();
         }
 
         @Override

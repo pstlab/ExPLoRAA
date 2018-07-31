@@ -619,7 +619,7 @@ public abstract class Message {
                     break;
             }
             in.endObject();
-            return null;
+            return m;
         }
     }
 }

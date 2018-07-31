@@ -55,7 +55,7 @@ public interface ExPLoRAA {
     Call<Lesson> new_lesson(@Field("teacher_id") long teacher_id, @Field("name") String name, @Field("model_id") long model_id);
 
     @DELETE("lesson/{id}")
-    void delete_lesson(@Path("id") long id);
+    Call<Void> delete_lesson(@Path("id") long id);
 
     @GET("lessons")
     Call<Collection<Lesson>> get_lessons();

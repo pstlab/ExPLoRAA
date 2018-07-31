@@ -78,7 +78,7 @@ public class FollowingLessonsFragment extends Fragment {
         @NonNull
         @Override
         public FollowingLessonView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new FollowingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.following_lesson_row, parent));
+            return new FollowingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.following_lesson_row, parent, false));
         }
 
         @Override

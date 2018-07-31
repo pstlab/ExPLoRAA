@@ -29,6 +29,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
@@ -271,6 +272,8 @@ public class LessonModel {
             if (value.id != null)
                 out.name("id").value(value.id);
 
+            out.name("name").value(value.name);
+
             out.name("stimuli");
             out.beginArray();
             for (StimulusTemplate stimulus_template : value.stimuli.values())
@@ -298,6 +301,12 @@ public class LessonModel {
             in.beginObject();
             while (in.hasNext())
                 switch ((in.nextName())) {
+                    case "id":
+                        model.id = in.nextLong();
+                        break;
+                    case "name":
+                        model.name = in.nextString();
+                        break;
                     case "stimuli":
                         model.stimuli = new HashMap<>();
                         in.beginArray();
@@ -508,93 +517,92 @@ public class LessonModel {
         @Override
         public StimulusTemplate read(JsonReader in) throws IOException {
             StimulusTemplate st = null;
-            String name = null;
-            Set<String> topics = new HashSet<>();
-            Condition trigger_condition = null;
-            Condition execution_condition = null;
-            Set<String> ids = new HashSet<>();
-            List<Relation> relations = new ArrayList<>();
             in.beginObject();
             while (in.hasNext())
                 switch ((in.nextName())) {
                     case "name":
-                        name = in.nextString();
+                        Objects.requireNonNull(st).name = in.nextString();
                         break;
                     case "topics":
+                        Objects.requireNonNull(st).topics = new HashSet<>();
                         in.beginArray();
-                        while (in.peek() != JsonToken.END_ARRAY) topics.add(in.nextString());
+                        while (in.peek() != JsonToken.END_ARRAY) st.topics.add(in.nextString());
                         in.endArray();
                         break;
                     case "trigger_condition":
-                        trigger_condition = Condition.ADAPTER.read(in);
+                        Objects.requireNonNull(st).trigger_condition = Condition.ADAPTER.read(in);
                         break;
                     case "execution_condition":
-                        execution_condition = Condition.ADAPTER.read(in);
+                        Objects.requireNonNull(st).execution_condition = Condition.ADAPTER.read(in);
                         break;
                     case "ids":
+                        Objects.requireNonNull(st).ids = new HashSet<>();
                         in.beginArray();
-                        while (in.peek() != JsonToken.END_ARRAY) ids.add(in.nextString());
+                        while (in.peek() != JsonToken.END_ARRAY) st.ids.add(in.nextString());
                         in.endArray();
                         break;
                     case "relations":
+                        Objects.requireNonNull(st).relations = new ArrayList<>();
                         in.beginArray();
                         while (in.peek() != JsonToken.END_ARRAY)
-                            relations.add(Relation.ADAPTER.read(in));
+                            st.relations.add(Relation.ADAPTER.read(in));
+                        in.endArray();
+                        break;
+                    case "content":
+                        switch (Objects.requireNonNull(st).type) {
+                            case Text:
+                                ((StimulusTemplate.TextStimulusTemplate) st).content = in.nextString();
+                                break;
+                            case URL:
+                                ((StimulusTemplate.URLStimulusTemplate) st).content = in.nextString();
+                                break;
+                        }
+                        break;
+                    case "url":
+                        ((StimulusTemplate.URLStimulusTemplate) Objects.requireNonNull(st)).url = in.nextString();
+                        break;
+                    case "question":
+                        ((StimulusTemplate.QuestionStimulusTemplate) Objects.requireNonNull(st)).question = in.nextString();
+                        break;
+                    case "answers":
+                        ((StimulusTemplate.QuestionStimulusTemplate) Objects.requireNonNull(st)).answers = new ArrayList<>();
+                        in.beginArray();
+                        while (in.peek() != JsonToken.END_ARRAY) {
+                            String answer = null;
+                            String event = null;
+                            in.beginObject();
+                            for (int i = 0; i < 2; i++) {
+                                switch ((in.nextName())) {
+                                    case "answer":
+                                        answer = in.nextString();
+                                        break;
+                                    case "event":
+                                        event = in.nextString();
+                                        break;
+                                }
+                            }
+                            ((StimulusTemplate.QuestionStimulusTemplate) st).answers.add(new StimulusTemplate.QuestionStimulusTemplate.Answer(answer, event));
+                            in.endObject();
+                        }
                         in.endArray();
                         break;
                     case "type":
                         switch (StimulusTemplate.StimulusTemplateType.valueOf(in.nextString())) {
                             case Root:
-                                st = new StimulusTemplate(StimulusTemplate.StimulusTemplateType.Root, name, topics, trigger_condition, execution_condition, ids, relations);
+                                st = new StimulusTemplate();
+                                st.type = StimulusTemplate.StimulusTemplateType.Root;
                                 break;
                             case Text:
-                                in.nextName();
-                                st = new StimulusTemplate.TextStimulusTemplate(name, topics, trigger_condition, execution_condition, ids, relations, in.nextString());
+                                st = new StimulusTemplate.TextStimulusTemplate();
+                                st.type = StimulusTemplate.StimulusTemplateType.Text;
                                 break;
                             case URL:
-                                String content = null;
-                                String url = null;
-                                while (in.hasNext())
-                                    switch ((in.nextName())) {
-                                        case "content":
-                                            content = in.nextString();
-                                            break;
-                                        case "url":
-                                            url = in.nextString();
-                                            break;
-                                    }
-                                st = new StimulusTemplate.URLStimulusTemplate(name, topics, trigger_condition, execution_condition, ids, relations, content, url);
+                                st = new StimulusTemplate.URLStimulusTemplate();
+                                st.type = StimulusTemplate.StimulusTemplateType.URL;
                                 break;
                             case Question:
-                                String question = null;
-                                List<StimulusTemplate.QuestionStimulusTemplate.Answer> answers = new ArrayList<>();
-                                while (in.hasNext())
-                                    switch ((in.nextName())) {
-                                        case "question":
-                                            question = in.nextString();
-                                            break;
-                                        case "answers":
-                                            in.beginArray();
-                                            while (in.peek() != JsonToken.END_ARRAY) {
-                                                String answer = null;
-                                                String event = null;
-                                                in.beginObject();
-                                                for (int i = 0; i < 2; i++) {
-                                                    switch ((in.nextName())) {
-                                                        case "answer":
-                                                            answer = in.nextString();
-                                                            break;
-                                                        case "event":
-                                                            event = in.nextString();
-                                                            break;
-                                                    }
-                                                }
-                                                answers.add(new StimulusTemplate.QuestionStimulusTemplate.Answer(answer, event));
-                                                in.endObject();
-                                            }
-                                            in.endArray();
-                                    }
-                                st = new StimulusTemplate.QuestionStimulusTemplate(name, topics, trigger_condition, execution_condition, ids, relations, question, answers);
+                                st = new StimulusTemplate.QuestionStimulusTemplate();
+                                st.type = StimulusTemplate.StimulusTemplateType.Question;
                                 break;
                         }
                         break;

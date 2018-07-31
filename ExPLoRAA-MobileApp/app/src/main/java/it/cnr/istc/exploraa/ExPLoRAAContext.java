@@ -534,6 +534,7 @@ public class ExPLoRAAContext implements LocationListener {
                     User user = response.body();
 
                     // we set the parameters of init's user (these parameters will be communicated to the server..)
+                    assert user != null;
                     user.par_types = get_par_types(ctx);
                     user.par_values = get_par_values(ctx);
 
@@ -601,6 +602,79 @@ public class ExPLoRAAContext implements LocationListener {
                 }
             }
         }.execute(email, password, first_name, last_name).get();
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void addLesson(@NonNull final Context ctx, @NonNull final String name, @NonNull final LessonModel model) {
+        new AsyncTask<Object, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Object... objects) {
+                try {
+                    final Response<Lesson> response = resource.new_lesson((Long) objects[0], (String) objects[1], (String) objects[2]).execute();
+                    if (!response.isSuccessful()) return null;
+                    final Lesson l = response.body();
+                    // we set the model of the returned lesson..
+                    l.model = model;
+                    // we add a new context for the returned lesson..
+                    addTeachingLesson(new TeachingLessonContext(l));
+                    // we solve the lesson..
+                    resource.solve(l.id);
+                } catch (final IOException e) {
+                    Log.w(TAG, "Lesson creation failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(name, GSON.toJson(model));
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void removeLesson(@NonNull final Context ctx, @NonNull final TeachingLessonContext l_ctx) {
+        new AsyncTask<Long, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Long... longs) {
+                try {
+                    final Response<Void> response = resource.delete_lesson(longs[0]).execute();
+                    if (!response.isSuccessful()) return null;
+                    // we remove the context for the lesson..
+                    removeTeachingLesson(l_ctx);
+                } catch (final IOException e) {
+                    Log.w(TAG, "Lesson removal failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(l_ctx.getLesson().id);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public Collection<Lesson> getLessons(@NonNull final Context ctx) throws ExecutionException, InterruptedException {
+        return new AsyncTask<Void, Integer, Collection<Lesson>>() {
+            @Override
+            protected Collection<Lesson> doInBackground(Void... voids) {
+                try {
+                    final Response<Collection<Lesson>> response = resource.get_lessons().execute();
+                    if (!response.isSuccessful()) return null;
+                    return response.body();
+                } catch (final IOException e) {
+                    Log.w(TAG, "Lesson removal failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute().get();
     }
 
     private Map<String, Parameter> get_par_types(@NonNull final Context ctx) {

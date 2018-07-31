@@ -78,7 +78,7 @@ public class TeachingLessonsFragment extends Fragment {
         @NonNull
         @Override
         public TeachingLessonView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new TeachingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.teaching_lesson_row, parent));
+            return new TeachingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.teaching_lesson_row, parent, false));
         }
 
         @Override

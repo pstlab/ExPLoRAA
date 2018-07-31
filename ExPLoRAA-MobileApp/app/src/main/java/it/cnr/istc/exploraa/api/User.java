@@ -25,6 +25,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 /**
@@ -170,6 +171,7 @@ public class User {
                                 par_vals.put(in.nextName(), in.nextString());
                             }
                             in.endObject();
+                            u.par_values.put(par_name, par_vals);
                         }
                         in.endObject();
                         break;
@@ -195,7 +197,7 @@ public class User {
                                     in.endArray();
                             }
                             in.endObject();
-                            u.follows.put(c_l.id, new Follow(t, c_l, interests));
+                            u.follows.put(Objects.requireNonNull(c_l).id, new Follow(t, c_l, interests));
                         }
                         in.endArray();
                         break;
@@ -216,7 +218,7 @@ public class User {
                                     break;
                             }
                             in.endObject();
-                            u.teachs.put(c_l.id, new Teach(s, c_l));
+                            u.teachs.put(Objects.requireNonNull(c_l).id, new Teach(s, c_l));
                         }
                         in.endArray();
                         break;
