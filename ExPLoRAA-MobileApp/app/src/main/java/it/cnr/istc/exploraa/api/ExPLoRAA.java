@@ -19,10 +19,13 @@ package it.cnr.istc.exploraa.api;
 import java.util.Collection;
 
 import retrofit2.Call;
+import retrofit2.http.DELETE;
 import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.POST;
+import retrofit2.http.PUT;
+import retrofit2.http.Path;
 
 /**
  * @author Riccardo De Benedictis
@@ -37,6 +40,59 @@ public interface ExPLoRAA {
     @POST("new_user")
     Call<User> new_user(@Field("email") String email, @Field("password") String password, @Field("first_name") String first_name, @Field("last_name") String last_name);
 
+    @DELETE("user/{id}")
+    void delete_user(@Path("id") long id);
+
     @GET("users")
-    Call<Collection<User>> getUsers();
+    Call<Collection<User>> get_users();
+
+    @FormUrlEncoded
+    @POST("new_lesson_by_model")
+    Call<Lesson> new_lesson(@Field("teacher_id") long teacher_id, @Field("name") String name, @Field("model") String model);
+
+    @FormUrlEncoded
+    @POST("new_lesson_by_model_id")
+    Call<Lesson> new_lesson(@Field("teacher_id") long teacher_id, @Field("name") String name, @Field("model_id") long model_id);
+
+    @DELETE("lesson/{id}")
+    void delete_lesson(@Path("id") long id);
+
+    @GET("lessons")
+    Call<Collection<Lesson>> get_lessons();
+
+    @FormUrlEncoded
+    @PUT("login")
+    void follow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id, @Field("interests") String interests);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void unfollow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void answer_question(@Field("lesson_id") long lesson_id, @Field("question_id") int question_id, @Field("answer_id") int answer_id);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void solve(@Field("id") long id);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void set_time(@Field("lesson_id") long lesson_id, @Field("token_id") int token_id, @Field("time") long time);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void play(@Field("id") long id);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void pause(@Field("id") long id);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void stop(@Field("id") long id);
+
+    @FormUrlEncoded
+    @PUT("login")
+    void go_to(@Field("id") long id, @Field("time") long time);
 }
