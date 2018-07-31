@@ -150,7 +150,7 @@ public class ExPLoRAAContext implements LocationListener {
                     // a user might become null as a consequence of a connection loss..
                     // we broadcast the lost of a parameter..
                     if (mqtt.isConnected()) for (Parameter par : par_types)
-                        mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(id_par_types.get(par.name))).getBytes(), 1, false);
+                        mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(par.name)).getBytes(), 1, false);
                     new Handler(Looper.getMainLooper()).post(new Runnable() {
                         @Override
                         public void run() {
@@ -241,23 +241,13 @@ public class ExPLoRAAContext implements LocationListener {
                         Log.w(TAG, "Message arrived: " + topic + " - " + message);
                         Message m = GSON.fromJson(new String(message.getPayload()), Message.class);
                         switch (m.message_type) {
-                            case NewLesson:
-                                // a teacher has created a new lesson for this student..
-                                final Message.NewLesson new_lesson = GSON.fromJson(new String(message.getPayload()), Message.NewLesson.class);
-                                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        addFollowingLesson(new FollowingLessonContext(new_lesson.lesson));
-                                    }
-                                });
-                                break;
                             case RemoveLesson:
                                 // a teacher has removed a lesson for this student..
                                 final Message.RemoveLesson lost_lesson = GSON.fromJson(new String(message.getPayload()), Message.RemoveLesson.class);
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson_id));
+                                        removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson));
                                     }
                                 });
                                 break;

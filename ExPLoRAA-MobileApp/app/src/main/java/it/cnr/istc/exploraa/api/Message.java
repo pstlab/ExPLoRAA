@@ -179,12 +179,12 @@ public abstract class Message {
     public static class RemoveToken extends Message {
 
         public long lesson_id;
-        public long id;
+        public int id;
 
         public RemoveToken() {
         }
 
-        public RemoveToken(long lesson_id, long id) {
+        public RemoveToken(long lesson_id, int id) {
             super(MessageType.RemoveToken);
             this.lesson_id = lesson_id;
             this.id = id;
@@ -546,9 +546,9 @@ public abstract class Message {
                                         m = new Stimulus.TextStimulus(lesson_id, id, students, time, in.nextString());
                                         break;
                                     case Question:
-                                        String question;
+                                        String question = null;
                                         List<String> answers = new ArrayList<>();
-                                        Integer answer;
+                                        Integer answer = null;
                                         while (in.hasNext())
                                             switch (in.nextName()) {
                                                 case "question":
@@ -567,8 +567,8 @@ public abstract class Message {
                                         m = new Stimulus.QuestionStimulus(lesson_id, id, students, time, question, answers, answer);
                                         break;
                                     case URL:
-                                        String content;
-                                        String url;
+                                        String content = null;
+                                        String url = null;
                                         while (in.hasNext())
                                             switch (in.nextName()) {
                                                 case "content":
