@@ -17,7 +17,6 @@
 package it.cnr.istc.exploraa.api;
 
 /**
- *
  * @author Riccardo De Benedictis
  */
 public class Teach {

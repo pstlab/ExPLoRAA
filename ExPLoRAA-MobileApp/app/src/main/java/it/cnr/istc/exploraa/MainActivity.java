@@ -28,9 +28,13 @@ public class MainActivity extends AppCompatActivity {
             public Fragment getItem(int position) {
                 switch (position) {
                     case 0:
-                        return new LearnFragment();
+                        return new StimuliFragment();
                     case 1:
-                        return new TeachFragment();
+                        return new FollowingLessonsFragment();
+                    case 2:
+                        return new TeachingLessonsFragment();
+                    case 3:
+                        return new StudentsFragment();
                     default:
                         throw new AssertionError("Invalid position..");
                 }
@@ -38,7 +42,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public int getCount() {
-                return 2;
+                return 4;
             }
         });
     }

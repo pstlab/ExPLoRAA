@@ -116,16 +116,16 @@ public class ExPLoRAAContext implements LocationListener {
     private final List<StudentContext> students = new ArrayList<>();
     private final LongSparseArray<StudentContext> id_students = new LongSparseArray<>();
     private final LongSparseArray<StudentContext.StudentListener> id_student_listener = new LongSparseArray<>();
-    private MqttClient mqtt;
-    /**
-     * The current user.
-     */
-    private User user;
     private final Collection<StimuliListener> stimuli_listeners = new ArrayList<>();
     private final Collection<FollowingLessonsListener> following_lessons_listeners = new ArrayList<>();
     private final Collection<TeachersListener> teachers_listeners = new ArrayList<>();
     private final Collection<TeachingLessonsListener> teaching_lessons_listeners = new ArrayList<>();
     private final Collection<StudentsListener> students_listeners = new ArrayList<>();
+    private MqttClient mqtt;
+    /**
+     * The current user.
+     */
+    private User user;
 
     private ExPLoRAAContext() {
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();

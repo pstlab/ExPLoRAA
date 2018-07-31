@@ -13,6 +13,9 @@
     <string name="create_account">No account yet? Create one</string>
     <string name="stimuli">Stimuli</string>
     <string name="lessons">Lessons</string>
+    <string name="following_lessons">Following lessons</string>
+    <string name="teaching_lessons">Teaching lessons</string>
     <string name="teachers">Teachers</string>
     <string name="students">Students</string>
+    <string name="add_lesson">Add lesson</string>
 </resources>

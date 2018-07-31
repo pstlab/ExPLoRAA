@@ -19,7 +19,6 @@ package it.cnr.istc.exploraa.api;
 import java.util.Set;
 
 /**
- *
  * @author Riccardo De Benedictis
  */
 public class Follow {
