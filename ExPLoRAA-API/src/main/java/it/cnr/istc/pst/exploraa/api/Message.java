@@ -183,12 +183,12 @@ public abstract class Message {
     public static class RemoveToken extends Message {
 
         public long lesson_id;
-        public long id;
+        public int id;
 
         public RemoveToken() {
         }
 
-        public RemoveToken(long lesson_id, long id) {
+        public RemoveToken(long lesson_id, int id) {
             super(MessageType.RemoveToken);
             this.lesson_id = lesson_id;
             this.id = id;
