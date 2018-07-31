@@ -568,6 +568,10 @@ public class ExPLoRAAContext implements LocationListener {
         }.execute(email, password).get();
     }
 
+    public void logout(@NonNull final Context ctx) {
+        setUser(ctx, null);
+    }
+
     @SuppressLint("StaticFieldLeak")
     public boolean new_user(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password, @NonNull final String first_name, @NonNull final String last_name) throws ExecutionException, InterruptedException {
         return new AsyncTask<String, Integer, Boolean>() {

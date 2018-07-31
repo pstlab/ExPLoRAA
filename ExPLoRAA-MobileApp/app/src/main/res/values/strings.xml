@@ -8,6 +8,7 @@
     <string name="first_name">First name</string>
     <string name="last_name">Last name</string>
     <string name="login">Login</string>
+    <string name="logout">Logout</string>
     <string name="create">Create</string>
     <string name="create_account">No account yet? Create one</string>
     <string name="stimuli">Stimuli</string>
