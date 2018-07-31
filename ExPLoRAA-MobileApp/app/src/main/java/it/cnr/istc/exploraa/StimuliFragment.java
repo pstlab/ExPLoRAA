@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -58,18 +59,7 @@ public class StimuliFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull StimulusView holder, int position) {
-            Message.Stimulus stimulus = ExPLoRAAContext.getInstance().getStimuli().get(position);
-            switch (stimulus.stimulus_type) {
-                case Text:
-                    holder.title.setText(((Message.Stimulus.TextStimulus) stimulus).content);
-                    break;
-                case Question:
-                    holder.title.setText(((Message.Stimulus.QuestionStimulus) stimulus).question);
-                    break;
-                case URL:
-                    holder.title.setText(((Message.Stimulus.URLStimulus) stimulus).content);
-                    break;
-            }
+            holder.setStimulus(ExPLoRAAContext.getInstance().getStimuli().get(position));
         }
 
         @Override
@@ -93,13 +83,34 @@ public class StimuliFragment extends Fragment {
         }
     }
 
-    private static class StimulusView extends RecyclerView.ViewHolder {
+    private static class StimulusView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public TextView title;
+        private Message.Stimulus stimulus;
+        private TextView title;
 
-        public StimulusView(View view) {
+        private StimulusView(View view) {
             super(view);
             title = view.findViewById(R.id.stimulus_title);
+        }
+
+        private void setStimulus(Message.Stimulus stimulus) {
+            this.stimulus = stimulus;
+            switch (stimulus.stimulus_type) {
+                case Text:
+                    title.setText(((Message.Stimulus.TextStimulus) stimulus).content);
+                    break;
+                case Question:
+                    title.setText(((Message.Stimulus.QuestionStimulus) stimulus).question);
+                    break;
+                case URL:
+                    title.setText(((Message.Stimulus.URLStimulus) stimulus).content);
+                    break;
+            }
+        }
+
+        @Override
+        public void onClick(View v) {
+            Log.d("StimulusView", "onClick " + getAdapterPosition() + " " + title.getText());
         }
     }
 }

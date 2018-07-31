@@ -59,7 +59,7 @@ public class EnrollActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull EnrollingLessonView holder, int position) {
-            holder.title.setText(lessons.get(position).name);
+            holder.setLesson(lessons.get(position));
         }
 
         @Override
@@ -70,12 +70,18 @@ public class EnrollActivity extends AppCompatActivity {
 
     private static class EnrollingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public TextView title;
+        private Lesson l;
+        private TextView title;
 
-        public EnrollingLessonView(View view) {
+        private EnrollingLessonView(View view) {
             super(view);
             view.setOnClickListener(this);
             title = view.findViewById(R.id.enrolling_lesson_name);
+        }
+
+        private void setLesson(Lesson l) {
+            this.l = l;
+            title.setText(l.name);
         }
 
         @Override

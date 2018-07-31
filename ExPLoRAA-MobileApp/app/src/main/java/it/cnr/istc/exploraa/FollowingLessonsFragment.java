@@ -84,8 +84,7 @@ public class FollowingLessonsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull FollowingLessonView holder, int position) {
-            TeachingLessonContext lesson = ExPLoRAAContext.getInstance().getTeachingLessons().get(position);
-            holder.title.setText(lesson.getLesson().name);
+            holder.setLesson(ExPLoRAAContext.getInstance().getTeachingLessons().get(position));
         }
 
         @Override
@@ -116,12 +115,18 @@ public class FollowingLessonsFragment extends Fragment {
 
     private static class FollowingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public TextView title;
+        private TeachingLessonContext ctx;
+        private TextView title;
 
         private FollowingLessonView(View view) {
             super(view);
             view.setOnClickListener(this);
             title = view.findViewById(R.id.following_lesson_name);
+        }
+
+        private void setLesson(TeachingLessonContext ctx) {
+            this.ctx = ctx;
+            title.setText(ctx.getLesson().name);
         }
 
         @Override

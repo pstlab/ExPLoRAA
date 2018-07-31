@@ -57,8 +57,7 @@ public class StudentsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull StudentView holder, int position) {
-            final StudentContext student = ExPLoRAAContext.getInstance().getStudents().get(position);
-            holder.title.setText(student.getStudent().first_name + " " + student.getStudent().last_name);
+            holder.setStudent(ExPLoRAAContext.getInstance().getStudents().get(position));
         }
 
         @Override
@@ -89,17 +88,23 @@ public class StudentsFragment extends Fragment {
 
     private static class StudentView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        public TextView title;
+        private StudentContext student;
+        private TextView name;
 
-        public StudentView(View view) {
+        private StudentView(View view) {
             super(view);
             view.setOnClickListener(this);
-            title = view.findViewById(R.id.student_name);
+            name = view.findViewById(R.id.student_name);
+        }
+
+        private void setStudent(StudentContext student) {
+            this.student = student;
+            name.setText(student.getStudent().first_name + " " + student.getStudent().last_name);
         }
 
         @Override
         public void onClick(View v) {
-            Log.d("StudentView", "onClick " + getAdapterPosition() + " " + title.getText());
+            Log.d("StudentView", "onClick " + getAdapterPosition() + " " + name.getText());
         }
     }
 }
