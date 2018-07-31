@@ -18,4 +18,6 @@
     <string name="teachers">Teachers</string>
     <string name="students">Students</string>
     <string name="add_lesson">Add lesson</string>
+    <string name="topics">Topics</string>
+    <string name="choose_topics">Choose topics</string>
 </resources>

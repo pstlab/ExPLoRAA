@@ -605,7 +605,7 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     @SuppressLint("StaticFieldLeak")
-    public void addLesson(@NonNull final Context ctx, @NonNull final String name, @NonNull final LessonModel model) {
+    public void addTeachingLesson(@NonNull final Context ctx, @NonNull final String name, @NonNull final LessonModel model) {
         new AsyncTask<Object, Integer, Void>() {
             @Override
             protected Void doInBackground(Object... objects) {
@@ -633,7 +633,7 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     @SuppressLint("StaticFieldLeak")
-    public void removeLesson(@NonNull final Context ctx, @NonNull final TeachingLessonContext l_ctx) {
+    public void removeTeachingLesson(@NonNull final Context ctx, @NonNull final TeachingLessonContext l_ctx) {
         new AsyncTask<Long, Integer, Void>() {
             @Override
             protected Void doInBackground(Long... longs) {
@@ -653,6 +653,28 @@ public class ExPLoRAAContext implements LocationListener {
                 return null;
             }
         }.execute(l_ctx.getLesson().id);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void followLesson(@NonNull final Context ctx, @NonNull final Lesson lesson, @NonNull final ArrayList<CharSequence> interests) {
+        new AsyncTask<Object, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Object... objects) {
+                try {
+                    final Response<Void> response = resource.follow((long) objects[0], (long) objects[1], GSON.toJson(objects[2])).execute();
+                    if (!response.isSuccessful()) return null;
+                    addFollowingLesson(new FollowingLessonContext(lesson));
+                } catch (final IOException e) {
+                    Log.w(TAG, "Lesson following failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(user.id, lesson.id, interests);
     }
 
     @SuppressLint("StaticFieldLeak")

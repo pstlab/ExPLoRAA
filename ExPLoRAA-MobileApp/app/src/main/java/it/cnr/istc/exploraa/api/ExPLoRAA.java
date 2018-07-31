@@ -62,37 +62,37 @@ public interface ExPLoRAA {
 
     @FormUrlEncoded
     @PUT("login")
-    void follow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id, @Field("interests") String interests);
+    Call<Void> follow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id, @Field("interests") String interests);
 
     @FormUrlEncoded
     @PUT("login")
-    void unfollow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id);
+    Call<Void> unfollow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id);
 
     @FormUrlEncoded
     @PUT("login")
-    void answer_question(@Field("lesson_id") long lesson_id, @Field("question_id") int question_id, @Field("answer_id") int answer_id);
+    Call<Void> answer_question(@Field("lesson_id") long lesson_id, @Field("question_id") int question_id, @Field("answer_id") int answer_id);
 
     @FormUrlEncoded
     @PUT("login")
-    void solve(@Field("id") long id);
+    Call<Void> solve(@Field("id") long id);
 
     @FormUrlEncoded
     @PUT("login")
-    void set_time(@Field("lesson_id") long lesson_id, @Field("token_id") int token_id, @Field("time") long time);
+    Call<Void> set_time(@Field("lesson_id") long lesson_id, @Field("token_id") int token_id, @Field("time") long time);
 
     @FormUrlEncoded
     @PUT("login")
-    void play(@Field("id") long id);
+    Call<Void> play(@Field("id") long id);
 
     @FormUrlEncoded
     @PUT("login")
-    void pause(@Field("id") long id);
+    Call<Void> pause(@Field("id") long id);
 
     @FormUrlEncoded
     @PUT("login")
-    void stop(@Field("id") long id);
+    Call<Void> stop(@Field("id") long id);
 
     @FormUrlEncoded
     @PUT("login")
-    void go_to(@Field("id") long id, @Field("time") long time);
+    Call<Void> go_to(@Field("id") long id, @Field("time") long time);
 }
