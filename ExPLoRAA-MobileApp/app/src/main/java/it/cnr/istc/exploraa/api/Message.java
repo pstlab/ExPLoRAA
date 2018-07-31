@@ -16,14 +16,24 @@
  */
 package it.cnr.istc.exploraa.api;
 
-import java.util.Collection;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * @author Riccardo De Benedictis
  */
 public abstract class Message {
 
+    public static final MessageAdapter ADAPTER = new MessageAdapter();
     public MessageType message_type;
 
     public Message() {
@@ -36,7 +46,8 @@ public abstract class Message {
     public enum MessageType {
         NewParameter,
         RemoveParameter,
-        NewLesson,
+        FollowLesson,
+        UnfollowLesson,
         RemoveLesson,
         Token,
         TokenUpdate,
@@ -61,40 +72,60 @@ public abstract class Message {
 
     public static class RemoveParameter extends Message {
 
-        public Parameter parameter;
+        public String parameter;
 
         public RemoveParameter() {
         }
 
-        public RemoveParameter(Parameter parameter) {
+        public RemoveParameter(String parameter) {
             super(MessageType.RemoveParameter);
             this.parameter = parameter;
         }
     }
 
-    public static class NewLesson extends Message {
+    public static class FollowLesson extends Message {
 
-        public Lesson lesson;
+        @JsonAdapter(User.UserAdapter.class)
+        public User student;
+        public long lesson;
+        public Set<String> interests;
 
-        public NewLesson() {
+        public FollowLesson() {
         }
 
-        public NewLesson(Lesson lesson) {
-            super(MessageType.NewLesson);
+        public FollowLesson(User student, long lesson, Set<String> interests) {
+            super(MessageType.FollowLesson);
+            this.student = student;
+            this.lesson = lesson;
+            this.interests = interests;
+        }
+    }
+
+    public static class UnfollowLesson extends Message {
+
+        public long student;
+        public long lesson;
+
+        public UnfollowLesson() {
+        }
+
+        public UnfollowLesson(long student, long lesson) {
+            super(MessageType.UnfollowLesson);
+            this.student = student;
             this.lesson = lesson;
         }
     }
 
     public static class RemoveLesson extends Message {
 
-        public long lesson_id;
+        public long lesson;
 
         public RemoveLesson() {
         }
 
-        public RemoveLesson(long lesson_id) {
+        public RemoveLesson(long lesson) {
             super(MessageType.RemoveLesson);
-            this.lesson_id = lesson_id;
+            this.lesson = lesson;
         }
     }
 
@@ -135,25 +166,25 @@ public abstract class Message {
         public TokenUpdate() {
         }
 
-        public TokenUpdate(long lesson_id, int id, Long min, Long max, long val) {
+        public TokenUpdate(long lesson_id, int id, Long min, Long max, long time) {
             super(MessageType.TokenUpdate);
             this.lesson_id = lesson_id;
             this.id = id;
             this.min = min;
             this.max = max;
-            this.time = val;
+            this.time = time;
         }
     }
 
     public static class RemoveToken extends Message {
 
         public long lesson_id;
-        public int id;
+        public long id;
 
         public RemoveToken() {
         }
 
-        public RemoveToken(long lesson_id, int id) {
+        public RemoveToken(long lesson_id, long id) {
             super(MessageType.RemoveToken);
             this.lesson_id = lesson_id;
             this.id = id;
@@ -165,17 +196,17 @@ public abstract class Message {
         public StimulusType stimulus_type;
         public long lesson_id;
         public int id;
-        public Collection<Long> students;
+        public Set<Long> students;
         public long time;
 
         public Stimulus() {
         }
 
-        public Stimulus(StimulusType stimulus_type, long lesson_id, int event_id, Collection<Long> students, long time) {
+        public Stimulus(StimulusType stimulus_type, long lesson_id, int id, Set<Long> students, long time) {
             super(MessageType.Stimulus);
             this.stimulus_type = stimulus_type;
             this.lesson_id = lesson_id;
-            this.id = event_id;
+            this.id = id;
             this.students = students;
             this.time = time;
         }
@@ -191,8 +222,8 @@ public abstract class Message {
             public TextStimulus() {
             }
 
-            public TextStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String content) {
-                super(StimulusType.Text, lesson_id, event_id, students, time);
+            public TextStimulus(long lesson_id, int id, Set<Long> students, long time, String content) {
+                super(StimulusType.Text, lesson_id, id, students, time);
                 this.content = content;
             }
         }
@@ -206,8 +237,8 @@ public abstract class Message {
             public QuestionStimulus() {
             }
 
-            public QuestionStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String question, List<String> answers, Integer answer) {
-                super(StimulusType.Question, lesson_id, event_id, students, time);
+            public QuestionStimulus(long lesson_id, int id, Set<Long> students, long time, String question, List<String> answers, Integer answer) {
+                super(StimulusType.Question, lesson_id, id, students, time);
                 this.question = question;
                 this.answers = answers;
                 this.answer = answer;
@@ -215,17 +246,17 @@ public abstract class Message {
 
             public static class Answer extends Message {
 
-                public long lessonId;
-                public int questionId;
+                public long lesson_id;
+                public int question_id;
                 public int answer;
 
                 public Answer() {
                 }
 
-                public Answer(long lessonId, int questionId, int answer) {
+                public Answer(long lesson_id, int question_id, int answer) {
                     super(MessageType.Answer);
-                    this.lessonId = lessonId;
-                    this.questionId = questionId;
+                    this.lesson_id = lesson_id;
+                    this.question_id = question_id;
                     this.answer = answer;
                 }
             }
@@ -239,8 +270,8 @@ public abstract class Message {
             public URLStimulus() {
             }
 
-            public URLStimulus(long lesson_id, int event_id, Collection<Long> students, long time, String content, String url) {
-                super(StimulusType.URL, lesson_id, event_id, students, time);
+            public URLStimulus(long lesson_id, int id, Set<Long> students, long time, String content, String url) {
+                super(StimulusType.URL, lesson_id, id, students, time);
                 this.content = content;
                 this.url = url;
             }
@@ -259,6 +290,336 @@ public abstract class Message {
             super(MessageType.RemoveStimulus);
             this.lesson_id = lesson_id;
             this.id = id;
+        }
+    }
+
+    public static class MessageAdapter extends TypeAdapter<Message> {
+
+        @Override
+        public void write(JsonWriter out, Message value) throws IOException {
+            out.beginObject();
+            out.name("message_type").value(value.message_type.name());
+            switch (value.message_type) {
+                case NewParameter:
+                    Parameter.ADAPTER.write(out.name("parameter"), ((NewParameter) value).parameter);
+                    break;
+                case RemoveParameter:
+                    out.name("parameter").value(((RemoveParameter) value).parameter);
+                    break;
+                case FollowLesson:
+                    out.name("student");
+                    User.ADAPTER.write(out.name("student"), ((FollowLesson) value).student);
+                    out.name("lesson").value(((FollowLesson) value).lesson);
+                    out.name("interests");
+                    out.beginArray();
+                    for (String interest : ((FollowLesson) value).interests)
+                        out.value(interest);
+                    out.endArray();
+                    break;
+                case UnfollowLesson:
+                    out.name("student").value(((UnfollowLesson) value).student);
+                    out.name("lesson").value(((UnfollowLesson) value).lesson);
+                    break;
+                case RemoveLesson:
+                    out.name("lesson").value(((RemoveLesson) value).lesson);
+                    break;
+                case Token:
+                    out.name("lesson_id").value(((Token) value).lesson_id);
+                    out.name("id").value(((Token) value).id);
+                    if (((Token) value).cause != null) {
+                        out.name("cause").value(((Token) value).cause);
+                    }
+                    if (((Token) value).min != null) {
+                        out.name("min").value(((Token) value).min);
+                    }
+                    if (((Token) value).max != null) {
+                        out.name("max").value(((Token) value).max);
+                    }
+                    out.name("time").value(((Token) value).time);
+                    if (((Token) value).refEvent != null) {
+                        out.name("refEvent").value(((Token) value).refEvent);
+                    }
+                    if (((Token) value).question != null) {
+                        out.name("question").value(((Token) value).question);
+                    }
+                    break;
+                case TokenUpdate:
+                    out.name("lesson_id").value(((TokenUpdate) value).lesson_id);
+                    out.name("id").value(((TokenUpdate) value).id);
+                    if (((TokenUpdate) value).min != null) {
+                        out.name("min").value(((TokenUpdate) value).min);
+                    }
+                    if (((TokenUpdate) value).max != null) {
+                        out.name("max").value(((TokenUpdate) value).max);
+                    }
+                    out.name("time").value(((TokenUpdate) value).time);
+                    break;
+                case RemoveToken:
+                    out.name("lesson_id").value(((RemoveToken) value).lesson_id);
+                    out.name("id").value(((RemoveToken) value).id);
+                    break;
+                case Stimulus:
+                    Stimulus st = (Stimulus) value;
+                    out.name("stimulus_type").value(st.stimulus_type.name());
+                    out.name("lesson_id").value(st.lesson_id);
+                    out.name("id").value(st.id);
+                    out.name("students");
+                    out.beginArray();
+                    for (Long student : st.students)
+                        out.value(student);
+                    out.endArray();
+                    out.name("time").value(st.time);
+                    switch (st.stimulus_type) {
+                        case Text:
+                            out.name("content").value(((Stimulus.TextStimulus) st).content);
+                            break;
+                        case Question:
+                            out.name("question").value(((Stimulus.QuestionStimulus) st).question);
+                            out.name("answers");
+                            out.beginArray();
+                            for (String answer : ((Stimulus.QuestionStimulus) st).answers)
+                                out.value(answer);
+                            out.endArray();
+                            if (((Stimulus.QuestionStimulus) st).answer != null)
+                                out.name("answer").value(((Stimulus.QuestionStimulus) st).answer);
+                            break;
+                        case URL:
+                            out.name("content").value(((Stimulus.URLStimulus) st).content);
+                            out.name("url").value(((Stimulus.URLStimulus) st).url);
+                            break;
+                        default:
+                            throw new AssertionError(st.stimulus_type.name());
+                    }
+                    break;
+                case Answer:
+                    out.name("lesson_id").value(((Stimulus.QuestionStimulus.Answer) value).lesson_id);
+                    out.name("question_id").value(((Stimulus.QuestionStimulus.Answer) value).question_id);
+                    out.name("answer").value(((Stimulus.QuestionStimulus.Answer) value).answer);
+                    break;
+                case RemoveStimulus:
+                    out.name("lesson_id").value(((RemoveStimulus) value).lesson_id);
+                    out.name("id").value(((RemoveStimulus) value).id);
+                    break;
+            }
+            out.endObject();
+        }
+
+        @Override
+        public Message read(JsonReader in) throws IOException {
+            in.beginObject();
+            in.nextName();
+            Message m = null;
+            switch (MessageType.valueOf(in.nextString())) {
+                case NewParameter:
+                    in.nextName();
+                    m = new NewParameter(Parameter.ADAPTER.read(in));
+                    break;
+                case RemoveParameter:
+                    in.nextName();
+                    m = new RemoveParameter(in.nextString());
+                    break;
+                case FollowLesson:
+                    m = new FollowLesson();
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "interests":
+                                ((FollowLesson) m).interests = new HashSet<>();
+                                in.beginArray();
+                                while (in.peek() != JsonToken.END_ARRAY)
+                                    ((FollowLesson) m).interests.add(in.nextString());
+                                in.endArray();
+                                break;
+                            case "student":
+                                ((FollowLesson) m).student = User.ADAPTER.read(in);
+                                break;
+                            case "lesson":
+                                ((FollowLesson) m).lesson = in.nextLong();
+                                break;
+                        }
+                    break;
+                case UnfollowLesson:
+                    m = new UnfollowLesson();
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "student":
+                                ((UnfollowLesson) m).student = in.nextLong();
+                                break;
+                            case "lesson":
+                                ((UnfollowLesson) m).lesson = in.nextLong();
+                                break;
+                        }
+                    break;
+                case RemoveLesson:
+                    m = new RemoveLesson();
+                    in.nextName();
+                    ((RemoveLesson) m).lesson = in.nextLong();
+                    break;
+                case Token:
+                    m = new Token();
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "lesson_id":
+                                ((Token) m).lesson_id = in.nextLong();
+                                break;
+                            case "id":
+                                ((Token) m).id = in.nextInt();
+                                break;
+                            case "cause":
+                                ((Token) m).cause = in.nextInt();
+                                break;
+                            case "min":
+                                ((Token) m).min = in.nextLong();
+                                break;
+                            case "max":
+                                ((Token) m).max = in.nextLong();
+                                break;
+                            case "time":
+                                ((Token) m).time = in.nextLong();
+                                break;
+                            case "refEvent":
+                                ((Token) m).refEvent = in.nextString();
+                                break;
+                            case "question":
+                                ((Token) m).question = in.nextInt();
+                                break;
+                        }
+                    break;
+                case TokenUpdate:
+                    m = new TokenUpdate();
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "lesson_id":
+                                ((TokenUpdate) m).lesson_id = in.nextLong();
+                                break;
+                            case "id":
+                                ((TokenUpdate) m).id = in.nextInt();
+                                break;
+                            case "min":
+                                ((TokenUpdate) m).min = in.nextLong();
+                                break;
+                            case "max":
+                                ((TokenUpdate) m).max = in.nextLong();
+                                break;
+                            case "time":
+                                ((TokenUpdate) m).time = in.nextLong();
+                                break;
+                        }
+                    break;
+                case RemoveToken:
+                    m = new RemoveToken();
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "lesson_id":
+                                ((RemoveToken) m).lesson_id = in.nextLong();
+                                break;
+                            case "id":
+                                ((RemoveToken) m).id = in.nextInt();
+                                break;
+                        }
+                    break;
+                case Stimulus: {
+                    long lesson_id = -1;
+                    int id = -1;
+                    Set<Long> students = new HashSet<>();
+                    long time = -1;
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "lesson_id":
+                                lesson_id = in.nextLong();
+                                break;
+                            case "id":
+                                id = in.nextInt();
+                                break;
+                            case "students":
+                                in.beginArray();
+                                while (in.peek() != JsonToken.END_ARRAY)
+                                    students.add(in.nextLong());
+                                in.endArray();
+                                break;
+                            case "time":
+                                time = in.nextLong();
+                                break;
+                            case "stimulus_type":
+                                switch (Stimulus.StimulusType.valueOf(in.nextString())) {
+                                    case Text:
+                                        in.nextName();
+                                        m = new Stimulus.TextStimulus(lesson_id, id, students, time, in.nextString());
+                                        break;
+                                    case Question:
+                                        String question;
+                                        List<String> answers = new ArrayList<>();
+                                        Integer answer;
+                                        while (in.hasNext())
+                                            switch (in.nextName()) {
+                                                case "question":
+                                                    question = in.nextString();
+                                                    break;
+                                                case "answers":
+                                                    in.beginArray();
+                                                    while (in.peek() != JsonToken.END_ARRAY)
+                                                        answers.add(in.nextString());
+                                                    in.endArray();
+                                                    break;
+                                                case "answer":
+                                                    answer = in.nextInt();
+                                                    break;
+                                            }
+                                        m = new Stimulus.QuestionStimulus(lesson_id, id, students, time, question, answers, answer);
+                                        break;
+                                    case URL:
+                                        String content;
+                                        String url;
+                                        while (in.hasNext())
+                                            switch (in.nextName()) {
+                                                case "content":
+                                                    content = in.nextString();
+                                                    break;
+                                                case "url":
+                                                    url = in.nextString();
+                                                    break;
+                                            }
+                                        m = new Stimulus.URLStimulus(lesson_id, id, students, time, content, url);
+                                        break;
+                                }
+                        }
+                    break;
+                }
+                case Answer: {
+                    long lesson_id = -1;
+                    int question_id = -1;
+                    int answer = -1;
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "lesson_id":
+                                lesson_id = in.nextLong();
+                                break;
+                            case "question_id":
+                                lesson_id = in.nextInt();
+                                break;
+                            case "answer":
+                                answer = in.nextInt();
+                                break;
+                        }
+                    m = new Stimulus.QuestionStimulus.Answer(lesson_id, question_id, answer);
+                    break;
+                }
+                case RemoveStimulus:
+                    long lesson_id = -1;
+                    int id = -1;
+                    while (in.hasNext())
+                        switch (in.nextName()) {
+                            case "lesson_id":
+                                lesson_id = in.nextLong();
+                                break;
+                            case "id":
+                                lesson_id = in.nextInt();
+                                break;
+                        }
+                    m = new RemoveStimulus(lesson_id, id);
+                    break;
+            }
+            in.endObject();
+            return null;
         }
     }
 }
