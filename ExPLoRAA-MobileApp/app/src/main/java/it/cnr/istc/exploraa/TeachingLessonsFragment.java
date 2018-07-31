@@ -7,6 +7,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -113,13 +114,19 @@ public class TeachingLessonsFragment extends Fragment {
         }
     }
 
-    private static class TeachingLessonView extends RecyclerView.ViewHolder {
+    private static class TeachingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public TextView title;
 
         public TeachingLessonView(View view) {
             super(view);
+            view.setOnClickListener(this);
             title = view.findViewById(R.id.teaching_lesson_name);
+        }
+
+        @Override
+        public void onClick(View v) {
+            Log.d("TeachingLessonView", "onClick " + getAdapterPosition() + " " + title.getText());
         }
     }
 }

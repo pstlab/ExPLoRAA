@@ -68,13 +68,19 @@ public class EnrollActivity extends AppCompatActivity {
         }
     }
 
-    private static class EnrollingLessonView extends RecyclerView.ViewHolder {
+    private static class EnrollingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         public TextView title;
 
         public EnrollingLessonView(View view) {
             super(view);
+            view.setOnClickListener(this);
             title = view.findViewById(R.id.enrolling_lesson_name);
+        }
+
+        @Override
+        public void onClick(View v) {
+            Log.d("EnrollingLessonView", "onClick " + getAdapterPosition() + " " + title.getText());
         }
     }
 }
