@@ -54,6 +54,7 @@ public class FollowingLessonsFragment extends Fragment {
                     to_remove.add(c_lessons.get(pos));
                 for (FollowingLessonContext ctx : to_remove)
                     ExPLoRAAContext.getInstance().unfollowLesson(getContext(), ctx);
+                following_lessons_adapter.selected_lessons.clear();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

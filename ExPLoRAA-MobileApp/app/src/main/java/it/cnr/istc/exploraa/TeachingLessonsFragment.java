@@ -54,6 +54,7 @@ public class TeachingLessonsFragment extends Fragment {
                     to_remove.add(c_lessons.get(pos));
                 for (TeachingLessonContext ctx : to_remove)
                     ExPLoRAAContext.getInstance().removeTeachingLesson(getContext(), ctx);
+                teaching_lessons_adapter.selected_lessons.clear();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
