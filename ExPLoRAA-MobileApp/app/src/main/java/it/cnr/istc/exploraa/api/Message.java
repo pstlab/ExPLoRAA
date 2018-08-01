@@ -522,7 +522,7 @@ public abstract class Message {
                                 break;
                         }
                     break;
-                case Stimulus: {
+                case Stimulus:
                     Stimulus st = null;
                     while (in.hasNext()) {
                         switch (in.nextName()) {
@@ -570,26 +570,25 @@ public abstract class Message {
                             case "stimulus_type":
                                 switch (Stimulus.StimulusType.valueOf(in.nextString())) {
                                     case Text:
-                                        in.nextName();
-                                        m = new Stimulus.TextStimulus();
-                                        m.message_type = MessageType.Stimulus;
+                                        st = new Stimulus.TextStimulus();
+                                        st.message_type = MessageType.Stimulus;
                                         ((Stimulus.TextStimulus) st).stimulus_type = Stimulus.StimulusType.Text;
                                         break;
                                     case Question:
-                                        m = new Stimulus.QuestionStimulus();
-                                        m.message_type = MessageType.Stimulus;
-                                        ((Stimulus.TextStimulus) st).stimulus_type = Stimulus.StimulusType.Question;
+                                        st = new Stimulus.QuestionStimulus();
+                                        st.message_type = MessageType.Stimulus;
+                                        ((Stimulus.QuestionStimulus) st).stimulus_type = Stimulus.StimulusType.Question;
                                         break;
                                     case URL:
-                                        m = new Stimulus.URLStimulus();
-                                        m.message_type = MessageType.Stimulus;
-                                        ((Stimulus.TextStimulus) st).stimulus_type = Stimulus.StimulusType.URL;
+                                        st = new Stimulus.URLStimulus();
+                                        st.message_type = MessageType.Stimulus;
+                                        ((Stimulus.URLStimulus) st).stimulus_type = Stimulus.StimulusType.URL;
                                         break;
                                 }
                         }
                     }
+                    m = st;
                     break;
-                }
                 case Answer: {
                     m = new Stimulus.QuestionStimulus.Answer();
                     m.message_type = MessageType.Answer;
