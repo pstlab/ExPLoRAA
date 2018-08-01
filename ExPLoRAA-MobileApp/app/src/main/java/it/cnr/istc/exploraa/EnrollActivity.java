@@ -52,6 +52,7 @@ public class EnrollActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 final ArrayList<CharSequence> topics = data.getCharSequenceArrayListExtra("topics");
                 ExPLoRAAContext.getInstance().followLesson(this, choosen_lesson, topics);
+                finish();
             }
         }
     }

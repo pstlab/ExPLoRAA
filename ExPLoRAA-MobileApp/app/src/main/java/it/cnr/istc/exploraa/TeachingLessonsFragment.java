@@ -1,18 +1,17 @@
 package it.cnr.istc.exploraa;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
@@ -24,6 +23,7 @@ public class TeachingLessonsFragment extends Fragment {
 
     private RecyclerView teaching_lessons_recycler_view;
     private TeachingLessonsAdapter teaching_lessons_adapter;
+    private MenuItem remove_teaching_lessons_menu_item;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -34,6 +34,7 @@ public class TeachingLessonsFragment extends Fragment {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.teaching_lessons_menu, menu);
+        remove_teaching_lessons_menu_item = menu.findItem(R.id.remove_teaching_lessons_menu_item);
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -42,6 +43,10 @@ public class TeachingLessonsFragment extends Fragment {
         switch (item.getItemId()) {
             case R.id.add_teaching_lesson_menu_item:
                 startActivity(new Intent(getActivity(), NewLessonActivity.class));
+                return true;
+            case R.id.remove_teaching_lessons_menu_item:
+                for (int pos : teaching_lessons_adapter.selected_lessons) {
+                }
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -95,7 +100,7 @@ public class TeachingLessonsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull TeachingLessonView holder, int position) {
-            holder.setLesson(ExPLoRAAContext.getInstance().getTeachingLessons().get(position));
+            holder.setLesson(position, ExPLoRAAContext.getInstance().getTeachingLessons().get(position));
         }
 
         @Override
@@ -124,56 +129,57 @@ public class TeachingLessonsFragment extends Fragment {
         }
     }
 
-    private static class TeachingLessonView extends RecyclerView.ViewHolder implements View.OnTouchListener {
+    private static class TeachingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
         private TeachingLessonContext lesson;
         private TextView title;
-        private final GestureDetector gestureDetector;
+        private TeachingLessonsFragment frgmnt;
 
-        private TeachingLessonView(final TeachingLessonsFragment frgmnt, View view) {
+        private TeachingLessonView(final TeachingLessonsFragment frgmnt, final View view) {
             super(view);
-            view.setOnTouchListener(this);
-            gestureDetector = new GestureDetector(frgmnt.getContext(), new GestureDetector.SimpleOnGestureListener() {
-                public void onLongPress(MotionEvent e) {
-                    int pos = getAdapterPosition();
-                    if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos)) {
-                        frgmnt.teaching_lessons_adapter.selected_lessons.remove(pos);
-                    } else {
-                        frgmnt.teaching_lessons_adapter.selected_lessons.add(pos);
-                    }
-                    frgmnt.teaching_lessons_adapter.teachingLessonUpdated(pos, lesson);
-                }
-
-                @Override
-                public boolean onDown(MotionEvent e) {
-                    if (frgmnt.teaching_lessons_adapter.selected_lessons.isEmpty()) {
-                        // we show the teaching lesson's details..
-                        final Intent intent = new Intent(frgmnt.getContext(), TeachingLessonActivity.class);
-                        intent.putExtra("lesson", lesson);
-                        frgmnt.startActivity(intent);
-                    } else {
-                        int pos = getAdapterPosition();
-                        if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos)) {
-                            frgmnt.teaching_lessons_adapter.selected_lessons.remove(pos);
-                        } else {
-                            frgmnt.teaching_lessons_adapter.selected_lessons.add(pos);
-                        }
-                        frgmnt.teaching_lessons_adapter.teachingLessonUpdated(pos, lesson);
-                    }
-                    return true;
-                }
-            });
+            this.frgmnt = frgmnt;
+            view.setOnClickListener(this);
+            view.setOnLongClickListener(this);
             title = view.findViewById(R.id.teaching_lesson_name);
         }
 
-        private void setLesson(TeachingLessonContext lesson) {
+        private void setLesson(int pos, TeachingLessonContext lesson) {
             this.lesson = lesson;
             title.setText(lesson.getLesson().name);
+            if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos))
+                itemView.setBackgroundColor(Color.LTGRAY);
+            else
+                itemView.setBackground(null);
         }
 
         @Override
-        public boolean onTouch(View v, MotionEvent event) {
-            gestureDetector.onTouchEvent(event);
+        public void onClick(View v) {
+            if (frgmnt.teaching_lessons_adapter.selected_lessons.isEmpty()) {
+                // we show the teaching lesson's details..
+                final Intent intent = new Intent(frgmnt.getContext(), TeachingLessonActivity.class);
+                intent.putExtra("lesson_id", lesson.getLesson().id);
+                frgmnt.startActivity(intent);
+            } else {
+                int pos = getAdapterPosition();
+                if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos)) {
+                    frgmnt.teaching_lessons_adapter.selected_lessons.remove(pos);
+                    if (frgmnt.teaching_lessons_adapter.selected_lessons.isEmpty())
+                        frgmnt.remove_teaching_lessons_menu_item.setVisible(false);
+                } else frgmnt.teaching_lessons_adapter.selected_lessons.add(pos);
+                frgmnt.teaching_lessons_adapter.teachingLessonUpdated(pos, lesson);
+            }
+        }
+
+        @Override
+        public boolean onLongClick(View v) {
+            int pos = getAdapterPosition();
+            if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos))
+                frgmnt.teaching_lessons_adapter.selected_lessons.remove(pos);
+            else {
+                frgmnt.teaching_lessons_adapter.selected_lessons.add(pos);
+                frgmnt.remove_teaching_lessons_menu_item.setVisible(true);
+            }
+            frgmnt.teaching_lessons_adapter.teachingLessonUpdated(pos, lesson);
             return true;
         }
     }

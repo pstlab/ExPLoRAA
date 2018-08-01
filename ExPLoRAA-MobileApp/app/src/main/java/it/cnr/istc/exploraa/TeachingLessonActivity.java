@@ -13,7 +13,8 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teaching_lesson);
-        ctx = (TeachingLessonContext) getIntent().getSerializableExtra("lesson");
+        long lesson_id = getIntent().getLongExtra("lesson_id", -1);
+        ctx = ExPLoRAAContext.getInstance().getTeachingLesson(getIntent().getLongExtra("lesson_id", -1));
     }
 
     @Override

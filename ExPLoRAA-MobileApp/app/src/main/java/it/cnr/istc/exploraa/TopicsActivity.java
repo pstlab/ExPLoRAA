@@ -28,7 +28,7 @@ public class TopicsActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_topics);
 
-        topics_recycler_view = findViewById(R.id.top);
+        topics_recycler_view = findViewById(R.id.topics_recycler_view);
         topics_adapter = new TopicsAdapter(getIntent().getCharSequenceArrayListExtra("topics"));
 
         // use this setting to improve performance if you know that changes

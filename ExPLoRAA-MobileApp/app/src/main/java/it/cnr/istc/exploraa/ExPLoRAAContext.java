@@ -362,6 +362,10 @@ public class ExPLoRAAContext implements LocationListener {
             listener.stimulusRemoved(pos, stimulus);
     }
 
+    public FollowingLessonContext getFollowingLesson(final long id) {
+        return id_following_lessons.get(id);
+    }
+
     public List<FollowingLessonContext> getFollowingLessons() {
         return Collections.unmodifiableList(following_lessons);
     }
@@ -411,6 +415,10 @@ public class ExPLoRAAContext implements LocationListener {
             listener.followingLessonRemoved(pos, l_ctx);
     }
 
+    public TeacherContext getTeacher(final long id) {
+        return id_teachers.get(id);
+    }
+
     public List<TeacherContext> getTeachers() {
         return Collections.unmodifiableList(teachers);
     }
@@ -442,6 +450,10 @@ public class ExPLoRAAContext implements LocationListener {
 
     public List<LessonModel> getModels() {
         return Collections.unmodifiableList(models);
+    }
+
+    public TeachingLessonContext getTeachingLesson(final long id) {
+        return id_teaching_lessons.get(id);
     }
 
     public List<TeachingLessonContext> getTeachingLessons() {
@@ -491,6 +503,10 @@ public class ExPLoRAAContext implements LocationListener {
         id_teaching_lesson_listener.remove(l_ctx.getLesson().id);
         for (TeachingLessonsListener listener : teaching_lessons_listeners)
             listener.teachingLessonRemoved(pos, l_ctx);
+    }
+
+    public StudentContext getStudent(final long id) {
+        return id_students.get(id);
     }
 
     public List<StudentContext> getStudents() {

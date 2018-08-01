@@ -14,7 +14,7 @@ public class FollowingLessonActivity extends AppCompatActivity implements Follow
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_following_lesson);
-        ctx = (FollowingLessonContext) getIntent().getSerializableExtra("lesson");
+        ctx = ExPLoRAAContext.getInstance().getFollowingLesson(getIntent().getLongExtra("lesson_id", -1));
     }
 
     @Override
