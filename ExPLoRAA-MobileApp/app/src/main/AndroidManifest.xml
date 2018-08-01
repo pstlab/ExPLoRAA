@@ -25,7 +25,9 @@
         <activity android:name=".NewUserActivity" />
         <activity android:name=".EnrollActivity" />
         <activity android:name=".NewLessonActivity" />
-        <activity android:name=".TopicsActivity"></activity>
+        <activity android:name=".TopicsActivity" />
+        <activity android:name=".TeachingLessonActivity" />
+        <activity android:name=".FollowingLessonActivity"></activity>
     </application>
 
 </manifest>

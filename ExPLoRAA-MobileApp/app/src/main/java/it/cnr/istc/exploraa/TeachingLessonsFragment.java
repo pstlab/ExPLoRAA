@@ -7,14 +7,18 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import java.util.HashSet;
+import java.util.Set;
 
 public class TeachingLessonsFragment extends Fragment {
 
@@ -53,7 +57,7 @@ public class TeachingLessonsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         teaching_lessons_recycler_view = view.findViewById(R.id.teaching_lessons_recycler_view);
-        teaching_lessons_adapter = new TeachingLessonsAdapter();
+        teaching_lessons_adapter = new TeachingLessonsAdapter(this);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -76,10 +80,17 @@ public class TeachingLessonsFragment extends Fragment {
 
     private static class TeachingLessonsAdapter extends RecyclerView.Adapter<TeachingLessonView> implements ExPLoRAAContext.TeachingLessonsListener {
 
+        private TeachingLessonsFragment frgmnt;
+        private Set<Integer> selected_lessons = new HashSet<>();
+
+        private TeachingLessonsAdapter(TeachingLessonsFragment frgmnt) {
+            this.frgmnt = frgmnt;
+        }
+
         @NonNull
         @Override
         public TeachingLessonView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new TeachingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.teaching_lesson_row, parent, false));
+            return new TeachingLessonView(frgmnt, LayoutInflater.from(parent.getContext()).inflate(R.layout.teaching_lesson_row, parent, false));
         }
 
         @Override
@@ -113,14 +124,45 @@ public class TeachingLessonsFragment extends Fragment {
         }
     }
 
-    private static class TeachingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private static class TeachingLessonView extends RecyclerView.ViewHolder implements View.OnTouchListener {
 
         private TeachingLessonContext lesson;
         private TextView title;
+        private final GestureDetector gestureDetector;
 
-        private TeachingLessonView(View view) {
+        private TeachingLessonView(final TeachingLessonsFragment frgmnt, View view) {
             super(view);
-            view.setOnClickListener(this);
+            view.setOnTouchListener(this);
+            gestureDetector = new GestureDetector(frgmnt.getContext(), new GestureDetector.SimpleOnGestureListener() {
+                public void onLongPress(MotionEvent e) {
+                    int pos = getAdapterPosition();
+                    if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos)) {
+                        frgmnt.teaching_lessons_adapter.selected_lessons.remove(pos);
+                    } else {
+                        frgmnt.teaching_lessons_adapter.selected_lessons.add(pos);
+                    }
+                    frgmnt.teaching_lessons_adapter.teachingLessonUpdated(pos, lesson);
+                }
+
+                @Override
+                public boolean onDown(MotionEvent e) {
+                    if (frgmnt.teaching_lessons_adapter.selected_lessons.isEmpty()) {
+                        // we show the teaching lesson's details..
+                        final Intent intent = new Intent(frgmnt.getContext(), TeachingLessonActivity.class);
+                        intent.putExtra("lesson", lesson);
+                        frgmnt.startActivity(intent);
+                    } else {
+                        int pos = getAdapterPosition();
+                        if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos)) {
+                            frgmnt.teaching_lessons_adapter.selected_lessons.remove(pos);
+                        } else {
+                            frgmnt.teaching_lessons_adapter.selected_lessons.add(pos);
+                        }
+                        frgmnt.teaching_lessons_adapter.teachingLessonUpdated(pos, lesson);
+                    }
+                    return true;
+                }
+            });
             title = view.findViewById(R.id.teaching_lesson_name);
         }
 
@@ -130,8 +172,9 @@ public class TeachingLessonsFragment extends Fragment {
         }
 
         @Override
-        public void onClick(View v) {
-            Log.d("TeachingLessonView", "onClick " + getAdapterPosition() + " " + title.getText());
+        public boolean onTouch(View v, MotionEvent event) {
+            gestureDetector.onTouchEvent(event);
+            return true;
         }
     }
 }

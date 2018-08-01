@@ -20,4 +20,5 @@
     <string name="add_lesson">Add lesson</string>
     <string name="topics">Topics</string>
     <string name="choose_topics">Choose topics</string>
+    <string name="remove_lessons">Remove lessons</string>
 </resources>

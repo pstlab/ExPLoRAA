@@ -7,4 +7,10 @@
         android:icon="@android:drawable/ic_menu_add"
         android:title="@string/add_lesson"
         app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/remove_following_lessons_menu_item"
+        android:icon="@android:drawable/ic_menu_delete"
+        android:title="@string/remove_lessons"
+        android:visible="false"
+        app:showAsAction="ifRoom" />
 </menu>

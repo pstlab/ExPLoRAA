@@ -2,6 +2,7 @@ package it.cnr.istc.exploraa;
 
 import android.util.LongSparseArray;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -9,7 +10,7 @@ import java.util.List;
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.Message;
 
-public class TeachingLessonContext {
+public class TeachingLessonContext implements Serializable {
 
     private final Lesson lesson;
     private final List<TokenRow> tokens = new ArrayList<>();

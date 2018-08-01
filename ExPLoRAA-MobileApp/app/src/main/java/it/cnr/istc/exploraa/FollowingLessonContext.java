@@ -1,5 +1,6 @@
 package it.cnr.istc.exploraa;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -7,7 +8,7 @@ import java.util.List;
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.Message;
 
-public class FollowingLessonContext {
+public class FollowingLessonContext implements Serializable {
 
     private final Lesson lesson;
     private final List<Message.Stimulus> stimuli = new ArrayList<>();
