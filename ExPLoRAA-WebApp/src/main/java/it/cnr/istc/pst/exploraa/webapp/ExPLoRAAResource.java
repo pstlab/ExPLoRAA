@@ -335,6 +335,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Path("follow")
     @Override
     public void follow(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id, @FormParam("interests") String interests) {
+        LOG.log(Level.INFO, "User {0} is trying to follow lesson {1} with interests {2}", new Object[]{user_id, lesson_id, interests});
         try {
             utx.begin();
             UserEntity student = em.find(UserEntity.class, user_id);
@@ -371,6 +372,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Path("unfollow")
     @Override
     public void unfollow(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id) {
+        LOG.log(Level.INFO, "User {0} is trying to unfollow lesson {1}", new Object[]{user_id, lesson_id});
         try {
             utx.begin();
             UserEntity student = em.find(UserEntity.class, user_id);

@@ -694,6 +694,28 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     @SuppressLint("StaticFieldLeak")
+    public void unfollowLesson(@NonNull final Context ctx, @NonNull final FollowingLessonContext l_ctx) {
+        new AsyncTask<Object, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Object... objects) {
+                try {
+                    final Response<Void> response = resource.unfollow((long) objects[0], (long) objects[1]).execute();
+                    if (!response.isSuccessful()) return null;
+                    removeFollowingLesson(l_ctx);
+                } catch (final IOException e) {
+                    Log.w(TAG, "Lesson following failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(user.id, l_ctx.getLesson().id);
+    }
+
+    @SuppressLint("StaticFieldLeak")
     public Collection<Lesson> getLessons(@NonNull final Context ctx) throws ExecutionException, InterruptedException {
         return new AsyncTask<Void, Integer, Collection<Lesson>>() {
             @Override

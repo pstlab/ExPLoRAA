@@ -16,7 +16,10 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 public class TeachingLessonsFragment extends Fragment {
@@ -45,8 +48,12 @@ public class TeachingLessonsFragment extends Fragment {
                 startActivity(new Intent(getActivity(), NewLessonActivity.class));
                 return true;
             case R.id.remove_teaching_lessons_menu_item:
-                for (int pos : teaching_lessons_adapter.selected_lessons) {
-                }
+                Collection<TeachingLessonContext> to_remove = new ArrayList<>(teaching_lessons_adapter.selected_lessons.size());
+                final List<TeachingLessonContext> c_lessons = ExPLoRAAContext.getInstance().getTeachingLessons();
+                for (int pos : teaching_lessons_adapter.selected_lessons)
+                    to_remove.add(c_lessons.get(pos));
+                for (TeachingLessonContext ctx : to_remove)
+                    ExPLoRAAContext.getInstance().removeTeachingLesson(getContext(), ctx);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
