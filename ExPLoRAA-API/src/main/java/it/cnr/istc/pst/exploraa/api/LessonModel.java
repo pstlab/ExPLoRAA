@@ -250,14 +250,14 @@ public class LessonModel {
         public static final RelationAdapter ADAPTER = new RelationAdapter();
         public String from;
         public String to;
-        public double lb;
-        public double ub;
+        public Long lb;
+        public Long ub;
         public TimeUnit unit;
 
         public Relation() {
         }
 
-        public Relation(String from, String to, double lb, double ub, TimeUnit unit) {
+        public Relation(String from, String to, Long lb, Long ub, TimeUnit unit) {
             this.from = from;
             this.to = to;
             this.lb = lb;

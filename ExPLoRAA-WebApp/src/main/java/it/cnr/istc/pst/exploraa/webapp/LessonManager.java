@@ -32,6 +32,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -97,10 +98,12 @@ public class LessonManager implements TemporalListener {
 
         // we enforce the temporal relations..
         for (LessonModel.Relation rel : lesson.model.relations) {
+            double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
+            double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
             if (rel.from.equals(THIS)) {
-                network.addConstraint(0, c_tks.get(rel.to).tp, rel.lb, rel.ub);
+                network.addConstraint(0, c_tks.get(rel.to).tp, lb, ub);
             } else {
-                network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, rel.lb, rel.ub);
+                network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, lb, ub);
             }
         }
 
@@ -125,10 +128,12 @@ public class LessonManager implements TemporalListener {
 
         // we enforce the temporal relations..
         for (LessonModel.Relation rel : tk.template.relations) {
+            double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
+            double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
             if (rel.from.equals(THIS)) {
-                network.addConstraint(tk.tp, c_tks.get(rel.to).tp, rel.lb, rel.ub);
+                network.addConstraint(tk.tp, c_tks.get(rel.to).tp, lb, ub);
             } else {
-                network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, rel.lb, rel.ub);
+                network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, lb, ub);
             }
         }
 
