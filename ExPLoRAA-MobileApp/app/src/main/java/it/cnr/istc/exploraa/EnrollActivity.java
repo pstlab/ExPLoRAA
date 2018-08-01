@@ -22,7 +22,7 @@ import it.cnr.istc.exploraa.api.Lesson;
 public class EnrollActivity extends AppCompatActivity {
 
     private static final String TAG = "EnrollActivity";
-    private static final int SELECT_TOPICS_REQUEST_CODE = 69;
+    private static final int SELECT_TOPICS_REQUEST_CODE = 42;
     private RecyclerView enrolling_lessons_recycler_view;
     private EnrollingLessonsAdapter enrolling_lessons_adapter;
     private Lesson choosen_lesson;
@@ -51,6 +51,7 @@ public class EnrollActivity extends AppCompatActivity {
         if (requestCode == SELECT_TOPICS_REQUEST_CODE) {
             if (resultCode == RESULT_OK) {
                 final ArrayList<CharSequence> topics = data.getCharSequenceArrayListExtra("topics");
+                ExPLoRAAContext.getInstance().followLesson(this, choosen_lesson, topics);
             }
         }
     }
@@ -102,9 +103,12 @@ public class EnrollActivity extends AppCompatActivity {
 
         @Override
         public void onClick(View v) {
-            Log.d("EnrollingLessonView", "onClick " + getAdapterPosition() + " " + title.getText());
             activity.choosen_lesson = l;
-            activity.startActivityForResult(new Intent(activity, TopicsActivity.class), SELECT_TOPICS_REQUEST_CODE);
+            ArrayList<CharSequence> topics = new ArrayList<>(l.topics.size());
+            for (String topic : l.topics) topics.add(topic);
+            final Intent intent = new Intent(activity, TopicsActivity.class);
+            intent.putCharSequenceArrayListExtra("topics", topics);
+            activity.startActivityForResult(intent, SELECT_TOPICS_REQUEST_CODE);
         }
     }
 }
