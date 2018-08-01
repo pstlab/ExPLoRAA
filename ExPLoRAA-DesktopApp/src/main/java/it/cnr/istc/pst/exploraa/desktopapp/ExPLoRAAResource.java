@@ -131,7 +131,7 @@ class ExPLoRAAResource implements ExPLoRAA {
     public void solve(long id) {
         Form solve_form = new Form();
         solve_form.param("id", Long.toString(id));
-        target.path("solve").path(Long.toString(id)).request().put(Entity.form(solve_form));
+        target.path("solve").request().put(Entity.form(solve_form));
     }
 
     @Override
