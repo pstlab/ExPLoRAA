@@ -233,8 +233,8 @@ public class Context {
                                     id_teaching_lessons.get(unfollow_lesson.lesson).studentsProperty().remove(id_students.get(unfollow_lesson.student));
                                     Set<Long> c_students = new HashSet<>();
                                     for (TeachingLessonContext l : teaching_lessons) {
-                                        for (Follow follow : l.getLesson().students.values()) {
-                                            c_students.add(follow.user.id);
+                                        for (StudentContext student : l.studentsProperty()) {
+                                            c_students.add(student.getStudent().id);
                                         }
                                     }
                                     if (!c_students.contains(unfollow_lesson.student)) {
@@ -399,9 +399,11 @@ public class Context {
             while (c.next()) {
                 c.getAddedSubList().forEach(tlc -> {
                     id_teaching_lessons.put(tlc.getLesson().id, tlc);
-                    for (Follow follow : tlc.getLesson().students.values()) {
-                        if (!id_students.containsKey(follow.user.id)) {
-                            students.add(new StudentContext(follow.user));
+                    if (tlc.getLesson().students != null) {
+                        for (Follow follow : tlc.getLesson().students.values()) {
+                            if (!id_students.containsKey(follow.user.id)) {
+                                students.add(new StudentContext(follow.user));
+                            }
                         }
                     }
                     try {
@@ -432,8 +434,8 @@ public class Context {
                 if (!c.getRemoved().isEmpty()) {
                     Set<Long> c_students = new HashSet<>();
                     for (TeachingLessonContext l : teaching_lessons) {
-                        for (Follow follow : l.getLesson().students.values()) {
-                            c_students.add(follow.user.id);
+                        for (StudentContext student : l.studentsProperty()) {
+                            c_students.add(student.getStudent().id);
                         }
                     }
                     Set<Long> to_remove_students = new HashSet<>();
