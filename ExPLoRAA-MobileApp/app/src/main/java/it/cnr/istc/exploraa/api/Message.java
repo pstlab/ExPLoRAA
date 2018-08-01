@@ -23,7 +23,6 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -420,6 +419,7 @@ public abstract class Message {
                     break;
                 case FollowLesson:
                     m = new FollowLesson();
+                    m.message_type = MessageType.FollowLesson;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "interests":
@@ -439,6 +439,7 @@ public abstract class Message {
                     break;
                 case UnfollowLesson:
                     m = new UnfollowLesson();
+                    m.message_type = MessageType.UnfollowLesson;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "student":
@@ -451,11 +452,13 @@ public abstract class Message {
                     break;
                 case RemoveLesson:
                     m = new RemoveLesson();
+                    m.message_type = MessageType.RemoveLesson;
                     in.nextName();
                     ((RemoveLesson) m).lesson = in.nextLong();
                     break;
                 case Token:
                     m = new Token();
+                    m.message_type = MessageType.Token;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "lesson_id":
@@ -486,6 +489,7 @@ public abstract class Message {
                     break;
                 case TokenUpdate:
                     m = new TokenUpdate();
+                    m.message_type = MessageType.TokenUpdate;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "lesson_id":
@@ -507,6 +511,7 @@ public abstract class Message {
                     break;
                 case RemoveToken:
                     m = new RemoveToken();
+                    m.message_type = MessageType.RemoveToken;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "lesson_id":
@@ -518,104 +523,102 @@ public abstract class Message {
                         }
                     break;
                 case Stimulus: {
-                    long lesson_id = -1;
-                    int id = -1;
-                    Set<Long> students = new HashSet<>();
-                    long time = -1;
-                    while (in.hasNext())
+                    Stimulus st = null;
+                    while (in.hasNext()) {
                         switch (in.nextName()) {
                             case "lesson_id":
-                                lesson_id = in.nextLong();
+                                st.lesson_id = in.nextLong();
                                 break;
                             case "id":
-                                id = in.nextInt();
+                                st.id = in.nextInt();
                                 break;
                             case "students":
+                                st.students = new HashSet<>();
                                 in.beginArray();
                                 while (in.peek() != JsonToken.END_ARRAY)
-                                    students.add(in.nextLong());
+                                    st.students.add(in.nextLong());
                                 in.endArray();
                                 break;
                             case "time":
-                                time = in.nextLong();
+                                st.time = in.nextLong();
+                                break;
+                            case "content":
+                                switch (st.stimulus_type) {
+                                    case Text:
+                                        ((Stimulus.TextStimulus) st).content = in.nextString();
+                                        break;
+                                    case URL:
+                                        ((Stimulus.URLStimulus) st).content = in.nextString();
+                                        break;
+                                }
+                                break;
+                            case "question":
+                                ((Stimulus.QuestionStimulus) st).question = in.nextString();
+                                break;
+                            case "answers":
+                                in.beginArray();
+                                while (in.peek() != JsonToken.END_ARRAY)
+                                    ((Stimulus.QuestionStimulus) st).answers.add(in.nextString());
+                                in.endArray();
+                                break;
+                            case "answer":
+                                ((Stimulus.QuestionStimulus) st).answer = in.nextInt();
+                                break;
+                            case "url":
+                                ((Stimulus.URLStimulus) st).url = in.nextString();
                                 break;
                             case "stimulus_type":
                                 switch (Stimulus.StimulusType.valueOf(in.nextString())) {
                                     case Text:
                                         in.nextName();
-                                        m = new Stimulus.TextStimulus(lesson_id, id, students, time, in.nextString());
+                                        m = new Stimulus.TextStimulus();
+                                        m.message_type = MessageType.Stimulus;
+                                        ((Stimulus.TextStimulus) st).stimulus_type = Stimulus.StimulusType.Text;
                                         break;
                                     case Question:
-                                        String question = null;
-                                        List<String> answers = new ArrayList<>();
-                                        Integer answer = null;
-                                        while (in.hasNext())
-                                            switch (in.nextName()) {
-                                                case "question":
-                                                    question = in.nextString();
-                                                    break;
-                                                case "answers":
-                                                    in.beginArray();
-                                                    while (in.peek() != JsonToken.END_ARRAY)
-                                                        answers.add(in.nextString());
-                                                    in.endArray();
-                                                    break;
-                                                case "answer":
-                                                    answer = in.nextInt();
-                                                    break;
-                                            }
-                                        m = new Stimulus.QuestionStimulus(lesson_id, id, students, time, question, answers, answer);
+                                        m = new Stimulus.QuestionStimulus();
+                                        m.message_type = MessageType.Stimulus;
+                                        ((Stimulus.TextStimulus) st).stimulus_type = Stimulus.StimulusType.Question;
                                         break;
                                     case URL:
-                                        String content = null;
-                                        String url = null;
-                                        while (in.hasNext())
-                                            switch (in.nextName()) {
-                                                case "content":
-                                                    content = in.nextString();
-                                                    break;
-                                                case "url":
-                                                    url = in.nextString();
-                                                    break;
-                                            }
-                                        m = new Stimulus.URLStimulus(lesson_id, id, students, time, content, url);
+                                        m = new Stimulus.URLStimulus();
+                                        m.message_type = MessageType.Stimulus;
+                                        ((Stimulus.TextStimulus) st).stimulus_type = Stimulus.StimulusType.URL;
                                         break;
                                 }
                         }
+                    }
                     break;
                 }
                 case Answer: {
-                    long lesson_id = -1;
-                    int question_id = -1;
-                    int answer = -1;
+                    m = new Stimulus.QuestionStimulus.Answer();
+                    m.message_type = MessageType.Answer;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "lesson_id":
-                                lesson_id = in.nextLong();
+                                ((Stimulus.QuestionStimulus.Answer) m).lesson_id = in.nextLong();
                                 break;
                             case "question_id":
-                                lesson_id = in.nextInt();
+                                ((Stimulus.QuestionStimulus.Answer) m).lesson_id = in.nextInt();
                                 break;
                             case "answer":
-                                answer = in.nextInt();
+                                ((Stimulus.QuestionStimulus.Answer) m).answer = in.nextInt();
                                 break;
                         }
-                    m = new Stimulus.QuestionStimulus.Answer(lesson_id, question_id, answer);
                     break;
                 }
                 case RemoveStimulus:
-                    long lesson_id = -1;
-                    int id = -1;
+                    m = new RemoveStimulus();
+                    m.message_type = MessageType.RemoveStimulus;
                     while (in.hasNext())
                         switch (in.nextName()) {
                             case "lesson_id":
-                                lesson_id = in.nextLong();
+                                ((RemoveStimulus) m).lesson_id = in.nextLong();
                                 break;
                             case "id":
-                                lesson_id = in.nextInt();
+                                ((RemoveStimulus) m).lesson_id = in.nextInt();
                                 break;
                         }
-                    m = new RemoveStimulus(lesson_id, id);
                     break;
             }
             in.endObject();

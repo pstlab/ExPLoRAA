@@ -73,6 +73,7 @@ public class Parameter {
                             p.properties.put(in.nextName(), in.nextString());
                         in.endObject();
                 }
+            in.endObject();
             return p;
         }
     }

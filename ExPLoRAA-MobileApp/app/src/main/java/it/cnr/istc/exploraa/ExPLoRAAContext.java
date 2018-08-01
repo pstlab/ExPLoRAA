@@ -35,6 +35,7 @@ import android.util.LongSparseArray;
 import android.widget.Toast;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -74,7 +75,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ExPLoRAAContext implements LocationListener {
 
     private static final String TAG = "LECTurEContext";
-    private static final Gson GSON = new Gson();
+    private static final Gson GSON = new GsonBuilder().registerTypeAdapter(Message.class, Message.ADAPTER).create();
     private static ExPLoRAAContext instance;
     private final ExPLoRAA resource;
     /**
@@ -284,7 +285,7 @@ public class ExPLoRAAContext implements LocationListener {
                 mqtt.subscribe(user.id + "/input", new IMqttMessageListener() {
                     @Override
                     public void messageArrived(String topic, MqttMessage message) {
-                        Log.w(TAG, "Message arrived: " + topic + " - " + message);
+                        Log.d(TAG, "Message arrived: " + topic + " - " + message);
                         Message m = GSON.fromJson(new String(message.getPayload()), Message.class);
                         switch (m.message_type) {
                             case RemoveLesson:
@@ -294,6 +295,32 @@ public class ExPLoRAAContext implements LocationListener {
                                     @Override
                                     public void run() {
                                         removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson));
+                                    }
+                                });
+                                break;
+                            case FollowLesson:
+                                // a new student is following a lesson of this teacher..
+                                final Message.FollowLesson follow_lesson = (Message.FollowLesson) m;
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        id_teaching_lessons.get(follow_lesson.lesson).addStudent(new StudentContext(follow_lesson.student));
+                                    }
+                                });
+                                break;
+                            case UnfollowLesson:
+                                // a student is not following a lesson of this user anymore..
+                                final Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
+                                new Handler(Looper.getMainLooper()).post(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        id_teaching_lessons.get(unfollow_lesson.lesson).removeStudent(id_students.get(unfollow_lesson.student));
+                                        Set<Long> c_students = new HashSet<>();
+                                        for (TeachingLessonContext l : teaching_lessons)
+                                            for (StudentContext student : l.getStudents())
+                                                c_students.add(student.getStudent().id);
+                                        if (!c_students.contains(unfollow_lesson.student))
+                                            removeStudent(id_students.get(unfollow_lesson.student));
                                     }
                                 });
                                 break;
