@@ -21,4 +21,10 @@
     <string name="topics">Topics</string>
     <string name="choose_topics">Choose topics</string>
     <string name="remove_lessons">Remove lessons</string>
+    <string name="time">Time</string>
+    <string name="play">Play</string>
+    <string name="pause">Pause</string>
+    <string name="stop">Stop</string>
+    <string name="min">Min</string>
+    <string name="max">Max</string>
 </resources>

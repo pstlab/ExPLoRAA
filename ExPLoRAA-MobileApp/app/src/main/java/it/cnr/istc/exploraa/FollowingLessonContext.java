@@ -17,6 +17,7 @@ public class FollowingLessonContext {
 
     FollowingLessonContext(Lesson lesson) {
         this.lesson = lesson;
+        stimuli.addAll(lesson.stimuli);
     }
 
     public Lesson getLesson() {

@@ -50,8 +50,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 import it.cnr.istc.exploraa.api.ExPLoRAA;
@@ -139,6 +141,50 @@ public class ExPLoRAAContext implements LocationListener {
 
     public User getUser() {
         return user;
+    }
+
+    public static String convertTimeToString(long time) {
+        long second = (time / 1000) % 60;
+        long minute = (time / (1000 * 60)) % 60;
+        long hour = (time / (1000 * 60 * 60)) % 24;
+        long days = (time / (1000 * 60 * 60 * 24));
+        if (days == 0) {
+            if (hour == 0) {
+                return String.format("%02d:%02d", minute, second);
+            } else {
+                return String.format("%02d:%02d:%02d", hour, minute, second);
+            }
+        } else {
+            return String.format("%03d:%02d:%02d:%02d", days, hour, minute, second);
+        }
+    }
+
+    public List<Message.Stimulus> getStimuli() {
+        return Collections.unmodifiableList(stimuli);
+    }
+
+    private void addStimulus(@NonNull final Message.Stimulus stimulus) {
+        final int pos = stimuli.size();
+        stimuli.add(stimulus);
+        id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
+        for (StimuliListener listener : stimuli_listeners)
+            listener.stimulusAdded(pos, stimulus);
+    }
+
+    private void removeStimulus(@NonNull final Message.Stimulus stimulus) {
+        final int pos = stimuli.indexOf(stimulus);
+        stimuli.remove(pos);
+        id_following_lessons.get(stimulus.lesson_id).removeStimulus(stimulus);
+        for (StimuliListener listener : stimuli_listeners)
+            listener.stimulusRemoved(pos, stimulus);
+    }
+
+    public FollowingLessonContext getFollowingLesson(final long id) {
+        return id_following_lessons.get(id);
+    }
+
+    public List<FollowingLessonContext> getFollowingLessons() {
+        return Collections.unmodifiableList(following_lessons);
     }
 
     public void setUser(@NonNull final Context ctx, User user) {
@@ -267,10 +313,7 @@ public class ExPLoRAAContext implements LocationListener {
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        TeachingLessonContext.TokenRow tk = id_teaching_lessons.get(token_update.lesson_id).getToken(token_update.id);
-                                        tk.setTime(token_update.time);
-                                        tk.setMin(token_update.min);
-                                        tk.setMax(token_update.max);
+                                        id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min, token_update.max);
                                     }
                                 });
                                 break;
@@ -342,38 +385,15 @@ public class ExPLoRAAContext implements LocationListener {
         }
     }
 
-    public List<Message.Stimulus> getStimuli() {
-        return Collections.unmodifiableList(stimuli);
-    }
-
-    private void addStimulus(@NonNull final Message.Stimulus stimulus) {
-        final int pos = stimuli.size();
-        stimuli.add(stimulus);
-        id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
-        for (StimuliListener listener : stimuli_listeners)
-            listener.stimulusAdded(pos, stimulus);
-    }
-
-    private void removeStimulus(@NonNull final Message.Stimulus stimulus) {
-        final int pos = stimuli.indexOf(stimulus);
-        stimuli.remove(pos);
-        id_following_lessons.get(stimulus.lesson_id).removeStimulus(stimulus);
-        for (StimuliListener listener : stimuli_listeners)
-            listener.stimulusRemoved(pos, stimulus);
-    }
-
-    public FollowingLessonContext getFollowingLesson(final long id) {
-        return id_following_lessons.get(id);
-    }
-
-    public List<FollowingLessonContext> getFollowingLessons() {
-        return Collections.unmodifiableList(following_lessons);
-    }
-
     private void addFollowingLesson(@NonNull final FollowingLessonContext l_ctx) {
         final int pos = following_lessons.size();
         following_lessons.add(l_ctx);
         id_following_lessons.put(l_ctx.getLesson().id, l_ctx);
+        if (id_teachers.get(l_ctx.getLesson().teacher.user.id) == null) {
+            final TeacherContext t_ctx = new TeacherContext(l_ctx.getLesson().teacher.user);
+            teachers.add(t_ctx);
+            id_teachers.put(t_ctx.getTeacher().id, t_ctx);
+        }
         FollowingLessonContext.FollowingLessonListener following_lesson_listener = new FollowingLessonContext.FollowingLessonListener() {
             @Override
             public void timeChanged(long t) {
@@ -401,18 +421,36 @@ public class ExPLoRAAContext implements LocationListener {
         };
         l_ctx.addListener(following_lesson_listener);
         id_following_lesson_listener.put(l_ctx.getLesson().id, following_lesson_listener);
+        try {
+            // we subscribe to the lesson's time..
+            mqtt.subscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time", new IMqttMessageListener() {
+                @Override
+                public void messageArrived(final String topic, final MqttMessage message) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setTime(Long.parseLong(new String(message.getPayload())));
+                        }
+                    });
+                }
+            });
+            // we subscribe to the lesson's state..
+            mqtt.subscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state", new IMqttMessageListener() {
+                @Override
+                public void messageArrived(final String topic, final MqttMessage message) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setState(Lesson.LessonState.valueOf(new String(message.getPayload())));
+                        }
+                    });
+                }
+            });
+        } catch (MqttException ex) {
+            Log.w(TAG, "MQTT subscription failed..", ex);
+        }
         for (FollowingLessonsListener listener : following_lessons_listeners)
             listener.followingLessonAdded(pos, l_ctx);
-    }
-
-    private void removeFollowingLesson(@NonNull FollowingLessonContext l_ctx) {
-        int pos = following_lessons.indexOf(l_ctx);
-        following_lessons.remove(pos);
-        id_following_lessons.remove(l_ctx.getLesson().id);
-        l_ctx.removeListener(id_following_lesson_listener.get(l_ctx.getLesson().id));
-        id_following_lesson_listener.remove(l_ctx.getLesson().id);
-        for (FollowingLessonsListener listener : following_lessons_listeners)
-            listener.followingLessonRemoved(pos, l_ctx);
     }
 
     public TeacherContext getTeacher(final long id) {
@@ -421,6 +459,35 @@ public class ExPLoRAAContext implements LocationListener {
 
     public List<TeacherContext> getTeachers() {
         return Collections.unmodifiableList(teachers);
+    }
+
+    private void removeFollowingLesson(@NonNull FollowingLessonContext l_ctx) {
+        for (Message.Stimulus st : l_ctx.getStimuli()) removeStimulus(st);
+        int pos = following_lessons.indexOf(l_ctx);
+        following_lessons.remove(pos);
+        id_following_lessons.remove(l_ctx.getLesson().id);
+        l_ctx.removeListener(id_following_lesson_listener.get(l_ctx.getLesson().id));
+        id_following_lesson_listener.remove(l_ctx.getLesson().id);
+        if (mqtt.isConnected()) {
+            try {
+                // we subscribe from the lesson's time and state..
+                mqtt.unsubscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
+                mqtt.unsubscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state");
+            } catch (MqttException ex) {
+                Log.w(TAG, "MQTT unsubscription failed..", ex);
+            }
+        }
+        Set<Long> c_teachers = new HashSet<>();
+        for (FollowingLessonContext l : following_lessons)
+            c_teachers.add(l.getLesson().teacher.user.id);
+        Set<Long> to_remove_teachers = new HashSet<>();
+        for (TeacherContext t_ctx : teachers)
+            if (!c_teachers.contains(t_ctx.getTeacher().id))
+                to_remove_teachers.add(t_ctx.getTeacher().id);
+        for (Long to_remove_teacher : to_remove_teachers)
+            removeTeacher(id_teachers.get(to_remove_teacher));
+        for (FollowingLessonsListener listener : following_lessons_listeners)
+            listener.followingLessonRemoved(pos, l_ctx);
     }
 
     private void addTeacher(@NonNull final TeacherContext t_ctx) {
@@ -436,16 +503,17 @@ public class ExPLoRAAContext implements LocationListener {
         };
         t_ctx.addListener(l);
         id_teacher_listener.put(t_ctx.getTeacher().id, l);
+        try {
+            mqtt.subscribe(t_ctx.getTeacher().id + "/output/on-line", new IMqttMessageListener() {
+                @Override
+                public void messageArrived(String topic, MqttMessage message) {
+                    t_ctx.setOnLine(Boolean.parseBoolean(new String(message.getPayload())));
+                }
+            });
+        } catch (MqttException ex) {
+            Log.w(TAG, "MQTT subscription failed..", ex);
+        }
         for (TeachersListener listener : teachers_listeners) listener.teacherAdded(pos, t_ctx);
-    }
-
-    private void removeTeacher(@NonNull TeacherContext t_ctx) {
-        int pos = teachers.indexOf(t_ctx);
-        teachers.remove(pos);
-        id_teachers.remove(t_ctx.getTeacher().id);
-        t_ctx.removeListener(id_teacher_listener.get(t_ctx.getTeacher().id));
-        id_teacher_listener.remove(t_ctx.getTeacher().id);
-        for (TeachersListener listener : teachers_listeners) listener.teacherRemoved(pos, t_ctx);
     }
 
     public List<LessonModel> getModels() {
@@ -460,49 +528,104 @@ public class ExPLoRAAContext implements LocationListener {
         return Collections.unmodifiableList(teaching_lessons);
     }
 
+    private void removeTeacher(@NonNull TeacherContext t_ctx) {
+        int pos = teachers.indexOf(t_ctx);
+        teachers.remove(pos);
+        id_teachers.remove(t_ctx.getTeacher().id);
+        t_ctx.removeListener(id_teacher_listener.get(t_ctx.getTeacher().id));
+        id_teacher_listener.remove(t_ctx.getTeacher().id);
+        try {
+            if (mqtt.isConnected()) { // we might be removing teachers as a consequence of a connection loss..
+                mqtt.unsubscribe(t_ctx.getTeacher().id + "/output/on-line");
+            }
+        } catch (MqttException ex) {
+            Log.w(TAG, "MQTT unsubscription failed..", ex);
+        }
+        for (TeachersListener listener : teachers_listeners) listener.teacherRemoved(pos, t_ctx);
+    }
+
     private void addTeachingLesson(@NonNull final TeachingLessonContext l_ctx) {
-        final int pos = teachers.size();
+        final int l_pos = teachers.size();
         teaching_lessons.add(l_ctx);
         id_teaching_lessons.put(l_ctx.getLesson().id, l_ctx);
+        if (l_ctx.getLesson().students != null)
+            for (Follow follow : l_ctx.getLesson().students.values())
+                l_ctx.addStudent(id_students.get(follow.user.id) != null ? id_students.get(follow.user.id) : new StudentContext(follow.user));
         TeachingLessonContext.TeachingLessonListener l = new TeachingLessonContext.TeachingLessonListener() {
             @Override
             public void timeChanged(long t) {
                 for (TeachingLessonsListener listener : teaching_lessons_listeners)
-                    listener.teachingLessonUpdated(pos, l_ctx);
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
             }
 
             @Override
             public void stateChanged(Lesson.LessonState state) {
                 for (TeachingLessonsListener listener : teaching_lessons_listeners)
-                    listener.teachingLessonUpdated(pos, l_ctx);
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
             }
 
             @Override
-            public void addedToken(TeachingLessonContext.TokenRow tk) {
+            public void studentAdded(int pos, StudentContext s_ctx) {
                 for (TeachingLessonsListener listener : teaching_lessons_listeners)
-                    listener.teachingLessonUpdated(pos, l_ctx);
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
             }
 
             @Override
-            public void removedToken(TeachingLessonContext.TokenRow tk) {
+            public void studentRemoved(int pos, StudentContext s_ctx) {
                 for (TeachingLessonsListener listener : teaching_lessons_listeners)
-                    listener.teachingLessonUpdated(pos, l_ctx);
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
+            }
+
+            @Override
+            public void addedToken(int pos, TeachingLessonContext.TokenRow tk) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
+            }
+
+            @Override
+            public void removedToken(int pos, TeachingLessonContext.TokenRow tk) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
+            }
+
+            @Override
+            public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(l_pos, l_ctx);
             }
         };
         l_ctx.addListener(l);
         id_teaching_lesson_listener.put(l_ctx.getLesson().id, l);
+        try {
+            // we subscribe to the lesson's time..
+            mqtt.subscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time", new IMqttMessageListener() {
+                @Override
+                public void messageArrived(final String topic, final MqttMessage message) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setTime(Long.parseLong(new String(message.getPayload())));
+                        }
+                    });
+                }
+            });
+            // we subscribe to the lesson's state..
+            mqtt.subscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state", new IMqttMessageListener() {
+                @Override
+                public void messageArrived(final String topic, final MqttMessage message) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setState(Lesson.LessonState.valueOf(new String(message.getPayload())));
+                        }
+                    });
+                }
+            });
+        } catch (MqttException ex) {
+            Log.w(TAG, "MQTT subscription failed..", ex);
+        }
         for (TeachingLessonsListener listener : teaching_lessons_listeners)
-            listener.teachingLessonAdded(pos, l_ctx);
-    }
-
-    private void removeTeachingLesson(@NonNull final TeachingLessonContext l_ctx) {
-        int pos = teaching_lessons.indexOf(l_ctx);
-        teaching_lessons.remove(pos);
-        id_teaching_lessons.remove(l_ctx.getLesson().id);
-        l_ctx.removeListener(id_teaching_lesson_listener.get(l_ctx.getLesson().id));
-        id_teaching_lesson_listener.remove(l_ctx.getLesson().id);
-        for (TeachingLessonsListener listener : teaching_lessons_listeners)
-            listener.teachingLessonRemoved(pos, l_ctx);
+            listener.teachingLessonAdded(l_pos, l_ctx);
     }
 
     public StudentContext getStudent(final long id) {
@@ -513,7 +636,35 @@ public class ExPLoRAAContext implements LocationListener {
         return Collections.unmodifiableList(students);
     }
 
-    private void addStudent(@NonNull final StudentContext s_ctx) {
+    private void removeTeachingLesson(@NonNull final TeachingLessonContext l_ctx) {
+        int pos = teaching_lessons.indexOf(l_ctx);
+        teaching_lessons.remove(pos);
+        id_teaching_lessons.remove(l_ctx.getLesson().id);
+        l_ctx.removeListener(id_teaching_lesson_listener.get(l_ctx.getLesson().id));
+        id_teaching_lesson_listener.remove(l_ctx.getLesson().id);
+        if (user != null && mqtt.isConnected()) {
+            try {
+                // we unsubscribe from the lesson's time and state..
+                mqtt.unsubscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
+                mqtt.unsubscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state");
+            } catch (MqttException ex) {
+                Log.w(TAG, "MQTT unsubscription failed..", ex);
+            }
+        }
+        Set<Long> c_students = new HashSet<>();
+        for (TeachingLessonContext l : teaching_lessons)
+            for (StudentContext student : l.getStudents()) c_students.add(student.getStudent().id);
+        Set<Long> to_remove_students = new HashSet<>();
+        for (StudentContext s_ctx : students)
+            if (!c_students.contains(s_ctx.getStudent().id))
+                to_remove_students.add(s_ctx.getStudent().id);
+        for (Long to_remove_student : to_remove_students)
+            removeStudent(id_students.get(to_remove_student));
+        for (TeachingLessonsListener listener : teaching_lessons_listeners)
+            listener.teachingLessonRemoved(pos, l_ctx);
+    }
+
+    void addStudent(@NonNull final StudentContext s_ctx) {
         final int pos = teachers.size();
         students.add(s_ctx);
         id_students.put(s_ctx.getStudent().id, s_ctx);
@@ -526,16 +677,25 @@ public class ExPLoRAAContext implements LocationListener {
         };
         s_ctx.addListener(l);
         id_student_listener.put(s_ctx.getStudent().id, l);
-        for (StudentsListener listener : students_listeners) listener.studentAdded(pos, s_ctx);
-    }
+        try {
+            // we subscribe to be notified whether the student gets online/offline..
+            mqtt.subscribe(s_ctx.getStudent().id + "/output/on-line", new IMqttMessageListener() {
+                @Override
+                public void messageArrived(final String topic, final MqttMessage message) {
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            s_ctx.setOnLine(Boolean.parseBoolean(new String(message.getPayload())));
+                        }
+                    });
+                }
+            });
 
-    private void removeStudent(@NonNull final StudentContext s_ctx) {
-        int pos = students.indexOf(s_ctx);
-        students.remove(pos);
-        id_students.remove(s_ctx.getStudent().id);
-        s_ctx.removeListener(id_student_listener.get(s_ctx.getStudent().id));
-        id_student_listener.remove(s_ctx.getStudent().id);
-        for (StudentsListener listener : students_listeners) listener.studentRemoved(pos, s_ctx);
+            // TODO: register to the student's parameters..
+        } catch (MqttException ex) {
+            Log.w(TAG, "MQTT subscription failed..", ex);
+        }
+        for (StudentsListener listener : students_listeners) listener.studentAdded(pos, s_ctx);
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -737,6 +897,64 @@ public class ExPLoRAAContext implements LocationListener {
         }.execute().get();
     }
 
+    private void removeStudent(@NonNull final StudentContext s_ctx) {
+        int pos = students.indexOf(s_ctx);
+        students.remove(pos);
+        id_students.remove(s_ctx.getStudent().id);
+        s_ctx.removeListener(id_student_listener.get(s_ctx.getStudent().id));
+        id_student_listener.remove(s_ctx.getStudent().id);
+        try {
+            if (mqtt.isConnected()) {
+                mqtt.unsubscribe(s_ctx.getStudent().id + "/output/on-line");
+            }
+        } catch (MqttException ex) {
+            Log.w(TAG, "MQTT unsubscription failed..", ex);
+        }
+        for (StudentsListener listener : students_listeners) listener.studentRemoved(pos, s_ctx);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void play(@NonNull final Context ctx, Lesson lesson) {
+        new AsyncTask<Long, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Long... longs) {
+                try {
+                    final Response<Void> response = resource.play(longs[0]).execute();
+                    if (!response.isSuccessful()) return null;
+                } catch (final IOException e) {
+                    Log.w(TAG, "Starting lesson failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(lesson.id);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void pause(@NonNull final Context ctx, Lesson lesson) {
+        new AsyncTask<Long, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Long... longs) {
+                try {
+                    final Response<Void> response = resource.pause(longs[0]).execute();
+                    if (!response.isSuccessful()) return null;
+                } catch (final IOException e) {
+                    Log.w(TAG, "Pausing lesson failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(lesson.id);
+    }
+
     private Map<String, Parameter> get_par_types(@NonNull final Context ctx) {
         Map<String, Parameter> c_par_types = new HashMap<>();
 
@@ -833,6 +1051,27 @@ public class ExPLoRAAContext implements LocationListener {
 
     public void removeStudentsListener(StudentsListener l) {
         students_listeners.remove(l);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void stop(@NonNull final Context ctx, Lesson lesson) {
+        new AsyncTask<Long, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Long... longs) {
+                try {
+                    final Response<Void> response = resource.stop(longs[0]).execute();
+                    if (!response.isSuccessful()) return null;
+                } catch (final IOException e) {
+                    Log.w(TAG, "Stopping lesson failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(lesson.id);
     }
 
     public interface StimuliListener {

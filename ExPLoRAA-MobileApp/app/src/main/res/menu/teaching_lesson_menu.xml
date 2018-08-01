@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item
+        android:id="@+id/teaching_lesson_play_menu_item"
+        android:icon="@android:drawable/ic_media_play"
+        android:title="@string/play"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/teaching_lesson_pause_menu_item"
+        android:icon="@android:drawable/ic_media_pause"
+        android:title="@string/pause"
+        app:showAsAction="ifRoom" />
+    <item
+        android:id="@+id/teaching_lesson_stop_menu_item"
+        android:icon="@android:drawable/alert_light_frame"
+        android:title="@string/stop"
+        app:showAsAction="ifRoom" />
+</menu>

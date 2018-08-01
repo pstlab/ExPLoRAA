@@ -69,30 +69,30 @@ public interface ExPLoRAA {
     Call<Void> unfollow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("answer_question")
     Call<Void> answer_question(@Field("lesson_id") long lesson_id, @Field("question_id") int question_id, @Field("answer_id") int answer_id);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("solve")
     Call<Void> solve(@Field("id") long id);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("set_time")
     Call<Void> set_time(@Field("lesson_id") long lesson_id, @Field("token_id") int token_id, @Field("time") long time);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("play")
     Call<Void> play(@Field("id") long id);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("pause")
     Call<Void> pause(@Field("id") long id);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("stop")
     Call<Void> stop(@Field("id") long id);
 
     @FormUrlEncoded
-    @PUT("login")
+    @PUT("go_to")
     Call<Void> go_to(@Field("id") long id, @Field("time") long time);
 }
