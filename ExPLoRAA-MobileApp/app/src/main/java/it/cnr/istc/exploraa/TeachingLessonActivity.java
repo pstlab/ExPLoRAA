@@ -122,10 +122,6 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
     }
 
     @Override
-    public void studentUpdated(int pos, StudentContext s_ctx) {
-    }
-
-    @Override
     public void addedToken(int pos, TeachingLessonContext.TokenRow tk) {
         teaching_lesson_tokens_adapter.notifyItemInserted(pos);
     }
