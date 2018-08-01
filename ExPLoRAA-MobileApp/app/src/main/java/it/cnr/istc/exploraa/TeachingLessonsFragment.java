@@ -55,6 +55,7 @@ public class TeachingLessonsFragment extends Fragment {
                 for (TeachingLessonContext ctx : to_remove)
                     ExPLoRAAContext.getInstance().removeTeachingLesson(getContext(), ctx);
                 teaching_lessons_adapter.selected_lessons.clear();
+                remove_teaching_lessons_menu_item.setVisible(false);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

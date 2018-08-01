@@ -55,6 +55,7 @@ public class FollowingLessonsFragment extends Fragment {
                 for (FollowingLessonContext ctx : to_remove)
                     ExPLoRAAContext.getInstance().unfollowLesson(getContext(), ctx);
                 following_lessons_adapter.selected_lessons.clear();
+                remove_following_lessons_menu_item.setVisible(false);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

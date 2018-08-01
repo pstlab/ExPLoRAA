@@ -9,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.CheckBox;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ public class TopicsActivity extends AppCompatActivity {
 
     private static final String TAG = "EnrollActivity";
     private RecyclerView topics_recycler_view;
+    private Button choose_topics_button;
     private TopicsAdapter topics_adapter;
 
     @Override
@@ -29,7 +31,9 @@ public class TopicsActivity extends AppCompatActivity {
         setContentView(R.layout.activity_topics);
 
         topics_recycler_view = findViewById(R.id.topics_recycler_view);
-        topics_adapter = new TopicsAdapter(getIntent().getCharSequenceArrayListExtra("topics"));
+        choose_topics_button = findViewById(R.id.choose_topics_button);
+
+        topics_adapter = new TopicsAdapter(this, getIntent().getCharSequenceArrayListExtra("topics"));
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -49,15 +53,17 @@ public class TopicsActivity extends AppCompatActivity {
 
         private final Set<CharSequence> selected_topics = new HashSet<>();
         private final List<CharSequence> topics;
+        private TopicsActivity activity;
 
-        private TopicsAdapter(Collection<CharSequence> topics) {
+        private TopicsAdapter(TopicsActivity activity, Collection<CharSequence> topics) {
+            this.activity = activity;
             this.topics = new ArrayList<>(topics);
         }
 
         @NonNull
         @Override
         public TopicView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new TopicView(this, LayoutInflater.from(parent.getContext()).inflate(R.layout.topic_row, parent, false));
+            return new TopicView(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.topic_row, parent, false));
         }
 
         @Override
@@ -71,21 +77,29 @@ public class TopicsActivity extends AppCompatActivity {
         }
     }
 
-    private static class TopicView extends RecyclerView.ViewHolder {
+    private static class TopicView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        private TopicsActivity activity;
         private CheckBox topic;
 
-        private TopicView(final TopicsAdapter adapter, View view) {
+        private TopicView(final TopicsActivity activity, View view) {
             super(view);
+            this.activity = activity;
             topic = view.findViewById(R.id.topic_check_box);
-            topic.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    final CharSequence c_topic = adapter.topics.get(getAdapterPosition());
-                    if (topic.isChecked()) adapter.selected_topics.add(c_topic);
-                    else adapter.selected_topics.remove(c_topic);
-                }
-            });
+            topic.setOnClickListener(this);
+        }
+
+        @Override
+        public void onClick(View v) {
+            final CharSequence c_topic = activity.topics_adapter.topics.get(getAdapterPosition());
+            if (topic.isChecked()) {
+                activity.topics_adapter.selected_topics.add(c_topic);
+                activity.choose_topics_button.setEnabled(true);
+            } else {
+                activity.topics_adapter.selected_topics.remove(c_topic);
+                if (activity.topics_adapter.selected_topics.isEmpty())
+                    activity.choose_topics_button.setEnabled(false);
+            }
         }
     }
 }
