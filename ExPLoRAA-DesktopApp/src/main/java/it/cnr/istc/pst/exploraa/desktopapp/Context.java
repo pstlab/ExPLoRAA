@@ -401,9 +401,7 @@ public class Context {
                     id_teaching_lessons.put(tlc.getLesson().id, tlc);
                     if (tlc.getLesson().students != null) {
                         for (Follow follow : tlc.getLesson().students.values()) {
-                            if (!id_students.containsKey(follow.user.id)) {
-                                students.add(new StudentContext(follow.user));
-                            }
+                            tlc.studentsProperty().add(id_students.containsKey(follow.user.id) ? id_students.get(follow.user.id) : new StudentContext(follow.user));
                         }
                     }
                     try {
