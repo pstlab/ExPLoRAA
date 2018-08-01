@@ -248,8 +248,8 @@ public class LessonModel {
         public static final RelationAdapter ADAPTER = new RelationAdapter();
         public String from;
         public String to;
-        public double lb;
-        public double ub;
+        public Long lb;
+        public Long ub;
         public TimeUnit unit;
 
         public Relation() {
@@ -640,10 +640,10 @@ public class LessonModel {
                         rel.to = in.nextString();
                         break;
                     case "lb":
-                        rel.lb = in.nextDouble();
+                        rel.lb = in.nextLong();
                         break;
                     case "ub":
-                        rel.ub = in.nextDouble();
+                        rel.ub = in.nextLong();
                         break;
                     case "unit":
                         rel.unit = TimeUnit.valueOf(in.nextString());

@@ -20,11 +20,7 @@ public class TeachingLessonContext {
 
     TeachingLessonContext(Lesson lesson) {
         this.lesson = lesson;
-        if (lesson.tokens != null) {
-            for (Message.Token tk : lesson.tokens) {
-                tokens.add(new TokenRow(tk));
-            }
-        }
+        for (Message.Token tk : lesson.tokens) tokens.add(new TokenRow(tk));
     }
 
     public Lesson getLesson() {

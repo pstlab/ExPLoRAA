@@ -14,7 +14,7 @@
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/teaching_lesson_stop_menu_item"
-        android:icon="@android:drawable/alert_light_frame"
+        android:icon="@android:drawable/ic_media_rew"
         android:title="@string/stop"
         app:showAsAction="ifRoom" />
 </menu>
