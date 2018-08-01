@@ -1,12 +1,12 @@
 package it.cnr.istc.exploraa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,7 +26,7 @@ public class StudentsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         students_recycler_view = view.findViewById(R.id.students_recycler_view);
-        students_adapter = new StudentsAdapter();
+        students_adapter = new StudentsAdapter(this);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -49,10 +49,16 @@ public class StudentsFragment extends Fragment {
 
     private static class StudentsAdapter extends RecyclerView.Adapter<StudentView> implements ExPLoRAAContext.StudentsListener {
 
+        private StudentsFragment frgmnt;
+
+        private StudentsAdapter(StudentsFragment frgmnt) {
+            this.frgmnt = frgmnt;
+        }
+
         @NonNull
         @Override
         public StudentView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new StudentView(LayoutInflater.from(parent.getContext()).inflate(R.layout.student_row, parent, false));
+            return new StudentView(frgmnt, LayoutInflater.from(parent.getContext()).inflate(R.layout.student_row, parent, false));
         }
 
         @Override
@@ -88,11 +94,13 @@ public class StudentsFragment extends Fragment {
 
     private static class StudentView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
+        private StudentsFragment frgmnt;
         private StudentContext student;
         private TextView name;
 
-        private StudentView(View view) {
+        private StudentView(StudentsFragment frgmnt, View view) {
             super(view);
+            this.frgmnt = frgmnt;
             view.setOnClickListener(this);
             name = view.findViewById(R.id.student_name);
         }
@@ -104,7 +112,10 @@ public class StudentsFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Log.d("StudentView", "onClick " + getAdapterPosition() + " " + name.getText());
+            // we show the student's details..
+            final Intent intent = new Intent(frgmnt.getContext(), StudentActivity.class);
+            intent.putExtra("student_id", student.getStudent().id);
+            frgmnt.startActivity(intent);
         }
     }
 }
