@@ -1,16 +1,18 @@
 package it.cnr.istc.exploraa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+
+import java.util.ArrayList;
 
 import it.cnr.istc.exploraa.api.Message;
 
@@ -28,7 +30,7 @@ public class StimuliFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         stimuli_recycler_view = view.findViewById(R.id.stimuli_recycler_view);
-        stimuli_adapter = new StimuliAdapter();
+        stimuli_adapter = new StimuliAdapter(this);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -51,10 +53,16 @@ public class StimuliFragment extends Fragment {
 
     private static class StimuliAdapter extends RecyclerView.Adapter<StimulusView> implements ExPLoRAAContext.StimuliListener {
 
+        private StimuliFragment frgmnt;
+
+        public StimuliAdapter(StimuliFragment frgmnt) {
+            this.frgmnt = frgmnt;
+        }
+
         @NonNull
         @Override
         public StimulusView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new StimulusView(LayoutInflater.from(parent.getContext()).inflate(R.layout.stimulus_row, parent, false));
+            return new StimulusView(frgmnt, LayoutInflater.from(parent.getContext()).inflate(R.layout.stimulus_row, parent, false));
         }
 
         @Override
@@ -85,11 +93,13 @@ public class StimuliFragment extends Fragment {
 
     private static class StimulusView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private Message.Stimulus stimulus;
+        private StimuliFragment frgmnt;
         private TextView title;
+        private Message.Stimulus stimulus;
 
-        private StimulusView(View view) {
+        private StimulusView(StimuliFragment frgmnt, View view) {
             super(view);
+            this.frgmnt = frgmnt;
             title = view.findViewById(R.id.stimulus_title);
         }
 
@@ -110,7 +120,31 @@ public class StimuliFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            Log.d("StimulusView", "onClick " + getAdapterPosition() + " " + title.getText());
+            switch (stimulus.stimulus_type) {
+                case Text:
+                    final Intent text_intent = new Intent(frgmnt.getContext(), TextStimulusActivity.class);
+                    text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
+                    frgmnt.startActivity(text_intent);
+                    break;
+                case Question:
+                    final Intent question_intent = new Intent(frgmnt.getContext(), TextStimulusActivity.class);
+                    question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
+                    ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
+                    for (String answer : ((Message.Stimulus.QuestionStimulus) stimulus).answers)
+                        answers.add(answer);
+                    question_intent.putExtra("answers", answers);
+                    if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
+                        question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
+                    }
+                    frgmnt.startActivity(question_intent);
+                    break;
+                case URL:
+                    final Intent url_intent = new Intent(frgmnt.getContext(), TextStimulusActivity.class);
+                    url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
+                    url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
+                    frgmnt.startActivity(url_intent);
+                    break;
+            }
         }
     }
 }

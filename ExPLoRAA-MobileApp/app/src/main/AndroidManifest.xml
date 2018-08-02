@@ -29,7 +29,11 @@
         <activity android:name=".TopicsActivity" />
         <activity android:name=".TeachingLessonActivity" />
         <activity android:name=".FollowingLessonActivity" />
-        <activity android:name=".StudentActivity"></activity>
+        <activity android:name=".StudentActivity" />
+        <activity android:name=".StimulusActivity" />
+        <activity android:name=".TextStimulusActivity" />
+        <activity android:name=".URLStimulusActivity" />
+        <activity android:name=".QuestionStimulusActivity"></activity>
     </application>
 
 </manifest>
