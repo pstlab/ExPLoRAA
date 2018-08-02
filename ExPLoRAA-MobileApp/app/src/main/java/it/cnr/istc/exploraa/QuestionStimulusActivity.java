@@ -1,5 +1,6 @@
 package it.cnr.istc.exploraa;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.widget.LinearLayout;
@@ -20,15 +21,21 @@ public class QuestionStimulusActivity extends AppCompatActivity {
         question_stimulus_content = findViewById(R.id.question_stimulus_content);
         question_stimulus_answers_group = findViewById(R.id.question_stimulus_answers_group);
 
-        question_stimulus_content.setText(getIntent().getStringExtra("question"));
+        final Intent intent = getIntent();
+        question_stimulus_content.setText(intent.getStringExtra("question"));
         int i = 0;
-        for (CharSequence answer : getIntent().getCharSequenceArrayListExtra("answers")) {
+        for (CharSequence answer : intent.getCharSequenceArrayListExtra("answers")) {
             final RadioButton button = new RadioButton(this);
             button.setId(i++);
             button.setText(answer);
             LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(RadioGroup.LayoutParams.MATCH_PARENT, RadioGroup.LayoutParams.WRAP_CONTENT);
             button.setLayoutParams(params);
             question_stimulus_answers_group.addView(button);
+        }
+
+        if (intent.hasExtra("answer")) {
+            question_stimulus_answers_group.check(intent.getIntExtra("answer", -1));
+            question_stimulus_answers_group.setEnabled(false);
         }
     }
 }
