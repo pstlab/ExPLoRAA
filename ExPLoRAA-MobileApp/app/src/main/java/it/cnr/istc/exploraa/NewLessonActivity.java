@@ -97,6 +97,7 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
                     adapter.add(model);
                     ExPLoRAAContext.getInstance().addModel(model);
                     new_lesson_type_spinner.setSelection(adapter.getCount() - 1);
+                    finish();
                 } catch (FileNotFoundException e) {
                     Log.i(TAG, "Uri: " + uri.toString(), e);
                 }
