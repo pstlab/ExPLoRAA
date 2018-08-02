@@ -27,4 +27,7 @@
     <string name="stop">Stop</string>
     <string name="min">Min</string>
     <string name="max">Max</string>
+    <string name="lesson_type">Lesson type</string>
+    <string name="lesson_name">Lesson name</string>
+    <string name="add_lesson_type">Add</string>
 </resources>

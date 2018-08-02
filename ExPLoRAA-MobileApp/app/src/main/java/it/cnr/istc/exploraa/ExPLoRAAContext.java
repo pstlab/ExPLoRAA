@@ -75,7 +75,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ExPLoRAAContext implements LocationListener {
 
     private static final String TAG = "LECTurEContext";
-    private static final Gson GSON = new GsonBuilder().registerTypeAdapter(Message.class, Message.ADAPTER).create();
+    public static final Gson GSON = new GsonBuilder().registerTypeAdapter(Message.class, Message.ADAPTER).registerTypeAdapter(LessonModel.class, LessonModel.ADAPTER).create();
     private static ExPLoRAAContext instance;
     private final ExPLoRAA resource;
     /**
@@ -543,6 +543,10 @@ public class ExPLoRAAContext implements LocationListener {
         for (TeachersListener listener : teachers_listeners) listener.teacherAdded(pos, t_ctx);
     }
 
+    public void addModel(final LessonModel model) {
+        models.add(model);
+    }
+
     public List<LessonModel> getModels() {
         return Collections.unmodifiableList(models);
     }
@@ -832,7 +836,7 @@ public class ExPLoRAAContext implements LocationListener {
                 }
                 return null;
             }
-        }.execute(name, GSON.toJson(model));
+        }.execute(user.id, name, GSON.toJson(model));
     }
 
     @SuppressLint("StaticFieldLeak")
