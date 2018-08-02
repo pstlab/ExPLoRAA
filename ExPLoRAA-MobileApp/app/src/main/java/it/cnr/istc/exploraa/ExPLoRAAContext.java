@@ -817,11 +817,15 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Object... objects) {
                 try {
-                    final Response<Lesson> response = resource.new_lesson((Long) objects[0], (String) objects[1], (String) objects[2]).execute();
+                    final Response<Lesson> response = (((LessonModel) objects[2]).id == null ?
+                            resource.new_lesson((Long) objects[0], (String) objects[1], ((LessonModel) objects[2]).id) :
+                            resource.new_lesson((Long) objects[0], (String) objects[1], GSON.toJson(objects[2]))).execute();
                     if (!response.isSuccessful()) return null;
                     final Lesson l = response.body();
                     // we set the model of the returned lesson..
                     l.model = model;
+                    // the new lesson has not any tokens yet..
+                    l.tokens = new ArrayList<>();
                     // we add a new context for the returned lesson..
                     addTeachingLesson(new TeachingLessonContext(l));
                     // we solve the lesson..
@@ -836,7 +840,7 @@ public class ExPLoRAAContext implements LocationListener {
                 }
                 return null;
             }
-        }.execute(user.id, name, GSON.toJson(model));
+        }.execute(user.id, name, model);
     }
 
     @SuppressLint("StaticFieldLeak")

@@ -97,7 +97,6 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
                     adapter.add(model);
                     ExPLoRAAContext.getInstance().addModel(model);
                     new_lesson_type_spinner.setSelection(adapter.getCount() - 1);
-                    finish();
                 } catch (FileNotFoundException e) {
                     Log.i(TAG, "Uri: " + uri.toString(), e);
                 }
@@ -106,7 +105,9 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
     }
 
     public void add_lesson(View view) {
-        ExPLoRAAContext.getInstance().addTeachingLesson(this, new_lesson_name.getText().toString(), (LessonModel) new_lesson_type_spinner.getSelectedItem());
+        final Object model = new_lesson_type_spinner.getSelectedItem();
+        ExPLoRAAContext.getInstance().addTeachingLesson(this, new_lesson_name.getText().toString(), (LessonModel) model);
+        finish();
     }
 
     @Override
