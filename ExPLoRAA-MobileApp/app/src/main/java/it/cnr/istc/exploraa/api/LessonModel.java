@@ -481,16 +481,20 @@ public class LessonModel {
             if (value.execution_condition != null)
                 Condition.ADAPTER.write(out.name("execution_condition"), value.execution_condition);
 
-            out.name("ids");
-            out.beginArray();
-            for (String id : value.ids) out.value(id);
-            out.endArray();
+            if (value.ids != null) {
+                out.name("ids");
+                out.beginArray();
+                for (String id : value.ids) out.value(id);
+                out.endArray();
+            }
 
-            out.name("ids");
-            out.beginArray();
-            for (Relation rel : value.relations)
-                Relation.ADAPTER.write(out, rel);
-            out.endArray();
+            if (value.relations != null) {
+                out.name("relations");
+                out.beginArray();
+                for (Relation rel : value.relations)
+                    Relation.ADAPTER.write(out, rel);
+                out.endArray();
+            }
 
             switch (value.type) {
                 case Root:
