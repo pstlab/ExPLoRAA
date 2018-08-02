@@ -420,16 +420,20 @@ public class LessonModel {
             if (obj.execution_condition != null) {
                 stimulus_builder.add("execution_condition", Condition.ADAPTER.adaptToJson(obj.execution_condition));
             }
-            JsonArrayBuilder ids_builder = Json.createArrayBuilder();
-            for (String id : obj.ids) {
-                ids_builder.add(id);
+            if (obj.ids != null) {
+                JsonArrayBuilder ids_builder = Json.createArrayBuilder();
+                for (String id : obj.ids) {
+                    ids_builder.add(id);
+                }
+                stimulus_builder.add("ids", ids_builder);
             }
-            stimulus_builder.add("ids", ids_builder);
-            JsonArrayBuilder rels_builder = Json.createArrayBuilder();
-            for (Relation rel : obj.relations) {
-                rels_builder.add(Relation.ADAPTER.adaptToJson(rel));
+            if (obj.relations != null) {
+                JsonArrayBuilder rels_builder = Json.createArrayBuilder();
+                for (Relation rel : obj.relations) {
+                    rels_builder.add(Relation.ADAPTER.adaptToJson(rel));
+                }
+                stimulus_builder.add("relations", rels_builder);
             }
-            stimulus_builder.add("relations", rels_builder);
             switch (obj.type) {
                 case Root:
                     break;
@@ -459,18 +463,24 @@ public class LessonModel {
             String name = obj.getString("name");
             Set<String> topics = new HashSet<>(obj.getJsonArray("topics").size());
             JsonArray topics_array = obj.getJsonArray("topics");
+            Set<String> ids = null;
+            List<Relation> relations = null;
             for (JsonValue topic : topics_array) {
                 topics.add(((JsonString) topic).getString());
             }
             Condition trigger_condition = obj.containsKey("trigger_condition") && !obj.isNull("trigger_condition") ? Condition.ADAPTER.adaptFromJson(obj.getJsonObject("trigger_condition")) : null;
             Condition execution_condition = obj.containsKey("execution_condition") && !obj.isNull("execution_condition") ? Condition.ADAPTER.adaptFromJson(obj.getJsonObject("execution_condition")) : null;
-            Set<String> ids = new HashSet<>(obj.getJsonArray("ids").size());
-            for (JsonValue id : obj.getJsonArray("ids")) {
-                ids.add(((JsonString) id).getString());
+            if (obj.containsKey("ids")) {
+                ids = new HashSet<>(obj.getJsonArray("ids").size());
+                for (JsonValue id : obj.getJsonArray("ids")) {
+                    ids.add(((JsonString) id).getString());
+                }
             }
-            List<Relation> relations = new ArrayList<>(obj.getJsonArray("relations").size());
-            for (JsonValue rel_val : obj.getJsonArray("relations")) {
-                relations.add(Relation.ADAPTER.adaptFromJson(rel_val.asJsonObject()));
+            if (obj.containsKey("relations")) {
+                relations = new ArrayList<>(obj.getJsonArray("relations").size());
+                for (JsonValue rel_val : obj.getJsonArray("relations")) {
+                    relations.add(Relation.ADAPTER.adaptFromJson(rel_val.asJsonObject()));
+                }
             }
             switch (StimulusTemplate.StimulusTemplateType.valueOf(obj.getString("type"))) {
                 case Root:
