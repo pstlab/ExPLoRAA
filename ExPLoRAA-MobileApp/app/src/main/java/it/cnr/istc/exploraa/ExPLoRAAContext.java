@@ -340,7 +340,7 @@ public class ExPLoRAAContext implements LocationListener {
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min, token_update.max);
+                                        id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min != null ? token_update.min : Long.MIN_VALUE, token_update.max != null ? token_update.max : Long.MAX_VALUE);
                                     }
                                 });
                                 break;
@@ -735,10 +735,11 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Boolean doInBackground(String... strings) {
                 try {
-                    Response<User> response = resource.login(strings[0], strings[1]).execute();
-                    if (!response.isSuccessful()) return false;
+                    Response<User> login_response = resource.login(strings[0], strings[1]).execute();
+                    if (!login_response.isSuccessful())
+                        throw new IOException(login_response.errorBody().string());
                     Log.i(TAG, "Login successful..");
-                    User user = response.body();
+                    User user = login_response.body();
 
                     // we set the parameters of init's user (these parameters will be communicated to the server..)
                     assert user != null;
@@ -761,6 +762,9 @@ public class ExPLoRAAContext implements LocationListener {
                                 addStudent(new StudentContext(follow.user));
                         addTeachingLesson(new TeachingLessonContext(teach.lesson));
                     }
+
+                    // we add the available lesson models..
+                    models.addAll(user.models.values());
 
                     return true;
                 } catch (final IOException e) {
@@ -786,10 +790,11 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Boolean doInBackground(String... strings) {
                 try {
-                    Response<User> response = resource.new_user(strings[0], strings[1], strings[2], strings[3]).execute();
-                    if (!response.isSuccessful()) return false;
+                    Response<User> new_user_response = resource.new_user(strings[0], strings[1], strings[2], strings[3]).execute();
+                    if (!new_user_response.isSuccessful())
+                        throw new IOException(new_user_response.errorBody().string());
                     Log.i(TAG, "Login successful..");
-                    User user = response.body();
+                    User user = new_user_response.body();
 
                     // we set the parameters of init's user (these parameters will be communicated to the server..)
                     user.par_types = get_par_types(ctx);
@@ -799,7 +804,7 @@ public class ExPLoRAAContext implements LocationListener {
 
                     return true;
                 } catch (final IOException e) {
-                    Log.w(TAG, "Login failed..", e);
+                    Log.w(TAG, "User creation failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
                         public void run() {
                             Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
@@ -817,11 +822,12 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Object... objects) {
                 try {
-                    final Response<Lesson> response = (((LessonModel) objects[2]).id == null ?
-                            resource.new_lesson((Long) objects[0], (String) objects[1], ((LessonModel) objects[2]).id) :
-                            resource.new_lesson((Long) objects[0], (String) objects[1], GSON.toJson(objects[2]))).execute();
-                    if (!response.isSuccessful()) return null;
-                    final Lesson l = response.body();
+                    final Response<Lesson> new_lesson_response = (((LessonModel) objects[2]).id == null ?
+                            resource.new_lesson((Long) objects[0], (String) objects[1], GSON.toJson(objects[2])) :
+                            resource.new_lesson((Long) objects[0], (String) objects[1], ((LessonModel) objects[2]).id)).execute();
+                    if (!new_lesson_response.isSuccessful())
+                        throw new IOException(new_lesson_response.errorBody().string());
+                    final Lesson l = new_lesson_response.body();
                     // we set the model of the returned lesson..
                     l.model = model;
                     // the new lesson has not any tokens yet..
@@ -829,7 +835,9 @@ public class ExPLoRAAContext implements LocationListener {
                     // we add a new context for the returned lesson..
                     addTeachingLesson(new TeachingLessonContext(l));
                     // we solve the lesson..
-                    resource.solve(l.id);
+                    final Response<Void> solve_response = resource.solve(l.id).execute();
+                    if (!solve_response.isSuccessful())
+                        throw new IOException(solve_response.errorBody().string());
                 } catch (final IOException e) {
                     Log.w(TAG, "Lesson creation failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
@@ -849,8 +857,9 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Long... longs) {
                 try {
-                    final Response<Void> response = resource.delete_lesson(longs[0]).execute();
-                    if (!response.isSuccessful()) return null;
+                    final Response<Void> delete_lesson_response = resource.delete_lesson(longs[0]).execute();
+                    if (!delete_lesson_response.isSuccessful())
+                        throw new IOException(delete_lesson_response.errorBody().string());
                     // we remove the context for the lesson..
                     removeTeachingLesson(l_ctx);
                 } catch (final IOException e) {
@@ -872,8 +881,9 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Object... objects) {
                 try {
-                    final Response<Void> response = resource.follow((long) objects[0], (long) objects[1], GSON.toJson(objects[2])).execute();
-                    if (!response.isSuccessful()) return null;
+                    final Response<Void> follow_response = resource.follow((long) objects[0], (long) objects[1], GSON.toJson(objects[2])).execute();
+                    if (!follow_response.isSuccessful())
+                        throw new IOException(follow_response.errorBody().string());
                     addFollowingLesson(new FollowingLessonContext(lesson));
                 } catch (final IOException e) {
                     Log.w(TAG, "Lesson following failed..", e);
@@ -894,11 +904,12 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Object... objects) {
                 try {
-                    final Response<Void> response = resource.unfollow((long) objects[0], (long) objects[1]).execute();
-                    if (!response.isSuccessful()) return null;
+                    final Response<Void> unfollow_response = resource.unfollow((long) objects[0], (long) objects[1]).execute();
+                    if (!unfollow_response.isSuccessful())
+                        throw new IOException(unfollow_response.errorBody().string());
                     removeFollowingLesson(l_ctx);
                 } catch (final IOException e) {
-                    Log.w(TAG, "Lesson following failed..", e);
+                    Log.w(TAG, "Lesson unfollowing failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
                         public void run() {
                             Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
@@ -916,11 +927,12 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Collection<Lesson> doInBackground(Void... voids) {
                 try {
-                    final Response<Collection<Lesson>> response = resource.get_lessons().execute();
-                    if (!response.isSuccessful()) return null;
-                    return response.body();
+                    final Response<Collection<Lesson>> get_lessons_response = resource.get_lessons().execute();
+                    if (!get_lessons_response.isSuccessful())
+                        throw new IOException(get_lessons_response.errorBody().string());
+                    return get_lessons_response.body();
                 } catch (final IOException e) {
-                    Log.w(TAG, "Lesson removal failed..", e);
+                    Log.w(TAG, "Lessons retrieval failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
                         public void run() {
                             Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
@@ -954,8 +966,9 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Long... longs) {
                 try {
-                    final Response<Void> response = resource.play(longs[0]).execute();
-                    if (!response.isSuccessful()) return null;
+                    final Response<Void> play_response = resource.play(longs[0]).execute();
+                    if (!play_response.isSuccessful())
+                        throw new IOException(play_response.errorBody().string());
                 } catch (final IOException e) {
                     Log.w(TAG, "Starting lesson failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
@@ -975,10 +988,33 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Long... longs) {
                 try {
-                    final Response<Void> response = resource.pause(longs[0]).execute();
-                    if (!response.isSuccessful()) return null;
+                    final Response<Void> pause_response = resource.pause(longs[0]).execute();
+                    if (!pause_response.isSuccessful())
+                        throw new IOException(pause_response.errorBody().string());
                 } catch (final IOException e) {
                     Log.w(TAG, "Pausing lesson failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                }
+                return null;
+            }
+        }.execute(lesson.id);
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void stop(@NonNull final Context ctx, Lesson lesson) {
+        new AsyncTask<Long, Integer, Void>() {
+            @Override
+            protected Void doInBackground(Long... longs) {
+                try {
+                    final Response<Void> stop_response = resource.stop(longs[0]).execute();
+                    if (!stop_response.isSuccessful())
+                        throw new IOException(stop_response.errorBody().string());
+                } catch (final IOException e) {
+                    Log.w(TAG, "Stopping lesson failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
                         public void run() {
                             Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
@@ -1086,27 +1122,6 @@ public class ExPLoRAAContext implements LocationListener {
 
     public void removeStudentsListener(StudentsListener l) {
         students_listeners.remove(l);
-    }
-
-    @SuppressLint("StaticFieldLeak")
-    public void stop(@NonNull final Context ctx, Lesson lesson) {
-        new AsyncTask<Long, Integer, Void>() {
-            @Override
-            protected Void doInBackground(Long... longs) {
-                try {
-                    final Response<Void> response = resource.stop(longs[0]).execute();
-                    if (!response.isSuccessful()) return null;
-                } catch (final IOException e) {
-                    Log.w(TAG, "Stopping lesson failed..", e);
-                    ((Activity) ctx).runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-                }
-                return null;
-            }
-        }.execute(lesson.id);
     }
 
     public interface StimuliListener {
