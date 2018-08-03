@@ -4,6 +4,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
@@ -44,6 +45,7 @@ public class EnrollActivity extends AppCompatActivity {
         enrolling_lessons_recycler_view.setHasFixedSize(true);
         enrolling_lessons_recycler_view.setLayoutManager(new LinearLayoutManager(this));
         enrolling_lessons_recycler_view.setAdapter(enrolling_lessons_adapter);
+        enrolling_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL));
     }
 
     @Override
