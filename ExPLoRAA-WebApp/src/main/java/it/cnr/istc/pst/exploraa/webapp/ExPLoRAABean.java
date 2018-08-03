@@ -368,17 +368,17 @@ public class ExPLoRAABean {
                         case Text:
                             Message.Stimulus.TextStimulus text = new Message.Stimulus.TextStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).content);
                             lesson.stimuli.add(text);
-                            tk_json = JSONB.toJson(text);
+                            tk_json = JSONB.toJson(text, Message.class);
                             break;
                         case URL:
                             Message.Stimulus.URLStimulus url = new Message.Stimulus.URLStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).content, ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).url);
                             lesson.stimuli.add(url);
-                            tk_json = JSONB.toJson(url);
+                            tk_json = JSONB.toJson(url, Message.class);
                             break;
                         case Question:
                             Message.Stimulus.QuestionStimulus question = new Message.Stimulus.QuestionStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).question, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).answers.stream().map(ans -> ans.answer).collect(Collectors.toList()), null);
                             lesson.stimuli.add(question);
-                            tk_json = JSONB.toJson(question);
+                            tk_json = JSONB.toJson(question, Message.class);
                             break;
                         default:
                             throw new AssertionError(tk.template.type.name());

@@ -3,6 +3,7 @@ package it.cnr.istc.exploraa;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -46,6 +47,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         teaching_lesson_tokens_recycler_view.setHasFixedSize(true);
         teaching_lesson_tokens_recycler_view.setLayoutManager(new LinearLayoutManager(this));
         teaching_lesson_tokens_recycler_view.setAdapter(teaching_lesson_tokens_adapter);
+        teaching_lesson_tokens_recycler_view.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
     }
 
     @Override

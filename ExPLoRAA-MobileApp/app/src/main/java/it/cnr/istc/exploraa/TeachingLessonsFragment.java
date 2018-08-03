@@ -79,7 +79,7 @@ public class TeachingLessonsFragment extends Fragment {
         teaching_lessons_recycler_view.setHasFixedSize(true);
         teaching_lessons_recycler_view.setLayoutManager(new LinearLayoutManager(getContext()));
         teaching_lessons_recycler_view.setAdapter(teaching_lessons_adapter);
-        teaching_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.HORIZONTAL));
+        teaching_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
     @Override

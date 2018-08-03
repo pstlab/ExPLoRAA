@@ -45,7 +45,7 @@ public class EnrollActivity extends AppCompatActivity {
         enrolling_lessons_recycler_view.setHasFixedSize(true);
         enrolling_lessons_recycler_view.setLayoutManager(new LinearLayoutManager(this));
         enrolling_lessons_recycler_view.setAdapter(enrolling_lessons_adapter);
-        enrolling_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.HORIZONTAL));
+        enrolling_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
     }
 
     @Override

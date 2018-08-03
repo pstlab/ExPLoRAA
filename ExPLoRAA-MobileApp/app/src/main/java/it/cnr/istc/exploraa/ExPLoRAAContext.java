@@ -164,18 +164,16 @@ public class ExPLoRAAContext implements LocationListener {
         return Collections.unmodifiableList(stimuli);
     }
 
-    private void addStimulus(@NonNull final Message.Stimulus stimulus) {
+    void addStimulus(@NonNull final Message.Stimulus stimulus) {
         final int pos = stimuli.size();
         stimuli.add(stimulus);
-        id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
         for (StimuliListener listener : stimuli_listeners)
             listener.stimulusAdded(pos, stimulus);
     }
 
-    private void removeStimulus(@NonNull final Message.Stimulus stimulus) {
+    void removeStimulus(@NonNull final Message.Stimulus stimulus) {
         final int pos = stimuli.indexOf(stimulus);
         stimuli.remove(pos);
-        id_following_lessons.get(stimulus.lesson_id).removeStimulus(stimulus);
         for (StimuliListener listener : stimuli_listeners)
             listener.stimulusRemoved(pos, stimulus);
     }
@@ -290,7 +288,7 @@ public class ExPLoRAAContext implements LocationListener {
                         switch (m.message_type) {
                             case RemoveLesson:
                                 // a teacher has removed a lesson for this student..
-                                final Message.RemoveLesson lost_lesson = GSON.fromJson(new String(message.getPayload()), Message.RemoveLesson.class);
+                                final Message.RemoveLesson lost_lesson = (Message.RemoveLesson) m;
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -326,7 +324,7 @@ public class ExPLoRAAContext implements LocationListener {
                                 break;
                             case Token:
                                 // a new token has been created for a teaching lesson..
-                                final Message.Token token = GSON.fromJson(new String(message.getPayload()), Message.Token.class);
+                                final Message.Token token = (Message.Token) m;
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -336,7 +334,7 @@ public class ExPLoRAAContext implements LocationListener {
                                 break;
                             case TokenUpdate:
                                 // a token of a teaching lesson has been updated..
-                                final Message.TokenUpdate token_update = GSON.fromJson(new String(message.getPayload()), Message.TokenUpdate.class);
+                                final Message.TokenUpdate token_update = (Message.TokenUpdate) m;
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -346,7 +344,7 @@ public class ExPLoRAAContext implements LocationListener {
                                 break;
                             case RemoveToken:
                                 // a token of a teaching lesson has been removed..
-                                final Message.RemoveToken remove_token = GSON.fromJson(new String(message.getPayload()), Message.RemoveToken.class);
+                                final Message.RemoveToken remove_token = (Message.RemoveToken) m;
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
@@ -356,27 +354,27 @@ public class ExPLoRAAContext implements LocationListener {
                                 break;
                             case Stimulus:
                                 // a new stimulus has been created for a following lesson..
-                                final Message.Stimulus stimulus = GSON.fromJson(new String(message.getPayload()), Message.Stimulus.class);
+                                final Message.Stimulus stimulus = (Message.Stimulus) m;
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
-                                        addStimulus(stimulus);
+                                        id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
                                     }
                                 });
                                 break;
                             case RemoveStimulus:
                                 // a stimulus has been removed for a following lesson..
-                                final Message.RemoveStimulus hide_stimulus = GSON.fromJson(new String(message.getPayload()), Message.RemoveStimulus.class);
+                                final Message.RemoveStimulus hide_stimulus = (Message.RemoveStimulus) m;
                                 new Handler(Looper.getMainLooper()).post(new Runnable() {
                                     @Override
                                     public void run() {
                                         Message.Stimulus s = null;
-                                        for (Message.Stimulus c_s : stimuli)
-                                            if (c_s.lesson_id == hide_stimulus.lesson_id && c_s.id == hide_stimulus.lesson_id) {
+                                        for (Message.Stimulus c_s : id_following_lessons.get(hide_stimulus.lesson_id).getStimuli())
+                                            if (c_s.id == hide_stimulus.id) {
                                                 s = c_s;
                                                 break;
                                             }
-                                        removeStimulus(s);
+                                        id_following_lessons.get(hide_stimulus.lesson_id).removeStimulus(s);
                                     }
                                 });
                                 break;

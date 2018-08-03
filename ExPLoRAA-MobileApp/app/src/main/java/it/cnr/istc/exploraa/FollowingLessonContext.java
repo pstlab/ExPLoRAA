@@ -50,16 +50,18 @@ public class FollowingLessonContext {
         return Collections.unmodifiableList(stimuli);
     }
 
-    public void addStimulus(final Message.Stimulus e) {
+    public void addStimulus(final Message.Stimulus stimulus) {
         int pos = stimuli.size();
-        stimuli.add(e);
-        for (FollowingLessonListener l : listeners) l.addedStimulus(pos, e);
+        stimuli.add(stimulus);
+        ExPLoRAAContext.getInstance().addStimulus(stimulus);
+        for (FollowingLessonListener l : listeners) l.addedStimulus(pos, stimulus);
     }
 
-    public void removeStimulus(final Message.Stimulus e) {
-        int pos = stimuli.indexOf(e);
+    public void removeStimulus(final Message.Stimulus stimulus) {
+        int pos = stimuli.indexOf(stimulus);
         stimuli.remove(pos);
-        for (FollowingLessonListener l : listeners) l.removedStimulus(pos, e);
+        ExPLoRAAContext.getInstance().removeStimulus(stimulus);
+        for (FollowingLessonListener l : listeners) l.removedStimulus(pos, stimulus);
     }
 
     public void addListener(FollowingLessonListener l) {

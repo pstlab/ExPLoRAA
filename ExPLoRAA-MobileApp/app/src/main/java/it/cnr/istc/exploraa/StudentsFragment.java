@@ -34,7 +34,7 @@ public class StudentsFragment extends Fragment {
         students_recycler_view.setHasFixedSize(true);
         students_recycler_view.setLayoutManager(new LinearLayoutManager(getContext()));
         students_recycler_view.setAdapter(students_adapter);
-        students_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.HORIZONTAL));
+        students_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
     @Override

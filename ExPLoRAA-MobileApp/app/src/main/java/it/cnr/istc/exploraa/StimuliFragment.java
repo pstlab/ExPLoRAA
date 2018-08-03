@@ -38,7 +38,7 @@ public class StimuliFragment extends Fragment {
         stimuli_recycler_view.setHasFixedSize(true);
         stimuli_recycler_view.setLayoutManager(new LinearLayoutManager(getContext()));
         stimuli_recycler_view.setAdapter(stimuli_adapter);
-        stimuli_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.HORIZONTAL));
+        stimuli_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
     @Override
