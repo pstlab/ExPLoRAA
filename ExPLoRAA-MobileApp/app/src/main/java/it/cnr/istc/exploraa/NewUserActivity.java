@@ -48,7 +48,7 @@ public class NewUserActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
         } else {
             try {
-                if (ExPLoRAAContext.getInstance().new_user(this, email.getText().toString(), password.getText().toString(), first_name.getText().toString(), last_name.getText().toString())) {
+                if (ExPLoRAAContext.getInstance().newUser(this, email.getText().toString(), password.getText().toString(), first_name.getText().toString(), last_name.getText().toString())) {
                     // we store email and password so as to avoid asking them everytime the app is started..
                     SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
                     SharedPreferences.Editor prefs_edit = shared_prefs.edit();
@@ -71,7 +71,7 @@ public class NewUserActivity extends AppCompatActivity {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     try {
-                        if (ExPLoRAAContext.getInstance().new_user(this, email.getText().toString(), password.getText().toString(), first_name.getText().toString(), last_name.getText().toString())) {
+                        if (ExPLoRAAContext.getInstance().newUser(this, email.getText().toString(), password.getText().toString(), first_name.getText().toString(), last_name.getText().toString())) {
                             // we store email and password so as to avoid asking them everytime the app is started..
                             SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
                             SharedPreferences.Editor prefs_edit = shared_prefs.edit();
