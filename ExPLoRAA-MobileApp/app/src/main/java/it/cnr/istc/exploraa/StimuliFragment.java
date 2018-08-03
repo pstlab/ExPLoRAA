@@ -102,6 +102,7 @@ public class StimuliFragment extends Fragment {
         private StimulusView(StimuliFragment frgmnt, View view) {
             super(view);
             this.frgmnt = frgmnt;
+            view.setOnClickListener(this);
             title = view.findViewById(R.id.stimulus_title);
         }
 
