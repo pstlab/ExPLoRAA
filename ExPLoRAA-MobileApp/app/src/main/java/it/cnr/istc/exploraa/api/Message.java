@@ -615,7 +615,7 @@ public abstract class Message {
                                 ((RemoveStimulus) m).lesson_id = in.nextLong();
                                 break;
                             case "id":
-                                ((RemoveStimulus) m).lesson_id = in.nextInt();
+                                ((RemoveStimulus) m).id = in.nextInt();
                                 break;
                         }
                     break;
