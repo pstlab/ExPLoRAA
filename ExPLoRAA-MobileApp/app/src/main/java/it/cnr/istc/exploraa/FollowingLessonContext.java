@@ -17,7 +17,8 @@ public class FollowingLessonContext {
 
     FollowingLessonContext(Lesson lesson) {
         this.lesson = lesson;
-        stimuli.addAll(lesson.stimuli);
+        for (Message.Stimulus stimulus : lesson.stimuli)
+            addStimulus(stimulus);
     }
 
     public Lesson getLesson() {
