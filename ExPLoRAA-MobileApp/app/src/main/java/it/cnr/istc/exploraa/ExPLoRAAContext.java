@@ -574,7 +574,7 @@ public class ExPLoRAAContext implements LocationListener {
     }
 
     private void addTeachingLesson(@NonNull final TeachingLessonContext l_ctx) {
-        final int l_pos = teachers.size();
+        final int l_pos = teaching_lessons.size();
         teaching_lessons.add(l_ctx);
         id_teaching_lessons.put(l_ctx.getLesson().id, l_ctx);
         if (l_ctx.getLesson().students != null)
