@@ -12,6 +12,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import it.cnr.istc.exploraa.api.Lesson;
@@ -21,6 +22,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
     private TeachingLessonContext ctx;
     private Menu options_menu;
+    private ImageView teaching_lesson_status_image_view;
     private TextView teaching_lesson_name;
     private TextView teaching_lesson_time;
     private RecyclerView teaching_lesson_tokens_recycler_view;
@@ -31,9 +33,10 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_teaching_lesson);
 
-        teaching_lesson_name = findViewById(R.id.teaching_lesson_name);
-        teaching_lesson_time = findViewById(R.id.teaching_lesson_time);
-        teaching_lesson_tokens_recycler_view = findViewById(R.id.teaching_lesson_tokens_recycler_view);
+        teaching_lesson_status_image_view = findViewById(R.id.activity_teaching_lesson_status_image_view);
+        teaching_lesson_name = findViewById(R.id.activity_teaching_lesson_name);
+        teaching_lesson_time = findViewById(R.id.activity_teaching_lesson_time);
+        teaching_lesson_tokens_recycler_view = findViewById(R.id.activity_teaching_lesson_tokens_recycler_view);
 
         long lesson_id = getIntent().getLongExtra("lesson_id", -1);
         ctx = ExPLoRAAContext.getInstance().getTeachingLesson(getIntent().getLongExtra("lesson_id", -1));
@@ -55,7 +58,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.teaching_lesson_menu, menu);
         options_menu = menu;
-        stateChanged(ctx.getLesson().state);
+        stateChanged(ctx.getState());
         return true;
     }
 
@@ -79,8 +82,8 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
     @Override
     public void onResume() {
         super.onResume();
-        teaching_lesson_time.setText(ExPLoRAAContext.convertTimeToString(ctx.getLesson().time));
         ctx.addListener(this);
+        stateChanged(ctx.getState());
     }
 
     @Override
@@ -98,19 +101,28 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
     public void stateChanged(Lesson.LessonState state) {
         switch (state) {
             case Running:
-                options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
-                options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
-                options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                teaching_lesson_status_image_view.setImageResource(R.drawable.ic_play);
+                if (options_menu != null) {
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                }
                 break;
             case Paused:
-                options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
-                options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
-                options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                teaching_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
+                if (options_menu != null) {
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                }
                 break;
             case Stopped:
-                options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
-                options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
-                options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
+                teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
+                if (options_menu != null) {
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
+                }
                 break;
         }
     }

@@ -69,7 +69,7 @@
         app:layout_constraintTop_toBottomOf="@+id/token_time" />
 
     <android.support.constraint.Barrier
-        android:id="@+id/barrier"
+        android:id="@+id/token_barrier"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         app:barrierDirection="right"
@@ -84,12 +84,12 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:gravity="right"
+        android:gravity="end"
         android:maxWidth="200dp"
         android:text="@string/app_name"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/barrier"
+        app:layout_constraintStart_toEndOf="@+id/token_barrier"
         app:layout_constraintTop_toTopOf="parent" />
 
 </android.support.constraint.ConstraintLayout>

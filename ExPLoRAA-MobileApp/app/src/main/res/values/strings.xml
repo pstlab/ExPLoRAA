@@ -32,4 +32,5 @@
     <string name="add_lesson_type">Add</string>
     <string name="connection_status">Connection status</string>
     <string name="lesson_status">Lesson status</string>
+    <string name="select_a_lesson">Select a lesson</string>
 </resources>

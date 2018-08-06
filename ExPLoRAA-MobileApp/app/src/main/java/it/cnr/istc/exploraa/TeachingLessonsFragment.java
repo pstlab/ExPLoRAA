@@ -154,7 +154,7 @@ public class TeachingLessonsFragment extends Fragment {
             this.frgmnt = frgmnt;
             view.setOnClickListener(this);
             view.setOnLongClickListener(this);
-            title = view.findViewById(R.id.teaching_lesson_name);
+            title = view.findViewById(R.id.activity_teaching_lesson_name);
             teaching_lesson_status_image_view = view.findViewById(R.id.teaching_lesson_status_image_view);
         }
 

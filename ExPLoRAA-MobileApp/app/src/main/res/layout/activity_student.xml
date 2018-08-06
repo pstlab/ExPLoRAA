@@ -4,24 +4,59 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".StudentActivity">
+    tools:context=".StudentActivity"
+    tools:layout_editor_absoluteY="81dp">
 
     <TextView
-        android:id="@+id/student_first_name"
+        android:id="@+id/student_first_name_label"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="17dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:text="@string/first_name"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
     <TextView
-        android:id="@+id/student_last_name"
+        android:id="@+id/student_first_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/student_first_name_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/student_barrier"
+        app:layout_constraintTop_toTopOf="@+id/student_first_name_label" />
+
+    <TextView
+        android:id="@+id/student_second_name_label"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:text="@string/last_name"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/student_first_name" />
+        app:layout_constraintTop_toBottomOf="@+id/student_first_name_label" />
+
+    <TextView
+        android:id="@+id/student_last_name"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="@+id/student_second_name_label"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/student_barrier"
+        app:layout_constraintTop_toTopOf="@+id/student_second_name_label" />
+
+    <android.support.constraint.Barrier
+        android:id="@+id/student_barrier"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        app:barrierDirection="right"
+        app:constraint_referenced_ids="student_second_name_label,student_first_name_label"
+        tools:layout_editor_absoluteX="74dp" />
 
 </android.support.constraint.ConstraintLayout>
