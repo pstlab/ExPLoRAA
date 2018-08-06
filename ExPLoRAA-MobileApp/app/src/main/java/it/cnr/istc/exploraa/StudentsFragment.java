@@ -11,6 +11,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 public class StudentsFragment extends Fragment {
@@ -99,17 +100,20 @@ public class StudentsFragment extends Fragment {
         private StudentsFragment frgmnt;
         private StudentContext student;
         private TextView name;
+        private ImageView student_connection_status_image_view;
 
         private StudentView(StudentsFragment frgmnt, View view) {
             super(view);
             this.frgmnt = frgmnt;
             view.setOnClickListener(this);
             name = view.findViewById(R.id.student_name);
+            student_connection_status_image_view = view.findViewById(R.id.student_connection_status_image_view);
         }
 
         private void setStudent(StudentContext student) {
             this.student = student;
             name.setText(student.getStudent().first_name + " " + student.getStudent().last_name);
+            student_connection_status_image_view.setImageResource(student.isOnLine() ? android.R.drawable.presence_online : android.R.drawable.presence_offline);
         }
 
         @Override
