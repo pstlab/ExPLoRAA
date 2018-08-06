@@ -62,7 +62,7 @@ public interface ExPLoRAA {
 
     @FormUrlEncoded
     @PUT("follow")
-    Call<Void> follow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id, @Field("interests") String interests);
+    Call<Lesson> follow(@Field("user_id") long user_id, @Field("lesson_id") long lesson_id, @Field("interests") String interests);
 
     @FormUrlEncoded
     @PUT("unfollow")

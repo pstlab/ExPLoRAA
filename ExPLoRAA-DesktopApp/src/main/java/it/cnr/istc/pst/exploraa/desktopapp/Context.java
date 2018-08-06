@@ -622,8 +622,8 @@ public class Context {
     }
 
     public void followLesson(Lesson lesson, Set<String> interests) {
-        resource.follow(user.get().id, lesson.id, JSONB.toJson(interests));
-        following_lessons.add(new FollowingLessonContext(lesson));
+        Lesson l = resource.follow(user.get().id, lesson.id, JSONB.toJson(interests));
+        following_lessons.add(new FollowingLessonContext(l));
     }
 
     public void unfollowLesson(Lesson lesson) {

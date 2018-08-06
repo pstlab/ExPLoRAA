@@ -863,10 +863,10 @@ public class ExPLoRAAContext implements LocationListener {
             @Override
             protected Void doInBackground(Object... objects) {
                 try {
-                    final Response<Void> follow_response = resource.follow((long) objects[0], (long) objects[1], GSON.toJson(objects[2])).execute();
+                    final Response<Lesson> follow_response = resource.follow((long) objects[0], (long) objects[1], GSON.toJson(objects[2])).execute();
                     if (!follow_response.isSuccessful())
                         throw new IOException(follow_response.errorBody().string());
-                    addFollowingLesson(new FollowingLessonContext(lesson));
+                    addFollowingLesson(new FollowingLessonContext(follow_response.body()));
                 } catch (final IOException e) {
                     Log.w(TAG, "Lesson following failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {

@@ -102,12 +102,12 @@ class ExPLoRAAResource implements ExPLoRAA {
     }
 
     @Override
-    public void follow(long user_id, long lesson_id, String interests) {
+    public Lesson follow(long user_id, long lesson_id, String interests) {
         Form follow_form = new Form();
         follow_form.param("user_id", Long.toString(user_id));
         follow_form.param("lesson_id", Long.toString(lesson_id));
         follow_form.param("interests", interests);
-        target.path("follow").request(MediaType.APPLICATION_JSON).put(Entity.form(follow_form));
+        return target.path("follow").request(MediaType.APPLICATION_JSON).put(Entity.form(follow_form), Lesson.class);
     }
 
     @Override

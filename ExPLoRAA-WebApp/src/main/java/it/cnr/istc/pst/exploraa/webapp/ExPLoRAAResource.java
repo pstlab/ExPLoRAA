@@ -179,7 +179,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
             for (FollowEntity follow : ue.getFollowedLessons()) {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
-                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, l.stimuli, null, new Teach(teacher, null), null, l.state, l.time);
+                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, l.stimuli.stream().filter(st -> st.students.contains(ue.getId())).collect(Collectors.toList()), null, new Teach(teacher, null), null, l.state, l.time);
                 follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
@@ -329,15 +329,16 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Override
     public Collection<Lesson> get_lessons() {
         LOG.info("retrieving all lessons..");
-        List<Lesson> lessons = ctx.getLessonManagers().stream().map(lm -> lm.getLesson()).map(l -> new Lesson(l.id, l.name, l.model, l.topics, l.stimuli, l.tokens, new Teach(l.teacher.user, null), l.students.values().stream().collect(Collectors.toMap(s -> s.user.id, s -> new Follow(s.user, null, s.interests))), l.state, l.time)).collect(Collectors.toList());
+        List<Lesson> lessons = ctx.getLessonManagers().stream().map(lm -> lm.getLesson()).map(l -> new Lesson(l.id, l.name, l.model, l.topics, null, null, new Teach(l.teacher.user, null), l.students.values().stream().collect(Collectors.toMap(s -> s.user.id, s -> new Follow(s.user, null, s.interests))), l.state, l.time)).collect(Collectors.toList());
         LOG.log(Level.INFO, "found {0} lessons", lessons.size());
         return lessons;
     }
 
     @PUT
     @Path("follow")
+    @Produces(MediaType.APPLICATION_JSON)
     @Override
-    public void follow(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id, @FormParam("interests") String interests) {
+    public Lesson follow(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id, @FormParam("interests") String interests) {
         LOG.log(Level.INFO, "User {0} is trying to follow lesson {1} with interests {2}", new Object[]{user_id, lesson_id, interests});
         try {
             utx.begin();
@@ -361,6 +362,10 @@ public class ExPLoRAAResource implements ExPLoRAA {
 
             ctx.follow(new User(student.getId(), student.getEmail(), student.getFirstName(), student.getLastName(), ctx.isOnline(student.getId()), ctx.getParTypes(student.getId()), ctx.getParValues(student.getId()), null, null, null), lesson_id, new HashSet<>(c_interests));
             utx.commit();
+
+            User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
+            Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
+            return new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, l.stimuli.stream().filter(st -> st.students.contains(student.getId())).collect(Collectors.toList()), null, new Teach(teacher, null), null, l.state, l.time);
         } catch (IllegalStateException | SecurityException | JsonbException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException ex) {
             try {
                 utx.rollback();

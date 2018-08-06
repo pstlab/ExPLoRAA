@@ -40,7 +40,7 @@ public interface ExPLoRAA {
 
     public Collection<Lesson> get_lessons();
 
-    public void follow(long user_id, long lesson_id, String interests);
+    public Lesson follow(long user_id, long lesson_id, String interests);
 
     public void unfollow(long user_id, long lesson_id);
 
