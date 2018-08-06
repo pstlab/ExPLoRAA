@@ -42,6 +42,7 @@ public class StudentsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         ExPLoRAAContext.getInstance().addStudentsListener(students_adapter);
+        students_adapter.notifyDataSetChanged();
     }
 
     @Override

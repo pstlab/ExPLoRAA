@@ -87,6 +87,7 @@ public class TeachingLessonsFragment extends Fragment {
     public void onResume() {
         super.onResume();
         ExPLoRAAContext.getInstance().addTeachingLessonsListener(teaching_lessons_adapter);
+        teaching_lessons_adapter.notifyDataSetChanged();
     }
 
     @Override

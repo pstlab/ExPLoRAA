@@ -45,6 +45,7 @@ public class StimuliFragment extends Fragment {
     public void onResume() {
         super.onResume();
         ExPLoRAAContext.getInstance().addStimuliListener(stimuli_adapter);
+        stimuli_adapter.notifyDataSetChanged();
     }
 
     @Override
