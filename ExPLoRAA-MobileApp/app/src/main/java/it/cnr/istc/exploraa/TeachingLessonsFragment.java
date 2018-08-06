@@ -15,6 +15,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
@@ -144,6 +145,7 @@ public class TeachingLessonsFragment extends Fragment {
 
         private TeachingLessonContext lesson;
         private TextView title;
+        private ImageView teaching_lesson_status_image_view;
         private TeachingLessonsFragment frgmnt;
 
         private TeachingLessonView(final TeachingLessonsFragment frgmnt, final View view) {
@@ -152,11 +154,23 @@ public class TeachingLessonsFragment extends Fragment {
             view.setOnClickListener(this);
             view.setOnLongClickListener(this);
             title = view.findViewById(R.id.teaching_lesson_name);
+            teaching_lesson_status_image_view = view.findViewById(R.id.teaching_lesson_status_image_view);
         }
 
         private void setLesson(int pos, TeachingLessonContext lesson) {
             this.lesson = lesson;
             title.setText(lesson.getLesson().name);
+            switch (lesson.getState()) {
+                case Running:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_play);
+                    break;
+                case Paused:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
+                    break;
+                case Stopped:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
+                    break;
+            }
             if (frgmnt.teaching_lessons_adapter.selected_lessons.contains(pos))
                 itemView.setBackgroundColor(Color.LTGRAY);
             else

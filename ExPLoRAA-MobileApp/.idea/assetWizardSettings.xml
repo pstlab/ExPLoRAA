@@ -34,8 +34,8 @@
                                   <option name="values">
                                     <map>
                                       <entry key="assetType" value="IMAGE" />
-                                      <entry key="imageAsset" value="C:\Users\ricde\Desktop\204712-200.png" />
-                                      <entry key="outputName" value="exploraa_icon" />
+                                      <entry key="imageAsset" value="C:\Users\ricde\Desktop\pause.png" />
+                                      <entry key="outputName" value="ic_pause" />
                                       <entry key="theme" value="CUSTOM" />
                                     </map>
                                   </option>
@@ -90,7 +90,25 @@
         </entry>
         <entry key="vectorWizard">
           <value>
-            <PersistentState />
+            <PersistentState>
+              <option name="children">
+                <map>
+                  <entry key="vectorAssetStep">
+                    <value>
+                      <PersistentState>
+                        <option name="values">
+                          <map>
+                            <entry key="assetSourceType" value="FILE" />
+                            <entry key="outputName" value="ic_stop" />
+                            <entry key="sourceFile" value="C:\Users\ricde\Desktop\stop.svg" />
+                          </map>
+                        </option>
+                      </PersistentState>
+                    </value>
+                  </entry>
+                </map>
+              </option>
+            </PersistentState>
           </value>
         </entry>
       </map>

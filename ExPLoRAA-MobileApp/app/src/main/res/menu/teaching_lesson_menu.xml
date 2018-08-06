@@ -4,17 +4,17 @@
 
     <item
         android:id="@+id/teaching_lesson_play_menu_item"
-        android:icon="@android:drawable/ic_media_play"
+        android:icon="@drawable/ic_play"
         android:title="@string/play"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/teaching_lesson_pause_menu_item"
-        android:icon="@android:drawable/ic_media_pause"
+        android:icon="@drawable/ic_pause"
         android:title="@string/pause"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/teaching_lesson_stop_menu_item"
-        android:icon="@android:drawable/ic_media_rew"
+        android:icon="@drawable/ic_stop"
         android:title="@string/stop"
         app:showAsAction="ifRoom" />
 </menu>

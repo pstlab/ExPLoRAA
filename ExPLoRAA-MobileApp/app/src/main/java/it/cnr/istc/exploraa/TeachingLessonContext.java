@@ -27,11 +27,19 @@ public class TeachingLessonContext {
         return lesson;
     }
 
+    public Lesson.LessonState getState() {
+        return lesson.state;
+    }
+
     public void setState(Lesson.LessonState state) {
         if (lesson.state != state) {
             lesson.state = state;
             for (TeachingLessonListener l : listeners) l.stateChanged(state);
         }
+    }
+
+    public long getTime() {
+        return lesson.time;
     }
 
     public void setTime(long time) {

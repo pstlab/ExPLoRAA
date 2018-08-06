@@ -12,8 +12,6 @@ public class FollowingLessonContext {
     private final Lesson lesson;
     private final List<Message.Stimulus> stimuli = new ArrayList<>();
     private final List<FollowingLessonListener> listeners = new ArrayList<>();
-    private Lesson.LessonState state = Lesson.LessonState.Stopped;
-    private long time = 0;
 
     FollowingLessonContext(Lesson lesson) {
         this.lesson = lesson;
@@ -26,23 +24,23 @@ public class FollowingLessonContext {
     }
 
     public Lesson.LessonState getState() {
-        return state;
+        return lesson.state;
     }
 
     public void setState(Lesson.LessonState state) {
-        if (this.state != state) {
-            this.state = state;
+        if (lesson.state != state) {
+            lesson.state = state;
             for (FollowingLessonListener l : listeners) l.stateChanged(state);
         }
     }
 
     public long getTime() {
-        return time;
+        return lesson.time;
     }
 
     public void setTime(long time) {
-        if (this.time != time) {
-            this.time = time;
+        if (lesson.time != time) {
+            lesson.time = time;
             for (FollowingLessonListener l : listeners) l.timeChanged(time);
         }
     }
