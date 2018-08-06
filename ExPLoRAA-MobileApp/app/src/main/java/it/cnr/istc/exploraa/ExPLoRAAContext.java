@@ -154,13 +154,8 @@ public class ExPLoRAAContext implements LocationListener {
                     // we broadcast the lost of a parameter..
                     if (mqtt.isConnected()) for (Parameter par : par_types)
                         mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(par.name)).getBytes(), 1, false);
-                    new Handler(Looper.getMainLooper()).post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                                ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).removeUpdates(ExPLoRAAContext.this);
-                        }
-                    });
+                    if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                        ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).removeUpdates(ExPLoRAAContext.this);
                     par_types.clear();
                     id_par_types.clear();
                     stimuli.clear();
@@ -349,13 +344,9 @@ public class ExPLoRAAContext implements LocationListener {
                     // we broadcast the existence of a new parameter..
                     mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
                 }
-                new Handler(Looper.getMainLooper()).post(new Runnable() {
-                    @Override
-                    public void run() {
-                        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                            ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ExPLoRAAContext.this);
-                    }
-                });
+                if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                    ((LocationManager) ctx.getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, ExPLoRAAContext.this);
+
                 for (Map.Entry<String, Map<String, String>> par_val : user.par_values.entrySet()) {
                     par_vals.put(par_val.getKey(), par_val.getValue());
                     // we broadcast the the new value of the parameter..
@@ -777,8 +768,13 @@ public class ExPLoRAAContext implements LocationListener {
                     l.model = model;
                     // the new lesson has not any tokens yet..
                     l.tokens = new ArrayList<>();
-                    // we add a new context for the returned lesson..
-                    addTeachingLesson(new TeachingLessonContext(l));
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            // we add a new context for the returned lesson..
+                            addTeachingLesson(new TeachingLessonContext(l));
+                        }
+                    });
                     // we solve the lesson..
                     final Response<Void> solve_response = resource.solve(l.id).execute();
                     if (!solve_response.isSuccessful())
@@ -805,8 +801,13 @@ public class ExPLoRAAContext implements LocationListener {
                     final Response<Void> delete_lesson_response = resource.delete_lesson(longs[0]).execute();
                     if (!delete_lesson_response.isSuccessful())
                         throw new IOException(delete_lesson_response.errorBody().string());
-                    // we remove the context for the lesson..
-                    removeTeachingLesson(l_ctx);
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            // we remove the context for the lesson..
+                            removeTeachingLesson(l_ctx);
+                        }
+                    });
                 } catch (final IOException e) {
                     Log.w(TAG, "Lesson removal failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
@@ -829,7 +830,12 @@ public class ExPLoRAAContext implements LocationListener {
                     final Response<Lesson> follow_response = resource.follow((long) objects[0], (long) objects[1], GSON.toJson(objects[2])).execute();
                     if (!follow_response.isSuccessful())
                         throw new IOException(follow_response.errorBody().string());
-                    addFollowingLesson(new FollowingLessonContext(follow_response.body()));
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            addFollowingLesson(new FollowingLessonContext(follow_response.body()));
+                        }
+                    });
                 } catch (final IOException e) {
                     Log.w(TAG, "Lesson following failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
@@ -852,7 +858,12 @@ public class ExPLoRAAContext implements LocationListener {
                     final Response<Void> unfollow_response = resource.unfollow((long) objects[0], (long) objects[1]).execute();
                     if (!unfollow_response.isSuccessful())
                         throw new IOException(unfollow_response.errorBody().string());
-                    removeFollowingLesson(l_ctx);
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            removeFollowingLesson(l_ctx);
+                        }
+                    });
                 } catch (final IOException e) {
                     Log.w(TAG, "Lesson unfollowing failed..", e);
                     ((Activity) ctx).runOnUiThread(new Runnable() {
