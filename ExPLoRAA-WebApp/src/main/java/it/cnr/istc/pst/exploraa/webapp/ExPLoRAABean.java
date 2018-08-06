@@ -442,7 +442,23 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void follow(User student, long lesson, Set<String> interests) {
-        lessons.get(lesson).getLesson().students.put(student.id, new Follow(student, lessons.get(lesson).getLesson(), interests));
+        Lesson l = lessons.get(lesson).getLesson();
+
+        // we add the new student to the lesson..
+        l.students.put(student.id, new Follow(student, lessons.get(lesson).getLesson(), interests));
+
+        // we add the student to the sent stimuli..
+        for (Message.Stimulus stimulus : l.stimuli) {
+            Message.Token tk = l.tokens.stream().filter(c_tk -> c_tk.id == stimulus.id).findAny().get();
+            LessonModel.StimulusTemplate stimulus_template = l.model.stimuli.get(tk.refEvent);
+            for (String interest : interests) {
+                if (stimulus_template.topics.contains(interest)) {
+                    stimulus.students.add(student.id);
+                    break;
+                }
+            }
+        }
+
         try {
             // we notify the teacher of a new user following a lesson..
             mqtt.publish(lessons.get(lesson).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.FollowLesson(student, lesson, interests)).getBytes(), 1, false);
@@ -460,10 +476,14 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void unfollow(long student, long lesson) {
-        lessons.get(lesson).getLesson().students.remove(student);
+        Lesson l = lessons.get(lesson).getLesson();
+        l.students.remove(student);
+        for (Message.Stimulus stimulus : l.stimuli) {
+            stimulus.students.remove(student);
+        }
         try {
             // we notify the teacher of a user unfollowing a lesson..
-            mqtt.publish(lessons.get(lesson).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.UnfollowLesson(student, lesson)).getBytes(), 1, false);
+            mqtt.publish(l.teacher.user.id + "/input", JSONB.toJson(new Message.UnfollowLesson(student, lesson)).getBytes(), 1, false);
             // we notify other students that have lost a classmate..
             for (Long student_id : lessons.get(lesson).getLesson().students.keySet()) {
                 if (student_id != student) {
