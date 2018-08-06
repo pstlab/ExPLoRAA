@@ -33,4 +33,7 @@
     <string name="connection_status">Connection status</string>
     <string name="lesson_status">Lesson status</string>
     <string name="select_a_lesson">Select a lesson</string>
+    <string name="text">Text</string>
+    <string name="question">Question</string>
+    <string name="url">Link</string>
 </resources>

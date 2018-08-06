@@ -30,10 +30,20 @@
         <activity android:name=".TeachingLessonActivity" />
         <activity android:name=".FollowingLessonActivity" />
         <activity android:name=".StudentActivity" />
-        <activity android:name=".StimulusActivity" />
-        <activity android:name=".TextStimulusActivity" />
-        <activity android:name=".URLStimulusActivity" />
-        <activity android:name=".QuestionStimulusActivity"></activity>
+        <activity
+            android:name=".TextStimulusActivity"
+            android:parentActivityName=".MainActivity" />
+        <activity
+            android:name=".URLStimulusActivity"
+            android:parentActivityName=".MainActivity" />
+        <activity
+            android:name=".QuestionStimulusActivity"
+            android:parentActivityName=".MainActivity" />
+
+        <service
+            android:name=".ExPLoRAAService"
+            android:enabled="true"
+            android:exported="true"></service>
     </application>
 
 </manifest>
