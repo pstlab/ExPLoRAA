@@ -4,7 +4,7 @@
 
     <item
         android:id="@+id/add_following_lesson_menu_item"
-        android:icon="@android:drawable/ic_menu_add"
+        android:icon="@android:drawable/ic_input_add"
         android:title="@string/add_lesson"
         app:showAsAction="ifRoom" />
     <item
