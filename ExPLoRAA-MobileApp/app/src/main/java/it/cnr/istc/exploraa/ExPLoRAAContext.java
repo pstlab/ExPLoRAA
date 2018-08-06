@@ -739,55 +739,18 @@ public class ExPLoRAAContext implements LocationListener {
         return id_students.get(id);
     }
 
-    @SuppressLint("StaticFieldLeak")
-    public boolean login(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password) throws ExecutionException, InterruptedException {
-        return new AsyncTask<String, Integer, Boolean>() {
-            @Override
-            protected Boolean doInBackground(String... strings) {
-                try {
-                    Response<User> login_response = resource.login(strings[0], strings[1]).execute();
-                    if (!login_response.isSuccessful())
-                        throw new IOException(login_response.errorBody().string());
-                    Log.i(TAG, "Login successful..");
-                    User user = login_response.body();
+    private static Map<String, Parameter> get_par_types(@NonNull final Context ctx) {
+        Map<String, Parameter> c_par_types = new HashMap<>();
 
-                    // we set the parameters of init's user (these parameters will be communicated to the server..)
-                    assert user != null;
-                    user.par_types = get_par_types(ctx);
-                    user.par_values = get_par_values(ctx);
-
-                    setUser(ctx, user);
-
-                    // we add the teachers and the following lessons..
-                    for (Follow follow : user.follows.values()) {
-                        if (id_teachers.get(follow.lesson.teacher.user.id) == null)
-                            addTeacher(new TeacherContext(follow.lesson.teacher.user));
-                        addFollowingLesson(new FollowingLessonContext(follow.lesson));
-                    }
-
-                    // we add the students and the teaching lessons..
-                    for (Teach teach : user.teachs.values()) {
-                        for (Follow follow : teach.lesson.students.values())
-                            if (id_students.get(follow.user.id) == null)
-                                addStudent(new StudentContext(follow.user));
-                        addTeachingLesson(new TeachingLessonContext(teach.lesson));
-                    }
-
-                    // we add the available lesson models..
-                    models.addAll(user.models.values());
-
-                    return true;
-                } catch (final IOException e) {
-                    Log.w(TAG, "Login failed..", e);
-                    ((Activity) ctx).runOnUiThread(new Runnable() {
-                        public void run() {
-                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
-                    return false;
-                }
-            }
-        }.execute(email, password).get();
+        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Parameter gps = new Parameter();
+            gps.name = "GPS";
+            gps.properties = new HashMap<>(2);
+            gps.properties.put("latitude", "numeric");
+            gps.properties.put("longitude", "numeric");
+            c_par_types.put("GPS", gps);
+        }
+        return c_par_types;
     }
 
     public void logout(@NonNull final Context ctx) {
@@ -992,21 +955,7 @@ public class ExPLoRAAContext implements LocationListener {
         }.execute(lesson.id);
     }
 
-    private Map<String, Parameter> get_par_types(@NonNull final Context ctx) {
-        Map<String, Parameter> c_par_types = new HashMap<>();
-
-        if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Parameter gps = new Parameter();
-            gps.name = "GPS";
-            gps.properties = new HashMap<>(2);
-            gps.properties.put("latitude", "numeric");
-            gps.properties.put("longitude", "numeric");
-            c_par_types.put("GPS", gps);
-        }
-        return c_par_types;
-    }
-
-    private Map<String, Map<String, String>> get_par_values(@NonNull final Context ctx) {
+    private static Map<String, Map<String, String>> get_par_values(@NonNull final Context ctx) {
         Map<String, Map<String, String>> c_par_values = new HashMap<>();
 
         if (ContextCompat.checkSelfPermission(ctx, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
@@ -1022,6 +971,62 @@ public class ExPLoRAAContext implements LocationListener {
             c_par_values.put("GPS", gps_pos);
         }
         return c_par_values;
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public boolean login(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password) throws ExecutionException, InterruptedException {
+        return new AsyncTask<String, Integer, Boolean>() {
+            @Override
+            protected Boolean doInBackground(String... strings) {
+                try {
+                    Response<User> login_response = resource.login(strings[0], strings[1]).execute();
+                    if (!login_response.isSuccessful())
+                        throw new IOException(login_response.errorBody().string());
+                    Log.i(TAG, "Login successful..");
+                    final User user = login_response.body();
+
+                    // we set the parameters of init's user (these parameters will be communicated to the server..)
+                    assert user != null;
+                    user.par_types = get_par_types(ctx);
+                    user.par_values = get_par_values(ctx);
+
+                    new Handler(Looper.getMainLooper()).post(new Runnable() {
+                        @Override
+                        public void run() {
+                            setUser(ctx, user);
+
+                            // we add the teachers and the following lessons..
+                            for (Follow follow : user.follows.values()) {
+                                if (id_teachers.get(follow.lesson.teacher.user.id) == null)
+                                    addTeacher(new TeacherContext(follow.lesson.teacher.user));
+                                addFollowingLesson(new FollowingLessonContext(follow.lesson));
+                            }
+
+                            // we add the students and the teaching lessons..
+                            for (Teach teach : user.teachs.values()) {
+                                for (Follow follow : teach.lesson.students.values())
+                                    if (id_students.get(follow.user.id) == null)
+                                        addStudent(new StudentContext(follow.user));
+                                addTeachingLesson(new TeachingLessonContext(teach.lesson));
+                            }
+
+                            // we add the available lesson models..
+                            models.addAll(user.models.values());
+                        }
+                    });
+
+                    return true;
+                } catch (final IOException e) {
+                    Log.w(TAG, "Login failed..", e);
+                    ((Activity) ctx).runOnUiThread(new Runnable() {
+                        public void run() {
+                            Toast.makeText(ctx, e.getLocalizedMessage(), Toast.LENGTH_LONG).show();
+                        }
+                    });
+                    return false;
+                }
+            }
+        }.execute(email, password).get();
     }
 
     @Override
