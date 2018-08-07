@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -11,6 +12,7 @@ import android.location.LocationManager;
 import android.os.Binder;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -139,15 +141,19 @@ public class ExPLoRAAService extends Service implements LocationListener {
     @Override
     public void onCreate() {
         super.onCreate();
-        Log.i(TAG, "Creating service..");
+        Log.i(TAG, "Creating ExPLoRAA service..");
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();
         resource = retrofit.create(ExPLoRAA.class);
+
+        SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
+            login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        Log.i(TAG, "Destroying service..");
+        Log.i(TAG, "Destroying ExPLoRAA service..");
         if (user != null)
             logout();
         if (mqtt != null && mqtt.isConnected()) try {
@@ -236,6 +242,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
 
                 if (mqtt.isConnected()) mqtt.disconnect();
                 mqtt.close();
+                Log.i(TAG, "Disconnected from the MQTT broker..");
                 mqtt = null;
             } catch (MqttException ex) {
                 Log.e(TAG, null, ex);
@@ -248,6 +255,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
                     @Override
                     public void connectionLost(Throwable cause) {
                         Log.e(TAG, "Connection lost..", cause);
+                        logout();
                     }
 
                     @Override
@@ -601,7 +609,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param last_name  the last name of the new user.
      */
     public void new_user(@NonNull final String email, @NonNull final String password, @NonNull final String first_name, @NonNull final String last_name) {
-        if (user != null) logout();
+        assert user == null;
         Log.i(TAG, "Creating new user..");
         resource.new_user(email, password, first_name, last_name).enqueue(new Callback<User>() {
             @Override
@@ -641,7 +649,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param password the password of the user.
      */
     public void login(String email, String password) {
-        if (user != null) logout();
+        assert user == null;
         Log.i(TAG, "Logging in..");
         resource.login(email, password).enqueue(new Callback<User>() {
             @Override
@@ -692,6 +700,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
         assert user != null;
         Log.i(TAG, "Logging out current user..");
         setUser(null);
+        stopSelf();
     }
 
     /**
@@ -814,7 +823,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param l_ctx the teaching lesson to remove.
      */
     public void remove_teaching_lesson(@NonNull final TeachingLessonContext l_ctx) {
-        Log.i(TAG, "Deleting lesson" + l_ctx.getLesson().id + "..");
+        Log.i(TAG, "Deleting lesson " + l_ctx.getLesson().id + "..");
         resource.delete_lesson(l_ctx.getLesson().id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -840,7 +849,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param lesson the lesson to play.
      */
     public void play(Lesson lesson) {
-        Log.i(TAG, "Playing lesson" + lesson.id + "..");
+        Log.i(TAG, "Playing lesson " + lesson.id + "..");
         resource.play(lesson.id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -864,7 +873,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param lesson the lesson to pause.
      */
     public void pause(Lesson lesson) {
-        Log.i(TAG, "Pausing lesson" + lesson.id + "..");
+        Log.i(TAG, "Pausing lesson " + lesson.id + "..");
         resource.pause(lesson.id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -888,7 +897,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param lesson the lesson to stop.
      */
     public void stop(Lesson lesson) {
-        Log.i(TAG, "Stopping lesson" + lesson.id + "..");
+        Log.i(TAG, "Stopping lesson " + lesson.id + "..");
         resource.stop(lesson.id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {

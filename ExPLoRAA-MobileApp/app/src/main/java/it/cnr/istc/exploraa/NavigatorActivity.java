@@ -58,8 +58,6 @@ public class NavigatorActivity extends AppCompatActivity {
                     finish();
                 } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                     ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-                else
-                    service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
             }
         }
 
