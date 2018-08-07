@@ -44,12 +44,12 @@ public class StudentContext {
     public void setOnLine(boolean on_line) {
         if (this.on_line != on_line) {
             this.on_line = on_line;
-            Intent lesson_state_changed_intent = new Intent(STUDENT_ONLINE + student.id);
-            lesson_state_changed_intent.putExtra("on_line", on_line);
-            service.sendBroadcast(lesson_state_changed_intent);
-            Intent lesson_updated_intent = new Intent(UPDATED_STUDENT);
-            lesson_updated_intent.putExtra("student", student.id);
-            service.sendBroadcast(lesson_updated_intent);
+            Intent student_online_intent = new Intent(STUDENT_ONLINE + student.id);
+            student_online_intent.putExtra("on_line", on_line);
+            service.sendBroadcast(student_online_intent);
+            Intent student_updated_intent = new Intent(UPDATED_STUDENT);
+            student_updated_intent.putExtra("student", student.id);
+            service.sendBroadcast(student_updated_intent);
         }
     }
 }

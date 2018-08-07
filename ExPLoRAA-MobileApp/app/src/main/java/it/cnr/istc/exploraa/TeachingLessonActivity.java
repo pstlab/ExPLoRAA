@@ -48,21 +48,12 @@ public class TeachingLessonActivity extends AppCompatActivity {
             switch (ctx.getState()) {
                 case Running:
                     teaching_lesson_status_image_view.setImageResource(R.drawable.ic_play);
-                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
-                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
-                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
                     break;
                 case Paused:
                     teaching_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
-                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
-                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
-                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
                     break;
                 case Stopped:
                     teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
-                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
-                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
-                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
                     break;
             }
         }
@@ -172,6 +163,23 @@ public class TeachingLessonActivity extends AppCompatActivity {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.teaching_lesson_menu, menu);
         options_menu = menu;
+        switch (ctx.getState()) {
+            case Running:
+                options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
+                options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
+                options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                break;
+            case Paused:
+                options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                break;
+            case Stopped:
+                options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
+                break;
+        }
         return true;
     }
 

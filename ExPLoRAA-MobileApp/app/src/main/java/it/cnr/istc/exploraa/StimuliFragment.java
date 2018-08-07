@@ -17,13 +17,14 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import it.cnr.istc.exploraa.api.Message;
 
 public class StimuliFragment extends Fragment {
 
     private RecyclerView stimuli_recycler_view;
-    private StimuliAdapter stimuli_adapter;
+    private final StimuliAdapter stimuli_adapter = new StimuliAdapter();
     private BroadcastReceiver stimulus_added_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -72,7 +73,6 @@ public class StimuliFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         stimuli_recycler_view = view.findViewById(R.id.stimuli_recycler_view);
-        stimuli_adapter = new StimuliAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -82,7 +82,18 @@ public class StimuliFragment extends Fragment {
         stimuli_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
+    void setStimuli(List<Message.Stimulus> stimuli) {
+        stimuli_adapter.setStimuli(stimuli);
+    }
+
     private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {
+
+        private List<Message.Stimulus> stimuli = new ArrayList<>();
+
+        private void setStimuli(List<Message.Stimulus> stimuli) {
+            this.stimuli = stimuli;
+            notifyDataSetChanged();
+        }
 
         @NonNull
         @Override
@@ -92,14 +103,12 @@ public class StimuliFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull StimulusView holder, int position) {
-            assert getActivity() != null;
-            holder.setStimulus(((MainActivity) getActivity()).service.getStimuli().get(position));
+            holder.setStimulus(stimuli.get(position));
         }
 
         @Override
         public int getItemCount() {
-            assert getActivity() != null;
-            return ((MainActivity) getActivity()).service.getStimuli().size();
+            return stimuli.size();
         }
     }
 

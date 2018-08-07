@@ -30,7 +30,7 @@ import java.util.Set;
 public class TeachingLessonsFragment extends Fragment {
 
     private RecyclerView teaching_lessons_recycler_view;
-    private TeachingLessonsAdapter teaching_lessons_adapter;
+    private final TeachingLessonsAdapter teaching_lessons_adapter = new TeachingLessonsAdapter();
     private MenuItem remove_teaching_lessons_menu_item;
     private BroadcastReceiver teaching_lesson_added_receiver = new BroadcastReceiver() {
         @Override
@@ -43,7 +43,7 @@ public class TeachingLessonsFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             assert getActivity() != null;
             final TeachingLessonContext lesson = ((MainActivity) getActivity()).service.getTeachingLesson(intent.getLongExtra("lesson", 0));
-            teaching_lessons_adapter.notifyItemChanged(((MainActivity) getActivity()).service.getFollowingLessons().indexOf(lesson));
+            teaching_lessons_adapter.notifyItemChanged(teaching_lessons_adapter.lessons.indexOf(lesson));
         }
     };
     private BroadcastReceiver teaching_lesson_removed_receiver = new BroadcastReceiver() {
@@ -119,7 +119,6 @@ public class TeachingLessonsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         teaching_lessons_recycler_view = view.findViewById(R.id.teaching_lessons_recycler_view);
-        teaching_lessons_adapter = new TeachingLessonsAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -129,9 +128,19 @@ public class TeachingLessonsFragment extends Fragment {
         teaching_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
+    void setLessons(List<TeachingLessonContext> lessons) {
+        teaching_lessons_adapter.setLessons(lessons);
+    }
+
     private class TeachingLessonsAdapter extends RecyclerView.Adapter<TeachingLessonView> {
 
+        private List<TeachingLessonContext> lessons = new ArrayList<>();
         private Set<Integer> selected_lessons = new HashSet<>();
+
+        private void setLessons(List<TeachingLessonContext> lessons) {
+            this.lessons = lessons;
+            notifyDataSetChanged();
+        }
 
         @NonNull
         @Override
@@ -141,12 +150,12 @@ public class TeachingLessonsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull TeachingLessonView holder, int position) {
-            holder.setLesson(position, ((MainActivity) getActivity()).service.getTeachingLessons().get(position));
+            holder.setLesson(position, lessons.get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ((MainActivity) getActivity()).service.getTeachingLessons().size();
+            return lessons.size();
         }
     }
 

@@ -17,10 +17,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class StudentsFragment extends Fragment {
 
     private RecyclerView students_recycler_view;
-    private StudentsAdapter students_adapter;
+    private final StudentsAdapter students_adapter = new StudentsAdapter();
     private BroadcastReceiver student_added_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -32,7 +35,7 @@ public class StudentsFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             assert getActivity() != null;
             final StudentContext student = ((MainActivity) getActivity()).service.getStudent(intent.getLongExtra("student", 0));
-            students_adapter.notifyItemChanged(((MainActivity) getActivity()).service.getStudents().indexOf(student));
+            students_adapter.notifyItemChanged(students_adapter.students.indexOf(student));
         }
     };
     private BroadcastReceiver student_removed_receiver = new BroadcastReceiver() {
@@ -79,7 +82,6 @@ public class StudentsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         students_recycler_view = view.findViewById(R.id.students_recycler_view);
-        students_adapter = new StudentsAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -89,7 +91,18 @@ public class StudentsFragment extends Fragment {
         students_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
+    void setStudents(List<StudentContext> students) {
+        students_adapter.setStudents(students);
+    }
+
     private class StudentsAdapter extends RecyclerView.Adapter<StudentView> {
+
+        private List<StudentContext> students = new ArrayList<>();
+
+        private void setStudents(List<StudentContext> students) {
+            this.students = students;
+            notifyDataSetChanged();
+        }
 
         @NonNull
         @Override
@@ -99,12 +112,12 @@ public class StudentsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull StudentView holder, int position) {
-            holder.setStudent(((MainActivity) getActivity()).service.getStudents().get(position));
+            holder.setStudent(students.get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ((MainActivity) getActivity()).service.getStudents().size();
+            return students.size();
         }
     }
 

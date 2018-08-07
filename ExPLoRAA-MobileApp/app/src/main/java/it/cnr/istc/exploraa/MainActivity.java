@@ -21,11 +21,20 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private ViewPager pager;
+    private final StimuliFragment stimuli_fragment = new StimuliFragment();
+    private final FollowingLessonsFragment following_lessons_fragment = new FollowingLessonsFragment();
+    private final TeachingLessonsFragment teaching_lessons_fragment = new TeachingLessonsFragment();
+    private final StudentsFragment students_fragment = new StudentsFragment();
     ExPLoRAAService service;
     private ServiceConnection service_connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
+
+            stimuli_fragment.setStimuli(service.getStimuli());
+            following_lessons_fragment.setLessons(service.getFollowingLessons());
+            teaching_lessons_fragment.setLessons(service.getTeachingLessons());
+            students_fragment.setStudents(service.getStudents());
         }
 
         @Override
@@ -46,13 +55,13 @@ public class MainActivity extends AppCompatActivity {
             public Fragment getItem(int position) {
                 switch (position) {
                     case 0:
-                        return new StimuliFragment();
+                        return stimuli_fragment;
                     case 1:
-                        return new FollowingLessonsFragment();
+                        return following_lessons_fragment;
                     case 2:
-                        return new TeachingLessonsFragment();
+                        return teaching_lessons_fragment;
                     case 3:
-                        return new StudentsFragment();
+                        return students_fragment;
                     default:
                         throw new AssertionError("Invalid position..");
                 }

@@ -29,7 +29,7 @@ import java.util.Set;
 
 public class FollowingLessonsFragment extends Fragment {
 
-    private FollowingLessonsAdapter following_lessons_adapter;
+    private final FollowingLessonsAdapter following_lessons_adapter = new FollowingLessonsAdapter();
     private MenuItem remove_following_lessons_menu_item;
     private BroadcastReceiver following_lesson_added_receiver = new BroadcastReceiver() {
         @Override
@@ -42,7 +42,7 @@ public class FollowingLessonsFragment extends Fragment {
         public void onReceive(Context context, Intent intent) {
             assert getActivity() != null;
             final FollowingLessonContext lesson = ((MainActivity) getActivity()).service.getFollowingLesson(intent.getLongExtra("lesson", 0));
-            following_lessons_adapter.notifyItemChanged(((MainActivity) getActivity()).service.getFollowingLessons().indexOf(lesson));
+            following_lessons_adapter.notifyItemChanged(following_lessons_adapter.lessons.indexOf(lesson));
         }
     };
     private BroadcastReceiver following_lesson_removed_receiver = new BroadcastReceiver() {
@@ -118,7 +118,6 @@ public class FollowingLessonsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         RecyclerView following_lessons_recycler_view = view.findViewById(R.id.following_lessons_recycler_view);
-        following_lessons_adapter = new FollowingLessonsAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -128,9 +127,19 @@ public class FollowingLessonsFragment extends Fragment {
         following_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
+    void setLessons(List<FollowingLessonContext> lessons) {
+        following_lessons_adapter.setLessons(lessons);
+    }
+
     private class FollowingLessonsAdapter extends RecyclerView.Adapter<FollowingLessonView> {
 
+        private List<FollowingLessonContext> lessons = new ArrayList<>();
         private Set<Integer> selected_lessons = new HashSet<>();
+
+        private void setLessons(List<FollowingLessonContext> lessons) {
+            this.lessons = lessons;
+            notifyDataSetChanged();
+        }
 
         @NonNull
         @Override
@@ -140,14 +149,12 @@ public class FollowingLessonsFragment extends Fragment {
 
         @Override
         public void onBindViewHolder(@NonNull FollowingLessonView holder, int position) {
-            assert getActivity() != null;
-            holder.setLesson(position, ((MainActivity) getActivity()).service.getFollowingLessons().get(position));
+            holder.setLesson(position, lessons.get(position));
         }
 
         @Override
         public int getItemCount() {
-            assert getActivity() != null;
-            return ((MainActivity) getActivity()).service.getFollowingLessons().size();
+            return lessons.size();
         }
     }
 
