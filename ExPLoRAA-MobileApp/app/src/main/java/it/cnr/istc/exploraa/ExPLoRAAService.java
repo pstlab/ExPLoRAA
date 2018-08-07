@@ -139,6 +139,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
     @Override
     public void onCreate() {
         super.onCreate();
+        Log.i(TAG, "Creating service..");
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();
         resource = retrofit.create(ExPLoRAA.class);
     }
@@ -146,6 +147,9 @@ public class ExPLoRAAService extends Service implements LocationListener {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        Log.i(TAG, "Destroying service..");
+        if (user != null)
+            logout();
         if (mqtt != null && mqtt.isConnected()) try {
             mqtt.disconnect();
             mqtt.close();
@@ -283,12 +287,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
                                 // a student is not following a lesson of this user anymore..
                                 final Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
                                 id_teaching_lessons.get(unfollow_lesson.lesson).removeStudent(id_students.get(unfollow_lesson.student));
-                                Set<Long> c_students = new HashSet<>();
-                                for (TeachingLessonContext l : teaching_lessons)
-                                    for (StudentContext student : l.getStudents())
-                                        c_students.add(student.getStudent().id);
-                                if (!c_students.contains(unfollow_lesson.student))
-                                    removeStudent(id_students.get(unfollow_lesson.student));
                                 break;
                             case Token:
                                 // a new token has been created for a teaching lesson..
@@ -349,7 +347,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
         }
     }
 
-    private void addStimulus(@NonNull final Message.Stimulus stimulus) {
+    void addStimulus(@NonNull final Message.Stimulus stimulus) {
         final int pos = stimuli.size();
         stimuli.add(stimulus);
         Intent added_stimulus_intent = new Intent(ADDED_STIMULUS);
@@ -357,7 +355,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
         sendBroadcast(added_stimulus_intent);
     }
 
-    private void removeStimulus(@NonNull final Message.Stimulus stimulus) {
+    void removeStimulus(@NonNull final Message.Stimulus stimulus) {
         final int pos = stimuli.indexOf(stimulus);
         stimuli.remove(pos);
         Intent removed_stimulus_intent = new Intent(REMOVED_STIMULUS);
@@ -548,7 +546,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
         sendBroadcast(removed_teaching_lesson_intent);
     }
 
-    private void addStudent(@NonNull final StudentContext s_ctx) {
+    void addStudent(@NonNull final StudentContext s_ctx) {
         final int pos = teachers.size();
         students.add(s_ctx);
         id_students.put(s_ctx.getStudent().id, s_ctx);
@@ -570,11 +568,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
         sendBroadcast(added_student_intent);
     }
 
-    public StudentContext getStudent(final long id) {
-        return id_students.get(id);
-    }
-
-    private void removeStudent(@NonNull final StudentContext s_ctx) {
+    void removeStudent(@NonNull final StudentContext s_ctx) {
         int pos = students.indexOf(s_ctx);
         students.remove(pos);
         id_students.remove(s_ctx.getStudent().id);
@@ -590,6 +584,10 @@ public class ExPLoRAAService extends Service implements LocationListener {
         sendBroadcast(removed_student_intent);
     }
 
+    public StudentContext getStudent(final long id) {
+        return id_students.get(id);
+    }
+
     public List<StudentContext> getStudents() {
         return Collections.unmodifiableList(students);
     }
@@ -603,6 +601,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param last_name  the last name of the new user.
      */
     public void new_user(@NonNull final String email, @NonNull final String password, @NonNull final String first_name, @NonNull final String last_name) {
+        if (user != null) logout();
+        Log.i(TAG, "Creating new user..");
         resource.new_user(email, password, first_name, last_name).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
@@ -641,6 +641,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param password the password of the user.
      */
     public void login(String email, String password) {
+        if (user != null) logout();
+        Log.i(TAG, "Logging in..");
         resource.login(email, password).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
@@ -687,6 +689,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * Logs out from the ExPLoRAA service, clearing stimuli, followed lessons, teachers, teached lessons and students.
      */
     public void logout() {
+        assert user != null;
+        Log.i(TAG, "Logging out current user..");
         setUser(null);
     }
 
@@ -696,6 +700,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param callback a callback for managing the request.
      */
     public void get_lessons(Callback<Collection<Lesson>> callback) {
+        Log.i(TAG, "Retrieving all the lessons..");
         resource.get_lessons().enqueue(callback);
     }
 
@@ -706,6 +711,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param interests the interests about the lesson.
      */
     public void follow_lesson(@NonNull final Lesson lesson, @NonNull final ArrayList<CharSequence> interests) {
+        Log.i(TAG, "Following lesson " + lesson.id + "..");
         resource.follow(user.id, lesson.id, GSON.toJson(interests)).enqueue(new Callback<Lesson>() {
             @Override
             public void onResponse(Call<Lesson> call, Response<Lesson> response) {
@@ -731,6 +737,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param l_ctx the lesson context representing the lesson that the current user does not want to follow anymore.
      */
     public void unfollow_lesson(@NonNull final FollowingLessonContext l_ctx) {
+        Log.i(TAG, "Unfollowing lesson " + l_ctx.getLesson().id + "..");
         resource.unfollow(user.id, l_ctx.getLesson().id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -757,6 +764,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param model the model of the new lesson.
      */
     public void add_teaching_lesson(@NonNull final String name, @NonNull final LessonModel model) {
+        Log.i(TAG, "Creating a new lesson..");
         (model.id == null ? resource.new_lesson(user.id, name, GSON.toJson(model)) : resource.new_lesson(user.id, name, model.id)).enqueue(new Callback<Lesson>() {
             @Override
             public void onResponse(Call<Lesson> call, Response<Lesson> response) {
@@ -806,6 +814,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param l_ctx the teaching lesson to remove.
      */
     public void remove_teaching_lesson(@NonNull final TeachingLessonContext l_ctx) {
+        Log.i(TAG, "Deleting lesson" + l_ctx.getLesson().id + "..");
         resource.delete_lesson(l_ctx.getLesson().id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -831,6 +840,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param lesson the lesson to play.
      */
     public void play(Lesson lesson) {
+        Log.i(TAG, "Playing lesson" + lesson.id + "..");
         resource.play(lesson.id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
@@ -854,7 +864,32 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * @param lesson the lesson to pause.
      */
     public void pause(Lesson lesson) {
+        Log.i(TAG, "Pausing lesson" + lesson.id + "..");
         resource.pause(lesson.id).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) try {
+                    Toast.makeText(ExPLoRAAService.this, response.errorBody().string(), Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e(TAG, null, t);
+            }
+        });
+    }
+
+    /**
+     * Stops the execution of the given lesson.
+     *
+     * @param lesson the lesson to stop.
+     */
+    public void stop(Lesson lesson) {
+        Log.i(TAG, "Stopping lesson" + lesson.id + "..");
+        resource.stop(lesson.id).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (!response.isSuccessful()) try {
@@ -895,29 +930,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
 
     @Override
     public void onProviderDisabled(String provider) {
-    }
-
-    /**
-     * Stops the execution of the given lesson.
-     *
-     * @param lesson the lesson to stop.
-     */
-    public void stop(Lesson lesson) {
-        resource.stop(lesson.id).enqueue(new Callback<Void>() {
-            @Override
-            public void onResponse(Call<Void> call, Response<Void> response) {
-                if (!response.isSuccessful()) try {
-                    Toast.makeText(ExPLoRAAService.this, response.errorBody().string(), Toast.LENGTH_SHORT).show();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Void> call, Throwable t) {
-                Log.e(TAG, null, t);
-            }
-        });
     }
 
     private Map<String, Parameter> get_par_types() {

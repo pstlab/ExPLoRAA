@@ -23,6 +23,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.LessonModel;
 
@@ -35,7 +38,7 @@ public class TeachingLessonActivity extends AppCompatActivity {
     private ImageView teaching_lesson_status_image_view;
     private TextView teaching_lesson_name;
     private TextView teaching_lesson_time;
-    private TokensAdapter teaching_lesson_tokens_adapter;
+    private final TokensAdapter teaching_lesson_tokens_adapter = new TokensAdapter();
     private ExPLoRAAService service;
     private ServiceConnection service_connection = new ServiceConnection() {
         @Override
@@ -56,6 +59,7 @@ public class TeachingLessonActivity extends AppCompatActivity {
                     teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
                     break;
             }
+            teaching_lesson_tokens_adapter.setTokens(ctx.getTokens());
         }
 
         @Override
@@ -124,8 +128,6 @@ public class TeachingLessonActivity extends AppCompatActivity {
         RecyclerView teaching_lesson_tokens_recycler_view = findViewById(R.id.activity_teaching_lesson_tokens_recycler_view);
 
         lesson_id = getIntent().getLongExtra("lesson_id", -1);
-
-        teaching_lesson_tokens_adapter = new TokensAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -202,6 +204,13 @@ public class TeachingLessonActivity extends AppCompatActivity {
 
     private class TokensAdapter extends RecyclerView.Adapter<TokenView> {
 
+        private List<TeachingLessonContext.TokenRow> tokens = new ArrayList<>();
+
+        private void setTokens(List<TeachingLessonContext.TokenRow> tokens) {
+            this.tokens = tokens;
+            notifyDataSetChanged();
+        }
+
         @NonNull
         @Override
         public TokenView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -210,12 +219,12 @@ public class TeachingLessonActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull TokenView holder, int position) {
-            holder.setToken(ctx.getTokens().get(position));
+            holder.setToken(tokens.get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ctx.getTokens().size();
+            return tokens.size();
         }
     }
 

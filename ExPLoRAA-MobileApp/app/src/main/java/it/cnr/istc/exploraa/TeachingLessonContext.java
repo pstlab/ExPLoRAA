@@ -5,7 +5,9 @@ import android.util.LongSparseArray;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.Message;
@@ -121,6 +123,9 @@ public class TeachingLessonContext {
         final int pos = students.size();
         students.add(s_ctx);
         id_students.put(s_ctx.getStudent().id, s_ctx);
+        // we add, if needed, this student to all the user's students..
+        if (service.getStudent(s_ctx.getStudent().id) == null)
+            service.addStudent(s_ctx);
         Intent added_student_intent = new Intent(ADDED_LESSON_STUDENT + lesson.id);
         added_student_intent.putExtra("position", pos);
         service.sendBroadcast(added_student_intent);
@@ -133,6 +138,13 @@ public class TeachingLessonContext {
         final int pos = students.indexOf(s_ctx);
         students.remove(pos);
         id_students.remove(s_ctx.getStudent().id);
+        // we remove, if it is not following any other lesson teached by this user, this student from all the user's students..
+        Set<Long> c_students = new HashSet<>();
+        for (TeachingLessonContext l : service.getTeachingLessons())
+            for (StudentContext student : l.getStudents())
+                c_students.add(student.getStudent().id);
+        if (!c_students.contains(s_ctx.getStudent().id))
+            service.removeStudent(id_students.get(s_ctx.getStudent().id));
         Intent added_student_intent = new Intent(REMOVED_LESSON_STUDENT + lesson.id);
         added_student_intent.putExtra("position", pos);
         service.sendBroadcast(added_student_intent);

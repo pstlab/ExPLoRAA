@@ -47,14 +47,20 @@ public class NavigatorActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
 
-            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
-            if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {
-                startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+            if (service.getUser() != null) {
+                Log.i(TAG, "User is already logged in..");
+                startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
                 finish();
-            } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-            else
-                service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+            } else {
+                SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
+                if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {
+                    startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+                    finish();
+                } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                    ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
+                else
+                    service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+            }
         }
 
         @Override

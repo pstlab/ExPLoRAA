@@ -70,6 +70,8 @@ public class FollowingLessonContext {
     public void addStimulus(final Message.Stimulus stimulus) {
         int pos = stimuli.size();
         stimuli.add(stimulus);
+        // we add the stimulus to all the received stimuli..
+        service.addStimulus(stimulus);
         Intent added_stimulus_intent = new Intent(ADDED_LESSON_STIMULUS + lesson.id);
         added_stimulus_intent.putExtra("position", pos);
         service.sendBroadcast(added_stimulus_intent);
@@ -81,6 +83,8 @@ public class FollowingLessonContext {
     public void removeStimulus(final Message.Stimulus stimulus) {
         int pos = stimuli.indexOf(stimulus);
         stimuli.remove(pos);
+        // we remove the stimulus from all the received stimuli..
+        service.removeStimulus(stimulus);
         Intent removed_stimulus_intent = new Intent(REMOVED_LESSON_STIMULUS + lesson.id);
         removed_stimulus_intent.putExtra("position", pos);
         service.sendBroadcast(removed_stimulus_intent);

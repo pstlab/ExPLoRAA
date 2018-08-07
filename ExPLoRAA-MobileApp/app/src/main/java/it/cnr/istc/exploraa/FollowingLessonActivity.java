@@ -21,6 +21,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.Message;
@@ -29,18 +30,17 @@ public class FollowingLessonActivity extends AppCompatActivity {
 
     private static final String TAG = "FollowingLessonActivity";
     private long lesson_id;
-    private FollowingLessonContext ctx;
     private ImageView following_lesson_status_image_view;
     private TextView following_lesson_name;
     private TextView following_lesson_time;
-    private StimuliAdapter stimuli_adapter;
+    private final StimuliAdapter stimuli_adapter = new StimuliAdapter();
     private ExPLoRAAService service;
     private ServiceConnection service_connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
 
-            ctx = service.getFollowingLesson(lesson_id);
+            FollowingLessonContext ctx = service.getFollowingLesson(lesson_id);
             following_lesson_name.setText(ctx.getLesson().name);
             following_lesson_time.setText(ExPLoRAAService.convertTimeToString(ctx.getTime()));
             switch (ctx.getState()) {
@@ -54,6 +54,7 @@ public class FollowingLessonActivity extends AppCompatActivity {
                     following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
                     break;
             }
+            stimuli_adapter.setStimuli(ctx.getStimuli());
         }
 
         @Override
@@ -107,8 +108,6 @@ public class FollowingLessonActivity extends AppCompatActivity {
         following_lesson_time = findViewById(R.id.activity_following_lesson_time);
         RecyclerView following_lesson_stimuli_recycler_view = findViewById(R.id.activity_following_lesson_stimuli_recycler_view);
 
-        stimuli_adapter = new StimuliAdapter();
-
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
         following_lesson_stimuli_recycler_view.setHasFixedSize(true);
@@ -140,6 +139,13 @@ public class FollowingLessonActivity extends AppCompatActivity {
 
     private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {
 
+        private List<Message.Stimulus> stimuli = new ArrayList<>();
+
+        private void setStimuli(List<Message.Stimulus> stimuli) {
+            this.stimuli = stimuli;
+            notifyDataSetChanged();
+        }
+
         @NonNull
         @Override
         public StimulusView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -148,12 +154,12 @@ public class FollowingLessonActivity extends AppCompatActivity {
 
         @Override
         public void onBindViewHolder(@NonNull StimulusView holder, int position) {
-            holder.setStimulus(ctx.getStimuli().get(position));
+            holder.setStimulus(stimuli.get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ctx.getStimuli().size();
+            return stimuli.size();
         }
     }
 
