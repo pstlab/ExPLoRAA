@@ -1,6 +1,9 @@
 package it.cnr.istc.exploraa;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,6 +24,44 @@ public class StimuliFragment extends Fragment {
 
     private RecyclerView stimuli_recycler_view;
     private StimuliAdapter stimuli_adapter;
+    private BroadcastReceiver stimulus_added_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            stimuli_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver stimulus_removed_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            stimuli_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver stimului_cleared_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            stimuli_adapter.notifyDataSetChanged();
+        }
+    };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        assert getActivity() != null;
+        getActivity().registerReceiver(stimulus_added_receiver, new IntentFilter(ExPLoRAAService.ADDED_STIMULUS));
+        getActivity().registerReceiver(stimulus_removed_receiver, new IntentFilter(ExPLoRAAService.REMOVED_STIMULUS));
+        getActivity().registerReceiver(stimului_cleared_receiver, new IntentFilter(ExPLoRAAService.CLEARED_STIMULI));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        assert getActivity() != null;
+        getActivity().unregisterReceiver(stimulus_added_receiver);
+        getActivity().unregisterReceiver(stimulus_removed_receiver);
+        getActivity().unregisterReceiver(stimului_cleared_receiver);
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -31,7 +72,7 @@ public class StimuliFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         stimuli_recycler_view = view.findViewById(R.id.stimuli_recycler_view);
-        stimuli_adapter = new StimuliAdapter(this);
+        stimuli_adapter = new StimuliAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -41,68 +82,34 @@ public class StimuliFragment extends Fragment {
         stimuli_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ExPLoRAAContext.getInstance().addStimuliListener(stimuli_adapter);
-        stimuli_adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        ExPLoRAAContext.getInstance().removeStimuliListener(stimuli_adapter);
-    }
-
-    private static class StimuliAdapter extends RecyclerView.Adapter<StimulusView> implements ExPLoRAAContext.StimuliListener {
-
-        private StimuliFragment frgmnt;
-
-        public StimuliAdapter(StimuliFragment frgmnt) {
-            this.frgmnt = frgmnt;
-        }
+    private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {
 
         @NonNull
         @Override
         public StimulusView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new StimulusView(frgmnt, LayoutInflater.from(parent.getContext()).inflate(R.layout.stimulus_row, parent, false));
+            return new StimulusView(LayoutInflater.from(parent.getContext()).inflate(R.layout.stimulus_row, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull StimulusView holder, int position) {
-            holder.setStimulus(ExPLoRAAContext.getInstance().getStimuli().get(position));
+            assert getActivity() != null;
+            holder.setStimulus(((MainActivity) getActivity()).service.getStimuli().get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ExPLoRAAContext.getInstance().getStimuli().size();
-        }
-
-        @Override
-        public void stimulusAdded(int pos, Message.Stimulus stimulus) {
-            notifyItemInserted(pos);
-        }
-
-        @Override
-        public void stimulusRemoved(int pos, Message.Stimulus stimulus) {
-            notifyItemRemoved(pos);
-        }
-
-        @Override
-        public void stimuliCleared() {
-            notifyDataSetChanged();
+            assert getActivity() != null;
+            return ((MainActivity) getActivity()).service.getStimuli().size();
         }
     }
 
-    private static class StimulusView extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private class StimulusView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private StimuliFragment frgmnt;
         private TextView title;
         private Message.Stimulus stimulus;
 
-        private StimulusView(StimuliFragment frgmnt, View view) {
+        private StimulusView(View view) {
             super(view);
-            this.frgmnt = frgmnt;
             view.setOnClickListener(this);
             title = view.findViewById(R.id.stimulus_title);
         }
@@ -126,27 +133,26 @@ public class StimuliFragment extends Fragment {
         public void onClick(View v) {
             switch (stimulus.stimulus_type) {
                 case Text:
-                    final Intent text_intent = new Intent(frgmnt.getContext(), TextStimulusActivity.class);
+                    final Intent text_intent = new Intent(getContext(), TextStimulusActivity.class);
                     text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
-                    frgmnt.startActivity(text_intent);
+                    startActivity(text_intent);
                     break;
                 case Question:
-                    final Intent question_intent = new Intent(frgmnt.getContext(), TextStimulusActivity.class);
+                    final Intent question_intent = new Intent(getContext(), TextStimulusActivity.class);
                     question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
                     ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
-                    for (String answer : ((Message.Stimulus.QuestionStimulus) stimulus).answers)
-                        answers.add(answer);
+                    answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
                     question_intent.putExtra("answers", answers);
                     if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
                         question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
                     }
-                    frgmnt.startActivity(question_intent);
+                    startActivity(question_intent);
                     break;
                 case URL:
-                    final Intent url_intent = new Intent(frgmnt.getContext(), TextStimulusActivity.class);
+                    final Intent url_intent = new Intent(getContext(), TextStimulusActivity.class);
                     url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
                     url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
-                    frgmnt.startActivity(url_intent);
+                    startActivity(url_intent);
                     break;
             }
         }

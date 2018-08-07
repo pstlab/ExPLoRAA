@@ -1,6 +1,9 @@
 package it.cnr.istc.exploraa;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -18,6 +21,54 @@ public class StudentsFragment extends Fragment {
 
     private RecyclerView students_recycler_view;
     private StudentsAdapter students_adapter;
+    private BroadcastReceiver student_added_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            students_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver student_updated_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            assert getActivity() != null;
+            final StudentContext student = ((MainActivity) getActivity()).service.getStudent(intent.getLongExtra("student", 0));
+            students_adapter.notifyItemChanged(((MainActivity) getActivity()).service.getStudents().indexOf(student));
+        }
+    };
+    private BroadcastReceiver student_removed_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            students_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver students_cleared_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            students_adapter.notifyDataSetChanged();
+        }
+    };
+
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+
+        assert getActivity() != null;
+        getActivity().registerReceiver(student_added_receiver, new IntentFilter(ExPLoRAAService.ADDED_STUDENT));
+        getActivity().registerReceiver(student_updated_receiver, new IntentFilter(StudentContext.UPDATED_STUDENT));
+        getActivity().registerReceiver(student_removed_receiver, new IntentFilter(ExPLoRAAService.REMOVED_STUDENT));
+        getActivity().registerReceiver(students_cleared_receiver, new IntentFilter(ExPLoRAAService.CLEARED_FOLLOWING_LESSONS));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        assert getActivity() != null;
+        getActivity().unregisterReceiver(student_added_receiver);
+        getActivity().unregisterReceiver(student_updated_receiver);
+        getActivity().unregisterReceiver(student_removed_receiver);
+        getActivity().unregisterReceiver(students_cleared_receiver);
+    }
 
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -28,7 +79,7 @@ public class StudentsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         students_recycler_view = view.findViewById(R.id.students_recycler_view);
-        students_adapter = new StudentsAdapter(this);
+        students_adapter = new StudentsAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -38,74 +89,33 @@ public class StudentsFragment extends Fragment {
         students_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ExPLoRAAContext.getInstance().addStudentsListener(students_adapter);
-        students_adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        ExPLoRAAContext.getInstance().removeStudentsListener(students_adapter);
-    }
-
-    private static class StudentsAdapter extends RecyclerView.Adapter<StudentView> implements ExPLoRAAContext.StudentsListener {
-
-        private StudentsFragment frgmnt;
-
-        private StudentsAdapter(StudentsFragment frgmnt) {
-            this.frgmnt = frgmnt;
-        }
+    private class StudentsAdapter extends RecyclerView.Adapter<StudentView> {
 
         @NonNull
         @Override
         public StudentView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new StudentView(frgmnt, LayoutInflater.from(parent.getContext()).inflate(R.layout.student_row, parent, false));
+            return new StudentView(LayoutInflater.from(parent.getContext()).inflate(R.layout.student_row, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull StudentView holder, int position) {
-            holder.setStudent(ExPLoRAAContext.getInstance().getStudents().get(position));
+            holder.setStudent(((MainActivity) getActivity()).service.getStudents().get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ExPLoRAAContext.getInstance().getStudents().size();
-        }
-
-        @Override
-        public void studentAdded(int pos, StudentContext ctx) {
-            notifyItemInserted(pos);
-        }
-
-        @Override
-        public void studentUpdated(int pos, StudentContext ctx) {
-            notifyItemChanged(pos);
-        }
-
-        @Override
-        public void studentRemoved(int pos, StudentContext ctx) {
-            notifyItemRemoved(pos);
-        }
-
-        @Override
-        public void studentsCleared() {
-            notifyDataSetChanged();
+            return ((MainActivity) getActivity()).service.getStudents().size();
         }
     }
 
-    private static class StudentView extends RecyclerView.ViewHolder implements View.OnClickListener {
+    private class StudentView extends RecyclerView.ViewHolder implements View.OnClickListener {
 
-        private StudentsFragment frgmnt;
         private StudentContext student;
         private TextView name;
         private ImageView student_connection_status_image_view;
 
-        private StudentView(StudentsFragment frgmnt, View view) {
+        private StudentView(View view) {
             super(view);
-            this.frgmnt = frgmnt;
             view.setOnClickListener(this);
             name = view.findViewById(R.id.student_name);
             student_connection_status_image_view = view.findViewById(R.id.student_connection_status_image_view);
@@ -120,9 +130,9 @@ public class StudentsFragment extends Fragment {
         @Override
         public void onClick(View v) {
             // we show the student's details..
-            final Intent intent = new Intent(frgmnt.getContext(), StudentActivity.class);
+            final Intent intent = new Intent(getContext(), StudentActivity.class);
             intent.putExtra("student_id", student.getStudent().id);
-            frgmnt.startActivity(intent);
+            startActivity(intent);
         }
     }
 }

@@ -1,11 +1,19 @@
 package it.cnr.istc.exploraa;
 
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,15 +26,101 @@ import android.widget.TextView;
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.LessonModel;
 
-public class TeachingLessonActivity extends AppCompatActivity implements TeachingLessonContext.TeachingLessonListener {
+public class TeachingLessonActivity extends AppCompatActivity {
 
+    private static final String TAG = "TeachingLessonActivity";
+    private long lesson_id;
     private TeachingLessonContext ctx;
     private Menu options_menu;
     private ImageView teaching_lesson_status_image_view;
     private TextView teaching_lesson_name;
     private TextView teaching_lesson_time;
-    private RecyclerView teaching_lesson_tokens_recycler_view;
     private TokensAdapter teaching_lesson_tokens_adapter;
+    private ExPLoRAAService service;
+    private ServiceConnection service_connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
+
+            ctx = service.getTeachingLesson(lesson_id);
+            teaching_lesson_name.setText(ctx.getLesson().name);
+            teaching_lesson_time.setText(ExPLoRAAService.convertTimeToString(ctx.getTime()));
+            switch (ctx.getState()) {
+                case Running:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_play);
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                    break;
+                case Paused:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                    break;
+                case Stopped:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
+                    break;
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            service = null;
+        }
+    };
+    private BroadcastReceiver time_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            teaching_lesson_time.setText(ExPLoRAAService.convertTimeToString(intent.getLongExtra("time", 0)));
+        }
+    };
+    private BroadcastReceiver state_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            switch (Lesson.LessonState.valueOf(intent.getStringExtra("state"))) {
+                case Running:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_play);
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                    break;
+                case Paused:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
+                    break;
+                case Stopped:
+                    teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
+                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
+                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
+                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
+                    break;
+            }
+        }
+    };
+    private BroadcastReceiver token_added_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            teaching_lesson_tokens_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver token_updated_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            teaching_lesson_tokens_adapter.notifyItemChanged(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver token_removed_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            teaching_lesson_tokens_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,14 +130,11 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         teaching_lesson_status_image_view = findViewById(R.id.activity_teaching_lesson_status_image_view);
         teaching_lesson_name = findViewById(R.id.activity_teaching_lesson_name);
         teaching_lesson_time = findViewById(R.id.activity_teaching_lesson_time);
-        teaching_lesson_tokens_recycler_view = findViewById(R.id.activity_teaching_lesson_tokens_recycler_view);
+        RecyclerView teaching_lesson_tokens_recycler_view = findViewById(R.id.activity_teaching_lesson_tokens_recycler_view);
 
-        long lesson_id = getIntent().getLongExtra("lesson_id", -1);
-        ctx = ExPLoRAAContext.getInstance().getTeachingLesson(getIntent().getLongExtra("lesson_id", -1));
+        lesson_id = getIntent().getLongExtra("lesson_id", -1);
 
-        teaching_lesson_name.setText(ctx.getLesson().name);
-
-        teaching_lesson_tokens_adapter = new TokensAdapter(this);
+        teaching_lesson_tokens_adapter = new TokensAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -51,6 +142,29 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         teaching_lesson_tokens_recycler_view.setLayoutManager(new LinearLayoutManager(this));
         teaching_lesson_tokens_recycler_view.setAdapter(teaching_lesson_tokens_adapter);
         teaching_lesson_tokens_recycler_view.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
+
+        registerReceiver(time_receiver, new IntentFilter(TeachingLessonContext.TEACHING_LESSON_TIME_CHANGED + lesson_id));
+        registerReceiver(state_receiver, new IntentFilter(TeachingLessonContext.TEACHING_LESSON_STATE_CHANGED + lesson_id));
+        registerReceiver(token_added_receiver, new IntentFilter(TeachingLessonContext.ADDED_LESSON_TOKEN + lesson_id));
+        registerReceiver(token_updated_receiver, new IntentFilter(TeachingLessonContext.UPDATED_LESSON_TOKEN + lesson_id));
+        registerReceiver(token_removed_receiver, new IntentFilter(TeachingLessonContext.REMOVED_LESSON_TOKEN + lesson_id));
+
+        // we bind the ExPLoRAA service..
+        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (service_connection != null) {
+            unbindService(service_connection);
+        }
+        unregisterReceiver(time_receiver);
+        unregisterReceiver(state_receiver);
+        unregisterReceiver(token_added_receiver);
+        unregisterReceiver(token_updated_receiver);
+        unregisterReceiver(token_removed_receiver);
     }
 
     @Override
@@ -58,7 +172,6 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.teaching_lesson_menu, menu);
         options_menu = menu;
-        stateChanged(ctx.getState());
         return true;
     }
 
@@ -66,127 +179,47 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.teaching_lesson_play_menu_item:
-                ExPLoRAAContext.getInstance().play(this, ctx.getLesson());
+                service.play(ctx.getLesson());
                 return true;
             case R.id.teaching_lesson_pause_menu_item:
-                ExPLoRAAContext.getInstance().pause(this, ctx.getLesson());
+                service.pause(ctx.getLesson());
                 return true;
             case R.id.teaching_lesson_stop_menu_item:
-                ExPLoRAAContext.getInstance().stop(this, ctx.getLesson());
+                service.stop(ctx.getLesson());
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ctx.addListener(this);
-        stateChanged(ctx.getState());
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        ctx.removeListener(this);
-    }
-
-    @Override
-    public void timeChanged(long t) {
-        teaching_lesson_time.setText(ExPLoRAAContext.convertTimeToString(t));
-    }
-
-    @Override
-    public void stateChanged(Lesson.LessonState state) {
-        switch (state) {
-            case Running:
-                teaching_lesson_status_image_view.setImageResource(R.drawable.ic_play);
-                if (options_menu != null) {
-                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(false);
-                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(true);
-                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
-                }
-                break;
-            case Paused:
-                teaching_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
-                if (options_menu != null) {
-                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
-                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
-                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(true);
-                }
-                break;
-            case Stopped:
-                teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
-                if (options_menu != null) {
-                    options_menu.findItem(R.id.teaching_lesson_play_menu_item).setVisible(true);
-                    options_menu.findItem(R.id.teaching_lesson_pause_menu_item).setVisible(false);
-                    options_menu.findItem(R.id.teaching_lesson_stop_menu_item).setVisible(false);
-                }
-                break;
-        }
-    }
-
-    @Override
-    public void studentAdded(int pos, StudentContext s_ctx) {
-    }
-
-    @Override
-    public void studentRemoved(int pos, StudentContext s_ctx) {
-    }
-
-    @Override
-    public void addedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.notifyItemInserted(pos);
-    }
-
-    @Override
-    public void removedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.notifyItemRemoved(pos);
-    }
-
-    @Override
-    public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.notifyItemChanged(pos);
-    }
-
-    private static class TokensAdapter extends RecyclerView.Adapter<TokenView> {
-
-        private TeachingLessonActivity activity;
-
-        private TokensAdapter(TeachingLessonActivity activity) {
-            this.activity = activity;
-        }
+    private class TokensAdapter extends RecyclerView.Adapter<TokenView> {
 
         @NonNull
         @Override
         public TokenView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new TokenView(activity, LayoutInflater.from(parent.getContext()).inflate(R.layout.token_row, parent, false));
+            return new TokenView(LayoutInflater.from(parent.getContext()).inflate(R.layout.token_row, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull TokenView holder, int position) {
-            holder.setToken(activity.ctx.getTokens().get(position));
+            holder.setToken(ctx.getTokens().get(position));
         }
 
         @Override
         public int getItemCount() {
-            return activity.ctx.getTokens().size();
+            return ctx.getTokens().size();
         }
     }
 
-    private static class TokenView extends RecyclerView.ViewHolder {
+    private class TokenView extends RecyclerView.ViewHolder {
 
-        private TeachingLessonActivity activity;
         private TextView token_time;
         private TextView token_min;
         private TextView token_max;
         private TextView token_content;
-        private TeachingLessonContext.TokenRow token;
 
-        private TokenView(TeachingLessonActivity activity, View view) {
+        private TokenView(View view) {
             super(view);
-            this.activity = activity;
             token_time = view.findViewById(R.id.token_time);
             token_min = view.findViewById(R.id.token_min);
             token_max = view.findViewById(R.id.token_max);
@@ -194,11 +227,10 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
         }
 
         private void setToken(TeachingLessonContext.TokenRow token) {
-            this.token = token;
-            token_time.setText(ExPLoRAAContext.convertTimeToString(token.getTime()));
-            token_min.setText(ExPLoRAAContext.convertTimeToString(token.getMin()));
-            token_max.setText(ExPLoRAAContext.convertTimeToString(token.getMax()));
-            final LessonModel.StimulusTemplate stimulus = activity.ctx.getLesson().model.stimuli.get(token.getToken().refEvent);
+            token_time.setText(ExPLoRAAService.convertTimeToString(token.getTime()));
+            token_min.setText(ExPLoRAAService.convertTimeToString(token.getMin()));
+            token_max.setText(ExPLoRAAService.convertTimeToString(token.getMax()));
+            final LessonModel.StimulusTemplate stimulus = ctx.getLesson().model.stimuli.get(token.getToken().refEvent);
             switch (stimulus.type) {
                 case Root:
                     break;

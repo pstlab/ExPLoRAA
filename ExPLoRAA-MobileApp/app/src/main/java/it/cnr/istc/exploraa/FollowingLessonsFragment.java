@@ -1,6 +1,9 @@
 package it.cnr.istc.exploraa;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -26,14 +29,56 @@ import java.util.Set;
 
 public class FollowingLessonsFragment extends Fragment {
 
-    private RecyclerView following_lessons_recycler_view;
     private FollowingLessonsAdapter following_lessons_adapter;
     private MenuItem remove_following_lessons_menu_item;
+    private BroadcastReceiver following_lesson_added_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            following_lessons_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver following_lesson_updated_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            assert getActivity() != null;
+            final FollowingLessonContext lesson = ((MainActivity) getActivity()).service.getFollowingLesson(intent.getLongExtra("lesson", 0));
+            following_lessons_adapter.notifyItemChanged(((MainActivity) getActivity()).service.getFollowingLessons().indexOf(lesson));
+        }
+    };
+    private BroadcastReceiver following_lesson_removed_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            following_lessons_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
+        }
+    };
+    private BroadcastReceiver following_lessons_cleared_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            following_lessons_adapter.notifyDataSetChanged();
+        }
+    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
+
+        assert getActivity() != null;
+        getActivity().registerReceiver(following_lesson_added_receiver, new IntentFilter(ExPLoRAAService.ADDED_FOLLOWING_LESSON));
+        getActivity().registerReceiver(following_lesson_updated_receiver, new IntentFilter(FollowingLessonContext.UPDATED_FOLLOWING_LESSON));
+        getActivity().registerReceiver(following_lesson_removed_receiver, new IntentFilter(ExPLoRAAService.REMOVED_FOLLOWING_LESSON));
+        getActivity().registerReceiver(following_lessons_cleared_receiver, new IntentFilter(ExPLoRAAService.CLEARED_FOLLOWING_LESSONS));
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+
+        assert getActivity() != null;
+        getActivity().unregisterReceiver(following_lesson_added_receiver);
+        getActivity().unregisterReceiver(following_lesson_updated_receiver);
+        getActivity().unregisterReceiver(following_lesson_removed_receiver);
+        getActivity().unregisterReceiver(following_lessons_cleared_receiver);
     }
 
     @Override
@@ -51,11 +96,11 @@ public class FollowingLessonsFragment extends Fragment {
                 return true;
             case R.id.remove_following_lessons_menu_item:
                 Collection<FollowingLessonContext> to_remove = new ArrayList<>(following_lessons_adapter.selected_lessons.size());
-                final List<FollowingLessonContext> c_lessons = ExPLoRAAContext.getInstance().getFollowingLessons();
+                final List<FollowingLessonContext> c_lessons = ((MainActivity) getActivity()).service.getFollowingLessons();
                 for (int pos : following_lessons_adapter.selected_lessons)
                     to_remove.add(c_lessons.get(pos));
                 for (FollowingLessonContext ctx : to_remove)
-                    ExPLoRAAContext.getInstance().unfollowLesson(getContext(), ctx);
+                    ((MainActivity) getActivity()).service.unfollow_lesson(ctx);
                 following_lessons_adapter.selected_lessons.clear();
                 remove_following_lessons_menu_item.setVisible(false);
                 return true;
@@ -72,8 +117,8 @@ public class FollowingLessonsFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        following_lessons_recycler_view = view.findViewById(R.id.following_lessons_recycler_view);
-        following_lessons_adapter = new FollowingLessonsAdapter(this);
+        RecyclerView following_lessons_recycler_view = view.findViewById(R.id.following_lessons_recycler_view);
+        following_lessons_adapter = new FollowingLessonsAdapter();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -83,75 +128,37 @@ public class FollowingLessonsFragment extends Fragment {
         following_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        ExPLoRAAContext.getInstance().addFollowingLessonsListener(following_lessons_adapter);
-        following_lessons_adapter.notifyDataSetChanged();
-    }
+    private class FollowingLessonsAdapter extends RecyclerView.Adapter<FollowingLessonView> {
 
-    @Override
-    public void onPause() {
-        super.onPause();
-        ExPLoRAAContext.getInstance().removeFollowingLessonsListener(following_lessons_adapter);
-    }
-
-    private static class FollowingLessonsAdapter extends RecyclerView.Adapter<FollowingLessonView> implements ExPLoRAAContext.FollowingLessonsListener {
-
-        private FollowingLessonsFragment frgmnt;
         private Set<Integer> selected_lessons = new HashSet<>();
-
-        private FollowingLessonsAdapter(FollowingLessonsFragment frgmnt) {
-            this.frgmnt = frgmnt;
-        }
 
         @NonNull
         @Override
         public FollowingLessonView onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-            return new FollowingLessonView(frgmnt, LayoutInflater.from(parent.getContext()).inflate(R.layout.following_lesson_row, parent, false));
+            return new FollowingLessonView(LayoutInflater.from(parent.getContext()).inflate(R.layout.following_lesson_row, parent, false));
         }
 
         @Override
         public void onBindViewHolder(@NonNull FollowingLessonView holder, int position) {
-            holder.setLesson(position, ExPLoRAAContext.getInstance().getFollowingLessons().get(position));
+            assert getActivity() != null;
+            holder.setLesson(position, ((MainActivity) getActivity()).service.getFollowingLessons().get(position));
         }
 
         @Override
         public int getItemCount() {
-            return ExPLoRAAContext.getInstance().getFollowingLessons().size();
-        }
-
-        @Override
-        public void followingLessonAdded(int pos, FollowingLessonContext ctx) {
-            notifyItemInserted(pos);
-        }
-
-        @Override
-        public void followingLessonUpdated(int pos, FollowingLessonContext ctx) {
-            notifyItemChanged(pos);
-        }
-
-        @Override
-        public void followingLessonRemoved(int pos, FollowingLessonContext ctx) {
-            notifyItemRemoved(pos);
-        }
-
-        @Override
-        public void followingLessonsCleared() {
-            notifyDataSetChanged();
+            assert getActivity() != null;
+            return ((MainActivity) getActivity()).service.getFollowingLessons().size();
         }
     }
 
-    private static class FollowingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
+    private class FollowingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
 
-        private FollowingLessonsFragment frgmnt;
         private TextView title;
         private ImageView following_lesson_status_image_view;
         private FollowingLessonContext lesson;
 
-        private FollowingLessonView(final FollowingLessonsFragment frgmnt, final View view) {
+        private FollowingLessonView(final View view) {
             super(view);
-            this.frgmnt = frgmnt;
             view.setOnClickListener(this);
             view.setOnLongClickListener(this);
             title = view.findViewById(R.id.following_lesson_name);
@@ -172,7 +179,7 @@ public class FollowingLessonsFragment extends Fragment {
                     following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
                     break;
             }
-            if (frgmnt.following_lessons_adapter.selected_lessons.contains(pos))
+            if (following_lessons_adapter.selected_lessons.contains(pos))
                 itemView.setBackgroundColor(Color.LTGRAY);
             else
                 itemView.setBackground(null);
@@ -180,32 +187,32 @@ public class FollowingLessonsFragment extends Fragment {
 
         @Override
         public void onClick(View v) {
-            if (frgmnt.following_lessons_adapter.selected_lessons.isEmpty()) {
+            if (following_lessons_adapter.selected_lessons.isEmpty()) {
                 // we show the teaching lesson's details..
-                final Intent intent = new Intent(frgmnt.getContext(), FollowingLessonActivity.class);
+                final Intent intent = new Intent(getContext(), FollowingLessonActivity.class);
                 intent.putExtra("lesson_id", lesson.getLesson().id);
-                frgmnt.startActivity(intent);
+                startActivity(intent);
             } else {
                 int pos = getAdapterPosition();
-                if (frgmnt.following_lessons_adapter.selected_lessons.contains(pos)) {
-                    frgmnt.following_lessons_adapter.selected_lessons.remove(pos);
-                    if (frgmnt.following_lessons_adapter.selected_lessons.isEmpty())
-                        frgmnt.remove_following_lessons_menu_item.setVisible(false);
-                } else frgmnt.following_lessons_adapter.selected_lessons.add(pos);
-                frgmnt.following_lessons_adapter.followingLessonUpdated(pos, lesson);
+                if (following_lessons_adapter.selected_lessons.contains(pos)) {
+                    following_lessons_adapter.selected_lessons.remove(pos);
+                    if (following_lessons_adapter.selected_lessons.isEmpty())
+                        remove_following_lessons_menu_item.setVisible(false);
+                } else following_lessons_adapter.selected_lessons.add(pos);
+                following_lessons_adapter.notifyItemChanged(pos);
             }
         }
 
         @Override
         public boolean onLongClick(View v) {
             int pos = getAdapterPosition();
-            if (frgmnt.following_lessons_adapter.selected_lessons.contains(pos))
-                frgmnt.following_lessons_adapter.selected_lessons.remove(pos);
+            if (following_lessons_adapter.selected_lessons.contains(pos))
+                following_lessons_adapter.selected_lessons.remove(pos);
             else {
-                frgmnt.following_lessons_adapter.selected_lessons.add(pos);
-                frgmnt.remove_following_lessons_menu_item.setVisible(true);
+                following_lessons_adapter.selected_lessons.add(pos);
+                remove_following_lessons_menu_item.setVisible(true);
             }
-            frgmnt.following_lessons_adapter.followingLessonUpdated(pos, lesson);
+            following_lessons_adapter.notifyItemChanged(pos);
             return true;
         }
     }

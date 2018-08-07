@@ -17,18 +17,22 @@
 package it.cnr.istc.exploraa;
 
 import android.Manifest;
+import android.content.BroadcastReceiver;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-
-import java.util.concurrent.ExecutionException;
 
 /**
  * @author Riccardo De Benedictis
@@ -37,28 +41,59 @@ public class NavigatorActivity extends AppCompatActivity {
 
     public static final String TAG = "NavigatorActivity";
     public static final int ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS = 123;
+    private ExPLoRAAService service;
+    private ServiceConnection service_connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
+
+            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
+            if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {
+                startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+                finish();
+            } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
+            else
+                service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            service = null;
+        }
+    };
+    private BroadcastReceiver login_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if (intent.getBooleanExtra("successful", false))
+                startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
+            else startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+            finish();
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-        } else if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-        } else {
-            try {
-                if (ExPLoRAAContext.getInstance().login(this, shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null))) {
-                    startActivity(new Intent(this, MainActivity.class));
-                } else {
-                    startActivity(new Intent(this, LoginActivity.class));
-                }
-                finish();
-            } catch (ExecutionException | InterruptedException e) {
-                Log.e(TAG, "login failed..", e);
-            }
+
+        final Intent service_intent = new Intent(this, ExPLoRAAService.class);
+        // we start the ExPLoRAA service..
+        startService(service_intent);
+
+        registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
+
+        // we bind the ExPLoRAA service..
+        if (!bindService(service_intent, service_connection, Context.BIND_AUTO_CREATE))
+            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (service_connection != null) {
+            unbindService(service_connection);
         }
+        unregisterReceiver(login_receiver);
     }
 
     @Override
@@ -67,16 +102,7 @@ public class NavigatorActivity extends AppCompatActivity {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                    try {
-                        if (ExPLoRAAContext.getInstance().login(this, shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null))) {
-                            startActivity(new Intent(this, MainActivity.class));
-                        } else {
-                            startActivity(new Intent(this, LoginActivity.class));
-                        }
-                        finish();
-                    } catch (ExecutionException | InterruptedException e) {
-                        Log.e(TAG, "login failed..", e);
-                    }
+                    service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
                 } else
                     finish();
             }

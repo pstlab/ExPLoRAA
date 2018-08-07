@@ -1,5 +1,7 @@
 package it.cnr.istc.exploraa;
 
+import android.content.Intent;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -10,6 +12,9 @@ import it.cnr.istc.exploraa.api.User;
 
 public class StudentContext {
 
+    public static final String STUDENT_ONLINE = "Student online";
+    public static final String UPDATED_STUDENT = "Student updated";
+    private final ExPLoRAAService service;
     private final User student;
     /**
      * The current student's parameter types.
@@ -20,10 +25,10 @@ public class StudentContext {
      * The current student's parameter values.
      */
     private final Map<String, Map<String, String>> par_vals = new HashMap<>();
-    private final List<StudentListener> listeners = new ArrayList<>();
     private boolean on_line;
 
-    StudentContext(User student) {
+    StudentContext(ExPLoRAAService service, User student) {
+        this.service = service;
         this.student = student;
         this.on_line = student.online;
     }
@@ -39,20 +44,12 @@ public class StudentContext {
     public void setOnLine(boolean on_line) {
         if (this.on_line != on_line) {
             this.on_line = on_line;
-            for (StudentListener l : listeners) l.onlineChanged(on_line);
+            Intent lesson_state_changed_intent = new Intent(STUDENT_ONLINE + student.id);
+            lesson_state_changed_intent.putExtra("on_line", on_line);
+            service.sendBroadcast(lesson_state_changed_intent);
+            Intent lesson_updated_intent = new Intent(UPDATED_STUDENT);
+            lesson_updated_intent.putExtra("student", student.id);
+            service.sendBroadcast(lesson_updated_intent);
         }
-    }
-
-    public void addListener(StudentListener l) {
-        listeners.add(l);
-    }
-
-    public void removeListener(StudentListener l) {
-        listeners.remove(l);
-    }
-
-    public interface StudentListener {
-
-        void onlineChanged(boolean on_line);
     }
 }

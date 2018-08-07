@@ -1,9 +1,13 @@
 package it.cnr.istc.exploraa;
 
 import android.app.Activity;
+import android.content.ComponentName;
+import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
@@ -23,8 +27,6 @@ import android.widget.TextView;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
 
 import it.cnr.istc.exploraa.api.LessonModel;
 
@@ -36,6 +38,20 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
     private ArrayAdapter<LessonModel> adapter;
     private EditText new_lesson_name;
     private Button add_lesson_button;
+    private ExPLoRAAService service;
+    private ServiceConnection service_connection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder binder) {
+            service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
+
+            adapter.addAll(service.getModels());
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            service = null;
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +62,7 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
         new_lesson_name = findViewById(R.id.new_lesson_name);
         add_lesson_button = findViewById(R.id.add_lesson_button);
 
-        final List<LessonModel> models = new ArrayList<>(ExPLoRAAContext.getInstance().getModels());
-        adapter = new ArrayAdapter<LessonModel>(this, 0, models) {
+        adapter = new ArrayAdapter<LessonModel>(this, 0) {
 
             @Override
             public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
@@ -60,12 +75,12 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
                 return getCustomView(position, convertView, parent);
             }
 
-            public View getCustomView(int position, View convertView, ViewGroup parent) {
+            private View getCustomView(int position, View convertView, ViewGroup parent) {
                 View listItem = convertView;
                 if (listItem == null)
                     listItem = LayoutInflater.from(getContext()).inflate(R.layout.lesson_model_row, parent, false);
 
-                LessonModel model = models.get(position);
+                LessonModel model = service.getModels().get(position);
 
                 TextView lesson_model_name = listItem.findViewById(R.id.lesson_model_name);
                 lesson_model_name.setText(model.name);
@@ -76,6 +91,18 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
         new_lesson_type_spinner.setAdapter(adapter);
 
         new_lesson_name.addTextChangedListener(this);
+
+        // we bind the ExPLoRAA service..
+        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (service_connection != null) {
+            unbindService(service_connection);
+        }
     }
 
     public void add_lesson_type(View view) {
@@ -93,9 +120,9 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
                 uri = data.getData();
                 try {
                     final BufferedReader reader = new BufferedReader(new InputStreamReader(getContentResolver().openInputStream(uri)));
-                    final LessonModel model = ExPLoRAAContext.GSON.fromJson(reader, LessonModel.class);
+                    final LessonModel model = ExPLoRAAService.GSON.fromJson(reader, LessonModel.class);
                     adapter.add(model);
-                    ExPLoRAAContext.getInstance().addModel(model);
+                    service.addModel(model);
                     new_lesson_type_spinner.setSelection(adapter.getCount() - 1);
                 } catch (FileNotFoundException e) {
                     Log.i(TAG, "Uri: " + uri.toString(), e);
@@ -106,7 +133,7 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
 
     public void add_lesson(View view) {
         final Object model = new_lesson_type_spinner.getSelectedItem();
-        ExPLoRAAContext.getInstance().addTeachingLesson(this, new_lesson_name.getText().toString(), (LessonModel) model);
+        service.add_teaching_lesson(new_lesson_name.getText().toString(), (LessonModel) model);
         finish();
     }
 

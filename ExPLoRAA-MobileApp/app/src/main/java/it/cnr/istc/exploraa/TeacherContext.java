@@ -1,17 +1,18 @@
 package it.cnr.istc.exploraa;
 
-import java.util.ArrayList;
-import java.util.List;
+import android.content.Intent;
 
 import it.cnr.istc.exploraa.api.User;
 
 public class TeacherContext {
 
+    public static final String TEACHER_ONLINE = "Teacher online";
+    private final ExPLoRAAService service;
     private final User teacher;
-    private final List<TeacherListener> listeners = new ArrayList<>();
     private boolean on_line;
 
-    TeacherContext(User teacher) {
+    TeacherContext(ExPLoRAAService service, User teacher) {
+        this.service = service;
         this.teacher = teacher;
         this.on_line = teacher.online;
     }
@@ -27,20 +28,10 @@ public class TeacherContext {
     public void setOnLine(boolean on_line) {
         if (this.on_line != on_line) {
             this.on_line = on_line;
-            for (TeacherListener l : listeners) l.onlineChanged(on_line);
+            Intent lesson_state_changed_intent = new Intent(TEACHER_ONLINE);
+            lesson_state_changed_intent.putExtra("lesson", teacher.id);
+            lesson_state_changed_intent.putExtra("on_line", on_line);
+            service.sendBroadcast(lesson_state_changed_intent);
         }
-    }
-
-    public void addListener(TeacherListener l) {
-        listeners.add(l);
-    }
-
-    public void removeListener(TeacherListener l) {
-        listeners.remove(l);
-    }
-
-    public interface TeacherListener {
-
-        void onlineChanged(boolean on_line);
     }
 }
