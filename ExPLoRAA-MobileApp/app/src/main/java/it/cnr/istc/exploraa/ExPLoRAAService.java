@@ -15,6 +15,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -148,6 +149,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
         if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
             login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+
+        startForeground(1, new NotificationCompat.Builder(this, getString(R.string.app_name)).setSmallIcon(R.mipmap.exploraa).build());
     }
 
     @Override
