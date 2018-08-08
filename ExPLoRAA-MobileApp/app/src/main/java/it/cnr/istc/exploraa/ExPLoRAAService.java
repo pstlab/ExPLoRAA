@@ -1,15 +1,22 @@
 package it.cnr.istc.exploraa;
 
 import android.Manifest;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
@@ -122,6 +129,21 @@ public class ExPLoRAAService extends Service implements LocationListener {
      */
     private final List<StudentContext> students = new ArrayList<>();
     private final LongSparseArray<StudentContext> id_students = new LongSparseArray<>();
+    private boolean logging_in = false;
+    private BroadcastReceiver connection_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.i(TAG, "Received connection change event..");
+            if (user == null) {
+                NetworkInfo activeNetwork = ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+                if (activeNetwork != null && activeNetwork.isConnected() && user == null) {
+                    SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(ExPLoRAAService.this);
+                    if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
+                        login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+                }
+            }
+        }
+    };
 
     public static String convertTimeToString(long time) {
         long second = (time / 1000) % 60;
@@ -146,11 +168,21 @@ public class ExPLoRAAService extends Service implements LocationListener {
         Retrofit retrofit = new Retrofit.Builder().baseUrl("http://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/ExPLoRAA/resources/").addConverterFactory(GsonConverterFactory.create(GSON)).build();
         resource = retrofit.create(ExPLoRAA.class);
 
-        SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
-        if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
-            login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+            nm.createNotificationChannel(new NotificationChannel(getString(R.string.app_name), getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT));
+        }
 
-        startForeground(1, new NotificationCompat.Builder(this, getString(R.string.app_name)).setSmallIcon(R.mipmap.exploraa).build());
+        registerReceiver(connection_receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
+
+        NetworkInfo activeNetwork = ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
+        if (activeNetwork != null && activeNetwork.isConnected()) {
+            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
+                login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+        }
+
+        startForeground(1, new NotificationCompat.Builder(this, getString(R.string.app_name)).setSmallIcon(R.drawable.ic_play).build());
     }
 
     @Override
@@ -165,6 +197,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
         } catch (MqttException e) {
             Log.e(TAG, null, e);
         }
+        unregisterReceiver(connection_receiver);
     }
 
     @Nullable
@@ -653,6 +686,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
      */
     public void login(String email, String password) {
         assert user == null;
+        if (logging_in) return;
+        logging_in = true;
         Log.i(TAG, "Logging in..");
         resource.login(email, password).enqueue(new Callback<User>() {
             @Override
@@ -687,11 +722,13 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 } catch (IOException e) {
                     Log.e(TAG, null, e);
                 }
+                logging_in = false;
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 Log.e(TAG, "Login failed..", t);
+                logging_in = false;
             }
         });
     }
@@ -703,7 +740,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
         assert user != null;
         Log.i(TAG, "Logging out current user..");
         setUser(null);
-        stopSelf();
     }
 
     /**

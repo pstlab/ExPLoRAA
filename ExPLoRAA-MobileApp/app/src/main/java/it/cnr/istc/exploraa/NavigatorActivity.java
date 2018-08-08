@@ -80,14 +80,10 @@ public class NavigatorActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        final Intent service_intent = new Intent(this, ExPLoRAAService.class);
-        // we start the ExPLoRAA service..
-        startService(service_intent);
-
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
 
         // we bind the ExPLoRAA service..
-        if (!bindService(service_intent, service_connection, Context.BIND_AUTO_CREATE))
+        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
             Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
     }
 
