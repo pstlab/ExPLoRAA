@@ -1,6 +1,7 @@
 package it.cnr.istc.exploraa;
 
 import android.Manifest;
+import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
@@ -187,7 +188,12 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
         }
 
-        startForeground(1, new NotificationCompat.Builder(this, getString(R.string.app_name)).setSmallIcon(R.drawable.ic_play).build());
+        final Notification notification = new NotificationCompat.Builder(this, getString(R.string.app_name))
+                .setSmallIcon(R.drawable.ic_backpacker)
+                .setContentTitle(getString(R.string.app_name))
+                .setContentText("ExPLoRAA is running..")
+                .build();
+        startForeground(1, notification);
     }
 
     @Override
