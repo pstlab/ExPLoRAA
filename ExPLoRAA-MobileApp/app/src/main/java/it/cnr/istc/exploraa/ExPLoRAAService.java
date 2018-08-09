@@ -4,7 +4,9 @@ import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -24,6 +26,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.util.LongSparseArray;
@@ -188,12 +191,18 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
         }
 
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         final Notification notification = new NotificationCompat.Builder(this, getString(R.string.app_name))
                 .setSmallIcon(R.drawable.ic_backpacker)
                 .setContentTitle(getString(R.string.app_name))
-                .setContentText("ExPLoRAA is running..")
+                .setContentIntent(pendingIntent)
+                .setGroup(getString(R.string.app_name))
+                .setGroupSummary(true)
                 .build();
-        startForeground(1, notification);
+        notification.sound = null;
+        startForeground(-1, notification);
     }
 
     @Override
@@ -300,108 +309,181 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 Log.e(TAG, null, ex);
             }
 
-            if (user != null) try {
-                // we create a new MQTT connection..
-                mqtt = new MqttClient("tcp://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, String.valueOf(user.id), new MemoryPersistence());
-                mqtt.setCallback(new MqttCallback() {
-                    @Override
-                    public void connectionLost(Throwable cause) {
-                        Log.e(TAG, "Connection lost..", cause);
-                        logout();
-                    }
-
-                    @Override
-                    public void messageArrived(String topic, MqttMessage message) {
-                        Log.w(TAG, "Message arrived: " + topic + " - " + message);
-                    }
-
-                    @Override
-                    public void deliveryComplete(IMqttDeliveryToken token) {
-                    }
-                });
-
-                MqttConnectOptions options = new MqttConnectOptions();
-                options.setCleanSession(true);
-                options.setAutomaticReconnect(true);
-                mqtt.connect(options);
-                Log.i(TAG, "Connected to the MQTT broker..");
-
-                // we subscribe to the input topic of the user..
-                mqtt.subscribe(user.id + "/input", new IMqttMessageListener() {
-                    @Override
-                    public void messageArrived(String topic, MqttMessage message) {
-                        Log.d(TAG, "Message arrived: " + topic + " - " + message);
-                        Message m = GSON.fromJson(new String(message.getPayload()), Message.class);
-                        switch (m.message_type) {
-                            case RemoveLesson:
-                                // a teacher has removed a lesson for this student..
-                                final Message.RemoveLesson lost_lesson = (Message.RemoveLesson) m;
-                                removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson));
-                                break;
-                            case FollowLesson:
-                                // a new student is following a lesson of this teacher..
-                                final Message.FollowLesson follow_lesson = (Message.FollowLesson) m;
-                                id_teaching_lessons.get(follow_lesson.lesson).addStudent(new StudentContext(ExPLoRAAService.this, follow_lesson.student));
-                                break;
-                            case UnfollowLesson:
-                                // a student is not following a lesson of this user anymore..
-                                final Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
-                                id_teaching_lessons.get(unfollow_lesson.lesson).removeStudent(id_students.get(unfollow_lesson.student));
-                                break;
-                            case Token:
-                                // a new token has been created for a teaching lesson..
-                                final Message.Token token = (Message.Token) m;
-                                id_teaching_lessons.get(token.lesson_id).addToken(token);
-                                break;
-                            case TokenUpdate:
-                                // a token of a teaching lesson has been updated..
-                                final Message.TokenUpdate token_update = (Message.TokenUpdate) m;
-                                id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min != null ? token_update.min : Long.MIN_VALUE, token_update.max != null ? token_update.max : Long.MAX_VALUE);
-                                break;
-                            case RemoveToken:
-                                // a token of a teaching lesson has been removed..
-                                final Message.RemoveToken remove_token = (Message.RemoveToken) m;
-                                id_teaching_lessons.get(remove_token.lesson_id).removeToken(id_teaching_lessons.get(remove_token.lesson_id).getToken(remove_token.id).getToken());
-                                break;
-                            case Stimulus:
-                                // a new stimulus has been created for a following lesson..
-                                final Message.Stimulus stimulus = (Message.Stimulus) m;
-                                id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
-                                break;
-                            case RemoveStimulus:
-                                // a stimulus has been removed for a following lesson..
-                                final Message.RemoveStimulus hide_stimulus = (Message.RemoveStimulus) m;
-                                Message.Stimulus s = null;
-                                for (Message.Stimulus c_s : id_following_lessons.get(hide_stimulus.lesson_id).getStimuli())
-                                    if (c_s.id == hide_stimulus.id) {
-                                        s = c_s;
-                                        break;
-                                    }
-                                id_following_lessons.get(hide_stimulus.lesson_id).removeStimulus(s);
-                                break;
-                            case Answer:
-                                break;
-                            default:
-                                throw new AssertionError(m.message_type.name());
+            if (user != null) {
+                try {
+                    // we create a new MQTT connection..
+                    mqtt = new MqttClient("tcp://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, String.valueOf(user.id), new MemoryPersistence());
+                    mqtt.setCallback(new MqttCallback() {
+                        @Override
+                        public void connectionLost(Throwable cause) {
+                            Log.e(TAG, "Connection lost..", cause);
+                            logout();
                         }
+
+                        @Override
+                        public void messageArrived(String topic, MqttMessage message) {
+                            Log.w(TAG, "Message arrived: " + topic + " - " + message);
+                        }
+
+                        @Override
+                        public void deliveryComplete(IMqttDeliveryToken token) {
+                        }
+                    });
+
+                    MqttConnectOptions options = new MqttConnectOptions();
+                    options.setCleanSession(true);
+                    options.setAutomaticReconnect(true);
+                    mqtt.connect(options);
+                    Log.i(TAG, "Connected to the MQTT broker..");
+
+                    // we subscribe to the input topic of the user..
+                    mqtt.subscribe(user.id + "/input", new IMqttMessageListener() {
+                        @Override
+                        public void messageArrived(String topic, MqttMessage message) {
+                            Log.d(TAG, "Message arrived: " + topic + " - " + message);
+                            Message m = GSON.fromJson(new String(message.getPayload()), Message.class);
+                            switch (m.message_type) {
+                                case RemoveLesson:
+                                    // a teacher has removed a lesson for this student..
+                                    final Message.RemoveLesson lost_lesson = (Message.RemoveLesson) m;
+                                    removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson));
+                                    break;
+                                case FollowLesson:
+                                    // a new student is following a lesson of this teacher..
+                                    final Message.FollowLesson follow_lesson = (Message.FollowLesson) m;
+                                    id_teaching_lessons.get(follow_lesson.lesson).addStudent(new StudentContext(ExPLoRAAService.this, follow_lesson.student));
+                                    break;
+                                case UnfollowLesson:
+                                    // a student is not following a lesson of this user anymore..
+                                    final Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
+                                    id_teaching_lessons.get(unfollow_lesson.lesson).removeStudent(id_students.get(unfollow_lesson.student));
+                                    break;
+                                case Token:
+                                    // a new token has been created for a teaching lesson..
+                                    final Message.Token token = (Message.Token) m;
+                                    id_teaching_lessons.get(token.lesson_id).addToken(token);
+                                    break;
+                                case TokenUpdate:
+                                    // a token of a teaching lesson has been updated..
+                                    final Message.TokenUpdate token_update = (Message.TokenUpdate) m;
+                                    id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min != null ? token_update.min : Long.MIN_VALUE, token_update.max != null ? token_update.max : Long.MAX_VALUE);
+                                    break;
+                                case RemoveToken:
+                                    // a token of a teaching lesson has been removed..
+                                    final Message.RemoveToken remove_token = (Message.RemoveToken) m;
+                                    id_teaching_lessons.get(remove_token.lesson_id).removeToken(id_teaching_lessons.get(remove_token.lesson_id).getToken(remove_token.id).getToken());
+                                    break;
+                                case Stimulus:
+                                    // a new stimulus has been created for a following lesson..
+                                    final Message.Stimulus stimulus = (Message.Stimulus) m;
+                                    id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
+                                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ExPLoRAAService.this);
+                                    TaskStackBuilder task_stack_builder = TaskStackBuilder.create(ExPLoRAAService.this);
+                                    switch (stimulus.stimulus_type) {
+                                        case Text:
+                                            Intent text_intent = new Intent(ExPLoRAAService.this, TextStimulusActivity.class);
+                                            text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
+                                            task_stack_builder.addNextIntentWithParentStack(text_intent);
+                                            PendingIntent text_pending_intent = task_stack_builder.getPendingIntent(stimulus.id, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                                            //PendingIntent text_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, text_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                            final Notification text_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                                                    .setSmallIcon(R.drawable.ic_backpacker)
+                                                    .setContentTitle(getString(R.string.app_name))
+                                                    .setContentText(((Message.Stimulus.TextStimulus) stimulus).content)
+                                                    .setStyle(new NotificationCompat.BigTextStyle()
+                                                            .bigText(((Message.Stimulus.TextStimulus) stimulus).content))
+                                                    .setContentIntent(text_pending_intent)
+                                                    .setGroup(getString(R.string.app_name))
+                                                    .setAutoCancel(true)
+                                                    .build();
+
+                                            notificationManager.notify(stimulus.id, text_notification);
+                                            break;
+                                        case Question:
+                                            Intent question_intent = new Intent(ExPLoRAAService.this, QuestionStimulusActivity.class);
+                                            question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
+                                            task_stack_builder.addNextIntentWithParentStack(question_intent);
+                                            PendingIntent question_pending_intent = task_stack_builder.getPendingIntent(stimulus.id, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                                            ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
+                                            answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
+                                            question_intent.putExtra("answers", answers);
+                                            if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
+                                                question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
+                                            }
+                                            //PendingIntent question_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, question_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                            final Notification question_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                                                    .setSmallIcon(R.drawable.ic_backpacker)
+                                                    .setContentTitle(getString(R.string.app_name))
+                                                    .setContentText(((Message.Stimulus.QuestionStimulus) stimulus).question)
+                                                    .setStyle(new NotificationCompat.BigTextStyle()
+                                                            .bigText(((Message.Stimulus.QuestionStimulus) stimulus).question))
+                                                    .setContentIntent(question_pending_intent)
+                                                    .setGroup(getString(R.string.app_name))
+                                                    .setAutoCancel(true)
+                                                    .build();
+
+                                            notificationManager.notify(stimulus.id, question_notification);
+                                            break;
+                                        case URL:
+                                            Intent url_intent = new Intent(ExPLoRAAService.this, URLStimulusActivity.class);
+                                            url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
+                                            url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
+                                            task_stack_builder.addNextIntentWithParentStack(url_intent);
+                                            PendingIntent url_pending_intent = task_stack_builder.getPendingIntent(stimulus.id, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                                            //PendingIntent url_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, url_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                                            final Notification url_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                                                    .setSmallIcon(R.drawable.ic_backpacker)
+                                                    .setContentTitle(getString(R.string.app_name))
+                                                    .setContentText(((Message.Stimulus.URLStimulus) stimulus).content)
+                                                    .setStyle(new NotificationCompat.BigTextStyle()
+                                                            .bigText(((Message.Stimulus.URLStimulus) stimulus).content))
+                                                    .setContentIntent(url_pending_intent)
+                                                    .setGroup(getString(R.string.app_name))
+                                                    .setAutoCancel(true)
+                                                    .build();
+
+                                            notificationManager.notify(stimulus.id, url_notification);
+                                            break;
+                                    }
+                                    break;
+                                case RemoveStimulus:
+                                    // a stimulus has been removed for a following lesson..
+                                    final Message.RemoveStimulus hide_stimulus = (Message.RemoveStimulus) m;
+                                    Message.Stimulus s = null;
+                                    for (Message.Stimulus c_s : id_following_lessons.get(hide_stimulus.lesson_id).getStimuli())
+                                        if (c_s.id == hide_stimulus.id) {
+                                            s = c_s;
+                                            break;
+                                        }
+                                    id_following_lessons.get(hide_stimulus.lesson_id).removeStimulus(s);
+                                    break;
+                                case Answer:
+                                    break;
+                                default:
+                                    throw new AssertionError(m.message_type.name());
+                            }
+                        }
+                    });
+
+                    for (Parameter par : user.par_types.values()) {
+                        par_types.add(par);
+                        // we broadcast the existence of a new parameter..
+                        mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
                     }
-                });
+                    if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+                        ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
 
-                for (Parameter par : user.par_types.values()) {
-                    par_types.add(par);
-                    // we broadcast the existence of a new parameter..
-                    mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
+                    for (Map.Entry<String, Map<String, String>> par_val : user.par_values.entrySet()) {
+                        par_vals.put(par_val.getKey(), par_val.getValue());
+                        // we broadcast the the new value of the parameter..
+                        mqtt.publish(user.id + "/output/" + par_val.getKey(), GSON.toJson(par_val.getValue()).getBytes(), 1, true);
+                    }
+                } catch (MqttException e) {
+                    Log.w(TAG, "MQTT Connection failed..", e);
                 }
-                if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
-                    ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
-
-                for (Map.Entry<String, Map<String, String>> par_val : user.par_values.entrySet()) {
-                    par_vals.put(par_val.getKey(), par_val.getValue());
-                    // we broadcast the the new value of the parameter..
-                    mqtt.publish(user.id + "/output/" + par_val.getKey(), GSON.toJson(par_val.getValue()).getBytes(), 1, true);
-                }
-            } catch (MqttException e) {
-                Log.w(TAG, "MQTT Connection failed..", e);
             }
             this.user = user;
         }

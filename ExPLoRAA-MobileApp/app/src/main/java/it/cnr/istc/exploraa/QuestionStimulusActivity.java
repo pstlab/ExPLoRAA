@@ -21,7 +21,11 @@ public class QuestionStimulusActivity extends AppCompatActivity {
         question_stimulus_content = findViewById(R.id.question_stimulus_content);
         question_stimulus_answers_group = findViewById(R.id.question_stimulus_answers_group);
 
-        final Intent intent = getIntent();
+        onNewIntent(getIntent());
+    }
+
+    @Override
+    protected void onNewIntent(Intent intent) {
         question_stimulus_content.setText(intent.getStringExtra("question"));
         int i = 0;
         for (CharSequence answer : intent.getCharSequenceArrayListExtra("answers")) {

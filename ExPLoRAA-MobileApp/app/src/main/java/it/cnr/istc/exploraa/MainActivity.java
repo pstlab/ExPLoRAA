@@ -10,6 +10,7 @@ import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -77,6 +78,9 @@ public class MainActivity extends AppCompatActivity {
         // we bind the ExPLoRAA service..
         if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
             Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+
+        // we clear all the notifications..
+        NotificationManagerCompat.from(this).cancelAll();
     }
 
     @Override
