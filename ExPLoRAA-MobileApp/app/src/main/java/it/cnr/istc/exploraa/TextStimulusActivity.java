@@ -20,11 +20,6 @@ public class TextStimulusActivity extends AppCompatActivity {
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
-    @Override
     protected void onNewIntent(Intent intent) {
         text_stimulus_content.setText(intent.getStringExtra("content"));
     }
