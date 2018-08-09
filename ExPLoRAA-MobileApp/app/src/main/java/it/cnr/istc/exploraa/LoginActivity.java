@@ -31,6 +31,7 @@ public class LoginActivity extends AppCompatActivity {
         @Override
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
+            service.login(email.getText().toString(), password.getText().toString());
         }
 
         @Override
@@ -64,16 +65,12 @@ public class LoginActivity extends AppCompatActivity {
         password = findViewById(R.id.login_input_password);
 
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
-
-        // we bind the ExPLoRAA service..
-        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
-            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service_connection != null) {
+        if (service != null) {
             unbindService(service_connection);
         }
         unregisterReceiver(login_receiver);
@@ -82,8 +79,13 @@ public class LoginActivity extends AppCompatActivity {
     public void login(View v) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-        else
-            service.login(email.getText().toString(), password.getText().toString());
+        else {
+            startService(new Intent(this, ExPLoRAAService.class));
+            ((ExPLoRAAApplication) getApplication()).setServiceRunning(true);
+            // we bind the ExPLoRAA service..
+            if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+                Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+        }
     }
 
     public void new_user(View v) {
@@ -95,8 +97,13 @@ public class LoginActivity extends AppCompatActivity {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    service.login(email.getText().toString(), password.getText().toString());
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    startService(new Intent(this, ExPLoRAAService.class));
+                    ((ExPLoRAAApplication) getApplication()).setServiceRunning(true);
+                    // we bind the ExPLoRAA service..
+                    if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+                        Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+                }
             }
         }
     }

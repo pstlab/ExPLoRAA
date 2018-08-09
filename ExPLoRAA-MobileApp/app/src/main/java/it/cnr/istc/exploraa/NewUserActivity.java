@@ -77,7 +77,7 @@ public class NewUserActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service_connection != null) {
+        if (service != null) {
             unbindService(service_connection);
         }
         unregisterReceiver(user_creation_receiver);

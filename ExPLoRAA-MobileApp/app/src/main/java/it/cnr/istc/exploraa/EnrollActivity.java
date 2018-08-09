@@ -88,7 +88,7 @@ public class EnrollActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service_connection != null) {
+        if (service != null) {
             unbindService(service_connection);
         }
     }

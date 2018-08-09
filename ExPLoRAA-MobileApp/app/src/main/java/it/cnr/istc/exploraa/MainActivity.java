@@ -73,6 +73,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        assert ((ExPLoRAAApplication) getApplication()).isServiceRunning();
         // we bind the ExPLoRAA service..
         if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
             Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
@@ -81,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service_connection != null) {
+        if (service != null) {
             unbindService(service_connection);
         }
     }
@@ -106,6 +107,9 @@ public class MainActivity extends AppCompatActivity {
 
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
+
+                stopService(new Intent(this, ExPLoRAAService.class));
+                ((ExPLoRAAApplication) getApplication()).setServiceRunning(false);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

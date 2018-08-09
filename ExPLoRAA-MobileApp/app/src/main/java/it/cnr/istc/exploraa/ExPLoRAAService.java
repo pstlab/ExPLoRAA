@@ -162,6 +162,11 @@ public class ExPLoRAAService extends Service implements LocationListener {
     }
 
     @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        return START_STICKY;
+    }
+
+    @Override
     public void onCreate() {
         super.onCreate();
         Log.i(TAG, "Creating ExPLoRAA service..");
@@ -183,6 +188,11 @@ public class ExPLoRAAService extends Service implements LocationListener {
         }
 
         startForeground(1, new NotificationCompat.Builder(this, getString(R.string.app_name)).setSmallIcon(R.drawable.ic_play).build());
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return super.onUnbind(intent);
     }
 
     @Override

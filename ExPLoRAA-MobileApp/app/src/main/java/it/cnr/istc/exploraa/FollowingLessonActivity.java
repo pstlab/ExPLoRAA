@@ -128,7 +128,7 @@ public class FollowingLessonActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service_connection != null) {
+        if (service != null) {
             unbindService(service_connection);
         }
         unregisterReceiver(time_receiver);

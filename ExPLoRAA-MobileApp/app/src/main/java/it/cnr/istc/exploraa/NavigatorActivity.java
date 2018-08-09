@@ -47,18 +47,8 @@ public class NavigatorActivity extends AppCompatActivity {
         public void onServiceConnected(ComponentName name, IBinder binder) {
             service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
 
-            if (service.getUser() != null) {
-                Log.i(TAG, "User is already logged in..");
-                startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
-                finish();
-            } else {
-                SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
-                if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {
-                    startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
-                    finish();
-                } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
-                    ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-            }
+            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
+            service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
         }
 
         @Override
@@ -82,15 +72,29 @@ public class NavigatorActivity extends AppCompatActivity {
 
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
 
-        // we bind the ExPLoRAA service..
-        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
-            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+        if (((ExPLoRAAApplication) getApplication()).isServiceRunning()) {
+            startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
+            finish();
+        } else {
+            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
+            if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {
+                startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+                finish();
+            } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
+            else {
+                startService(new Intent(this, ExPLoRAAService.class));
+                ((ExPLoRAAApplication) getApplication()).setServiceRunning(true);
+                if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+                    Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+            }
+        }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service_connection != null) {
+        if (service != null) {
             unbindService(service_connection);
         }
         unregisterReceiver(login_receiver);
@@ -101,8 +105,10 @@ public class NavigatorActivity extends AppCompatActivity {
         switch (requestCode) {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
-                    service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+                    startService(new Intent(this, ExPLoRAAService.class));
+                    ((ExPLoRAAApplication) getApplication()).setServiceRunning(true);
+                    if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+                        Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
                 } else
                     finish();
             }
