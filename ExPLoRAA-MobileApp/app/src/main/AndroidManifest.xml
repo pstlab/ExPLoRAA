@@ -19,7 +19,6 @@
         <activity android:name=".NavigatorActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -34,15 +33,15 @@
         <activity android:name=".StudentActivity" />
         <activity
             android:name=".TextStimulusActivity"
-            android:documentLaunchMode="always"
+            android:documentLaunchMode="never"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".URLStimulusActivity"
-            android:documentLaunchMode="always"
+            android:documentLaunchMode="never"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".QuestionStimulusActivity"
-            android:documentLaunchMode="always"
+            android:documentLaunchMode="never"
             android:parentActivityName=".MainActivity" />
 
         <service

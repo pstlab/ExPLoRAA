@@ -192,7 +192,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
         }
 
         Intent intent = new Intent(this, MainActivity.class);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         final Notification notification = new NotificationCompat.Builder(this, getString(R.string.app_name))
                 .setSmallIcon(R.drawable.ic_backpacker)
