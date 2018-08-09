@@ -376,77 +376,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
                                     // a new stimulus has been created for a following lesson..
                                     final Message.Stimulus stimulus = (Message.Stimulus) m;
                                     id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
-                                    NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ExPLoRAAService.this);
-                                    TaskStackBuilder task_stack_builder = TaskStackBuilder.create(ExPLoRAAService.this);
-                                    switch (stimulus.stimulus_type) {
-                                        case Text:
-                                            Intent text_intent = new Intent(ExPLoRAAService.this, TextStimulusActivity.class);
-                                            text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
-                                            task_stack_builder.addNextIntentWithParentStack(text_intent);
-                                            PendingIntent text_pending_intent = task_stack_builder.getPendingIntent(stimulus.id, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                                            //PendingIntent text_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, text_intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                            final Notification text_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
-                                                    .setSmallIcon(R.drawable.ic_backpacker)
-                                                    .setContentTitle(getString(R.string.app_name))
-                                                    .setContentText(((Message.Stimulus.TextStimulus) stimulus).content)
-                                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                                            .bigText(((Message.Stimulus.TextStimulus) stimulus).content))
-                                                    .setContentIntent(text_pending_intent)
-                                                    .setGroup(getString(R.string.app_name))
-                                                    .setAutoCancel(true)
-                                                    .build();
-
-                                            notificationManager.notify(stimulus.id, text_notification);
-                                            break;
-                                        case Question:
-                                            Intent question_intent = new Intent(ExPLoRAAService.this, QuestionStimulusActivity.class);
-                                            question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
-                                            task_stack_builder.addNextIntentWithParentStack(question_intent);
-                                            PendingIntent question_pending_intent = task_stack_builder.getPendingIntent(stimulus.id, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                                            ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
-                                            answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
-                                            question_intent.putExtra("answers", answers);
-                                            if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
-                                                question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
-                                            }
-                                            //PendingIntent question_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, question_intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                            final Notification question_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
-                                                    .setSmallIcon(R.drawable.ic_backpacker)
-                                                    .setContentTitle(getString(R.string.app_name))
-                                                    .setContentText(((Message.Stimulus.QuestionStimulus) stimulus).question)
-                                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                                            .bigText(((Message.Stimulus.QuestionStimulus) stimulus).question))
-                                                    .setContentIntent(question_pending_intent)
-                                                    .setGroup(getString(R.string.app_name))
-                                                    .setAutoCancel(true)
-                                                    .build();
-
-                                            notificationManager.notify(stimulus.id, question_notification);
-                                            break;
-                                        case URL:
-                                            Intent url_intent = new Intent(ExPLoRAAService.this, URLStimulusActivity.class);
-                                            url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
-                                            url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
-                                            task_stack_builder.addNextIntentWithParentStack(url_intent);
-                                            PendingIntent url_pending_intent = task_stack_builder.getPendingIntent(stimulus.id, PendingIntent.FLAG_UPDATE_CURRENT);
-
-                                            //PendingIntent url_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, url_intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                                            final Notification url_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
-                                                    .setSmallIcon(R.drawable.ic_backpacker)
-                                                    .setContentTitle(getString(R.string.app_name))
-                                                    .setContentText(((Message.Stimulus.URLStimulus) stimulus).content)
-                                                    .setStyle(new NotificationCompat.BigTextStyle()
-                                                            .bigText(((Message.Stimulus.URLStimulus) stimulus).content))
-                                                    .setContentIntent(url_pending_intent)
-                                                    .setGroup(getString(R.string.app_name))
-                                                    .setAutoCancel(true)
-                                                    .build();
-
-                                            notificationManager.notify(stimulus.id, url_notification);
-                                            break;
-                                    }
                                     break;
                                 case RemoveStimulus:
                                     // a stimulus has been removed for a following lesson..
@@ -494,6 +423,78 @@ public class ExPLoRAAService extends Service implements LocationListener {
         Intent added_stimulus_intent = new Intent(ADDED_STIMULUS);
         added_stimulus_intent.putExtra("position", pos);
         sendBroadcast(added_stimulus_intent);
+
+        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ExPLoRAAService.this);
+        TaskStackBuilder task_stack_builder = TaskStackBuilder.create(ExPLoRAAService.this);
+        switch (stimulus.stimulus_type) {
+            case Text:
+                Intent text_intent = new Intent(ExPLoRAAService.this, TextStimulusActivity.class);
+                text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
+                task_stack_builder.addNextIntentWithParentStack(text_intent);
+                PendingIntent text_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                //PendingIntent text_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, text_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                final Notification text_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                        .setSmallIcon(R.drawable.ic_backpacker)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setContentText(((Message.Stimulus.TextStimulus) stimulus).content)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(((Message.Stimulus.TextStimulus) stimulus).content))
+                        .setContentIntent(text_pending_intent)
+                        .setGroup(getString(R.string.app_name))
+                        .setAutoCancel(true)
+                        .build();
+
+                notificationManager.notify(pos, text_notification);
+                break;
+            case Question:
+                Intent question_intent = new Intent(ExPLoRAAService.this, QuestionStimulusActivity.class);
+                question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
+                task_stack_builder.addNextIntentWithParentStack(question_intent);
+                PendingIntent question_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
+                answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
+                question_intent.putExtra("answers", answers);
+                if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
+                    question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
+                }
+                //PendingIntent question_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, question_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                final Notification question_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                        .setSmallIcon(R.drawable.ic_backpacker)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setContentText(((Message.Stimulus.QuestionStimulus) stimulus).question)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(((Message.Stimulus.QuestionStimulus) stimulus).question))
+                        .setContentIntent(question_pending_intent)
+                        .setGroup(getString(R.string.app_name))
+                        .setAutoCancel(true)
+                        .build();
+
+                notificationManager.notify(pos, question_notification);
+                break;
+            case URL:
+                Intent url_intent = new Intent(ExPLoRAAService.this, URLStimulusActivity.class);
+                url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
+                url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
+                task_stack_builder.addNextIntentWithParentStack(url_intent);
+                PendingIntent url_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
+
+                //PendingIntent url_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, url_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                final Notification url_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                        .setSmallIcon(R.drawable.ic_backpacker)
+                        .setContentTitle(getString(R.string.app_name))
+                        .setContentText(((Message.Stimulus.URLStimulus) stimulus).content)
+                        .setStyle(new NotificationCompat.BigTextStyle()
+                                .bigText(((Message.Stimulus.URLStimulus) stimulus).content))
+                        .setContentIntent(url_pending_intent)
+                        .setGroup(getString(R.string.app_name))
+                        .setAutoCancel(true)
+                        .build();
+
+                notificationManager.notify(pos, url_notification);
+                break;
+        }
     }
 
     void removeStimulus(@NonNull final Message.Stimulus stimulus) {
@@ -502,6 +503,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         Intent removed_stimulus_intent = new Intent(REMOVED_STIMULUS);
         removed_stimulus_intent.putExtra("position", pos);
         sendBroadcast(removed_stimulus_intent);
+
+        NotificationManagerCompat.from(ExPLoRAAService.this).cancel(pos);
     }
 
     public List<Message.Stimulus> getStimuli() {
