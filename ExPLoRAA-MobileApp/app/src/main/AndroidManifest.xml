@@ -33,15 +33,12 @@
         <activity android:name=".StudentActivity" />
         <activity
             android:name=".TextStimulusActivity"
-            android:documentLaunchMode="never"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".URLStimulusActivity"
-            android:documentLaunchMode="never"
             android:parentActivityName=".MainActivity" />
         <activity
             android:name=".QuestionStimulusActivity"
-            android:documentLaunchMode="never"
             android:parentActivityName=".MainActivity" />
 
         <service
