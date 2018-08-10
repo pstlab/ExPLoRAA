@@ -33,9 +33,8 @@ public class App {
         // we start the MQTT broker..
         BrokerService broker = new BrokerService();
         broker.setPersistent(false);
-        TransportConnector connector;
         try {
-            connector = broker
+            TransportConnector connector = broker
                     .addConnector("mqtt://" + properties.getProperty("host") + ":" + properties.getProperty("port"));
             connector.setAllowLinkStealing(true);
             broker.setPlugins(new BrokerPlugin[] { new BrokerPlugin() {
