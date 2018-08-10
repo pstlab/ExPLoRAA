@@ -1,4 +1,10 @@
-/ExPLoRAA-API/target/
-/TemporalNetwork/target/
-/ExPLoRAA-WebApp/target/
-/ExPLoRAA-DesktopApp/target/
+.vscode
+/api/.settings
+/api/target
+/api/.classpath
+/api/.project
+/server/.settings
+/server/target
+/server/.classpath
+/server/.factorypath
+/server/.project
