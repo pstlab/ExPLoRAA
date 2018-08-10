@@ -6,6 +6,10 @@ import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
+
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.BrokerPlugin;
@@ -19,6 +23,8 @@ import org.apache.activemq.command.ConnectionInfo;
  */
 public class App {
 
+    private static final String PERSISTENCE_UNIT_NAME = "ExPLoRAA_PU";
+    private static EntityManagerFactory factory;
     private static final Logger LOG = Logger.getLogger(App.class.getName());
 
     public static void main(String[] args) {
@@ -29,6 +35,9 @@ public class App {
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
+
+        factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
+        EntityManager em = factory.createEntityManager();
 
         // we start the MQTT broker..
         BrokerService broker = new BrokerService();
