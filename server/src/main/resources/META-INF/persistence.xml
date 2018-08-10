@@ -4,11 +4,12 @@
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/persistence http://xmlns.jcp.org/xml/ns/persistence/persistence_2_1.xsd">
     <persistence-unit name="ExPLoRAA_PU" transaction-type="RESOURCE_LOCAL">
         <class>it.cnr.istc.exploraa.db.UserEntity</class>
+        <class>it.cnr.istc.exploraa.db.LessonEntity</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property name="javax.persistence.jdbc.url" value="jdbc:derby:ExPLoRAADB;create=true" />
-            <property name="javax.persistence.jdbc.user" value="test" />
-            <property name="javax.persistence.jdbc.password" value="test" />
+            <property name="javax.persistence.jdbc.user" value="ExPLoRAA" />
+            <property name="javax.persistence.jdbc.password" value="ExPLoRAA" />
 
             <!-- EclipseLink should create the database schema automatically -->
             <property name="eclipselink.ddl-generation" value="create-tables" />

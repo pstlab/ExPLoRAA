@@ -2,6 +2,7 @@ package it.cnr.istc.exploraa;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Properties;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,13 +19,16 @@ import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionInfo;
 
+import it.cnr.istc.exploraa.db.LessonEntity;
+import it.cnr.istc.exploraa.db.UserEntity;
+
 /**
  * This is the main server class.
  */
 public class App {
 
     private static final String PERSISTENCE_UNIT_NAME = "ExPLoRAA_PU";
-    private static EntityManagerFactory factory;
+    private static EntityManagerFactory factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
     private static final Logger LOG = Logger.getLogger(App.class.getName());
 
     public static void main(String[] args) {
@@ -35,9 +39,6 @@ public class App {
         } catch (IOException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
-
-        factory = Persistence.createEntityManagerFactory(PERSISTENCE_UNIT_NAME);
-        EntityManager em = factory.createEntityManager();
 
         // we start the MQTT broker..
         BrokerService broker = new BrokerService();
@@ -71,5 +72,16 @@ public class App {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        LOG.info("Connecting to ExPLoRAA database..");
+        EntityManager em = factory.createEntityManager();
+
+        // we retrieve all the users..
+        List<UserEntity> users = em.createQuery("SELECT u FROM UserEntity u", UserEntity.class).getResultList();
+        LOG.info("Found " + users.size() + " users..");
+
+        // we retrieve all the lessons..
+        List<LessonEntity> lessons = em.createQuery("SELECT l FROM LessonEntity l", LessonEntity.class).getResultList();
+        LOG.info("Found " + lessons.size() + " lessons..");
     }
 }
