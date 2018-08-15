@@ -281,6 +281,8 @@ public class MessageAdapter extends TypeAdapter<Message> {
                     case Text:
                         ((Stimulus.TextStimulus) st).content = in.nextString();
                         break;
+                    case Question:
+                        throw new AssertionError();
                     case URL:
                         ((Stimulus.URLStimulus) st).content = in.nextString();
                         break;

@@ -169,7 +169,6 @@ public class UserAdapter extends TypeAdapter<User> {
                     in.beginObject();
                     User s = null;
                     Lesson c_l = null;
-                    Set<String> interests = new HashSet<>();
                     switch ((in.nextName())) {
                     case "user":
                         s = User.ADAPTER.read(in);

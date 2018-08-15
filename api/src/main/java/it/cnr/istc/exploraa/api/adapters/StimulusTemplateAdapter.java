@@ -115,6 +115,8 @@ public class StimulusTemplateAdapter extends TypeAdapter<StimulusTemplate> {
                 case Text:
                     ((StimulusTemplate.TextStimulusTemplate) st).content = in.nextString();
                     break;
+                case Question:
+                    throw new AssertionError();
                 case URL:
                     ((StimulusTemplate.URLStimulusTemplate) st).content = in.nextString();
                     break;
