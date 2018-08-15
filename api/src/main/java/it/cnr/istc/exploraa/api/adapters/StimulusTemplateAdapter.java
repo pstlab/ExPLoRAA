@@ -112,6 +112,8 @@ public class StimulusTemplateAdapter extends TypeAdapter<StimulusTemplate> {
                 break;
             case "content":
                 switch (Objects.requireNonNull(st).type) {
+                case Root:
+                    break;
                 case Text:
                     ((StimulusTemplate.TextStimulusTemplate) st).content = in.nextString();
                     break;
