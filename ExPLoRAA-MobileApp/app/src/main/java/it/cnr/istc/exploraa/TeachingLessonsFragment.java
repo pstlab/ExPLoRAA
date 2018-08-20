@@ -42,7 +42,7 @@ public class TeachingLessonsFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             assert getActivity() != null;
-            final TeachingLessonContext lesson = ((MainActivity) getActivity()).service.getTeachingLesson(intent.getLongExtra("lesson", 0));
+            final TeachingLessonContext lesson = ExPLoRAAContext.getInstance().getService().getTeachingLesson(intent.getLongExtra("lesson", 0));
             teaching_lessons_adapter.notifyItemChanged(teaching_lessons_adapter.lessons.indexOf(lesson));
         }
     };
@@ -97,11 +97,11 @@ public class TeachingLessonsFragment extends Fragment {
                 return true;
             case R.id.remove_teaching_lessons_menu_item:
                 Collection<TeachingLessonContext> to_remove = new ArrayList<>(teaching_lessons_adapter.selected_lessons.size());
-                final List<TeachingLessonContext> c_lessons = ((MainActivity) getActivity()).service.getTeachingLessons();
+                final List<TeachingLessonContext> c_lessons = ExPLoRAAContext.getInstance().getService().getTeachingLessons();
                 for (int pos : teaching_lessons_adapter.selected_lessons)
                     to_remove.add(c_lessons.get(pos));
                 for (TeachingLessonContext ctx : to_remove)
-                    ((MainActivity) getActivity()).service.remove_teaching_lesson(ctx);
+                    ExPLoRAAContext.getInstance().getService().remove_teaching_lesson(ctx);
                 teaching_lessons_adapter.selected_lessons.clear();
                 remove_teaching_lessons_menu_item.setVisible(false);
                 return true;

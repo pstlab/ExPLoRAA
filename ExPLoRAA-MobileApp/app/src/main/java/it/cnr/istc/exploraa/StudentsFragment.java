@@ -34,7 +34,7 @@ public class StudentsFragment extends Fragment {
         @Override
         public void onReceive(Context context, Intent intent) {
             assert getActivity() != null;
-            final StudentContext student = ((MainActivity) getActivity()).service.getStudent(intent.getLongExtra("student", 0));
+            final StudentContext student = ExPLoRAAContext.getInstance().getService().getStudent(intent.getLongExtra("student", 0));
             students_adapter.notifyItemChanged(students_adapter.students.indexOf(student));
         }
     };

@@ -1,19 +1,14 @@
 package it.cnr.istc.exploraa;
 
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.app.NotificationManagerCompat;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -26,23 +21,6 @@ public class MainActivity extends AppCompatActivity {
     private final FollowingLessonsFragment following_lessons_fragment = new FollowingLessonsFragment();
     private final TeachingLessonsFragment teaching_lessons_fragment = new TeachingLessonsFragment();
     private final StudentsFragment students_fragment = new StudentsFragment();
-    ExPLoRAAService service;
-    private ServiceConnection service_connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder binder) {
-            service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
-
-            stimuli_fragment.setStimuli(service.getStimuli());
-            following_lessons_fragment.setLessons(service.getFollowingLessons());
-            teaching_lessons_fragment.setLessons(service.getTeachingLessons());
-            students_fragment.setStudents(service.getStudents());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            service = null;
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -74,21 +52,17 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        assert ((ExPLoRAAApplication) getApplication()).isServiceRunning();
-        // we bind the ExPLoRAA service..
-        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
-            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
+        if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
+            throw new RuntimeException("Service should be running..");
+        final ExPLoRAAService service = ExPLoRAAContext.getInstance().getService();
+
+        stimuli_fragment.setStimuli(service.getStimuli());
+        following_lessons_fragment.setLessons(service.getFollowingLessons());
+        teaching_lessons_fragment.setLessons(service.getTeachingLessons());
+        students_fragment.setStudents(service.getStudents());
 
         // we clear all the notifications..
         NotificationManagerCompat.from(this).cancelAll();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (service != null) {
-            unbindService(service_connection);
-        }
     }
 
     @Override
@@ -102,7 +76,9 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.logout_menu_item:
-                service.logout();
+                if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
+                    throw new RuntimeException("Service should be running..");
+                ExPLoRAAContext.getInstance().getService().logout();
                 SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
                 SharedPreferences.Editor prefs_edit = shared_prefs.edit();
                 prefs_edit.remove(getString(R.string.email));
@@ -112,8 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
 
-                stopService(new Intent(this, ExPLoRAAService.class));
-                ((ExPLoRAAApplication) getApplication()).setServiceRunning(false);
+                ExPLoRAAContext.getInstance().stopService();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

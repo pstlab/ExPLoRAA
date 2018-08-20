@@ -41,21 +41,6 @@ public class NavigatorActivity extends AppCompatActivity {
 
     public static final String TAG = "NavigatorActivity";
     public static final int ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS = 123;
-    private ExPLoRAAService service;
-    private ServiceConnection service_connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder binder) {
-            service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
-
-            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
-            service.login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            service = null;
-        }
-    };
     private BroadcastReceiver login_receiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
@@ -72,7 +57,7 @@ public class NavigatorActivity extends AppCompatActivity {
 
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
 
-        if (((ExPLoRAAApplication) getApplication()).isServiceRunning()) {
+        if (ExPLoRAAContext.getInstance().isServiceRunning()) {
             startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
             finish();
         } else {
@@ -82,36 +67,24 @@ public class NavigatorActivity extends AppCompatActivity {
                 finish();
             } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                 ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-            else {
-                startService(new Intent(this, ExPLoRAAService.class));
-                ((ExPLoRAAApplication) getApplication()).setServiceRunning(true);
-                if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
-                    Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
-            }
+            else ExPLoRAAContext.getInstance().startService(getApplication());
         }
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service != null) {
-            unbindService(service_connection);
-        }
         unregisterReceiver(login_receiver);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    startService(new Intent(this, ExPLoRAAService.class));
-                    ((ExPLoRAAApplication) getApplication()).setServiceRunning(true);
-                    if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
-                        Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
-                } else
+            case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    ExPLoRAAContext.getInstance().startService(getApplication());
+                else
                     finish();
-            }
         }
     }
 }
