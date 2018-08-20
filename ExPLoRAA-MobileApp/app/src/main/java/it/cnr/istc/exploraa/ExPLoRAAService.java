@@ -21,6 +21,7 @@ import android.net.NetworkInfo;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -73,21 +74,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
     private static final String TAG = "ExPLoRAAService";
     public static final String LOGIN = "Login";
     public static final String USER_CREATION = "User creation";
-    public static final String ADDED_STIMULUS = "Added stimulus";
-    public static final String REMOVED_STIMULUS = "Removed stimulus";
-    public static final String CLEARED_STIMULI = "Cleared stimuli";
-    public static final String ADDED_FOLLOWING_LESSON = "Added following lesson";
-    public static final String REMOVED_FOLLOWING_LESSON = "Removed following lesson";
-    public static final String CLEARED_FOLLOWING_LESSONS = "Cleared following lessons";
-    public static final String ADDED_TEACHER = "Added teacher";
-    public static final String REMOVED_TEACHER = "Removed teacher";
-    public static final String CLEARED_TEACHERS = "Cleared teachers";
-    public static final String ADDED_TEACHING_LESSON = "Added teaching lesson";
-    public static final String REMOVED_TEACHING_LESSON = "Removed teaching lesson";
-    public static final String CLEARED_TEACHING_LESSONS = "Cleared teaching lessons";
-    public static final String ADDED_STUDENT = "Added student";
-    public static final String REMOVED_STUDENT = "Removed student";
-    public static final String CLEARED_STUDENTS = "Cleared students";
     public static final Gson GSON = new GsonBuilder().registerTypeAdapter(Message.class, Message.ADAPTER).registerTypeAdapter(LessonModel.class, LessonModel.ADAPTER).create();
     private final IBinder binder = new ExPLoRAABinder();
     private ExPLoRAA resource;
@@ -114,11 +100,13 @@ public class ExPLoRAAService extends Service implements LocationListener {
      */
     private final List<FollowingLessonContext> following_lessons = new ArrayList<>();
     private final LongSparseArray<FollowingLessonContext> id_following_lessons = new LongSparseArray<>();
+    private final LongSparseArray<FollowingLessonContext.FollowingLessonListener> id_following_lesson_listener = new LongSparseArray<>();
     /**
      * The followed teachers.
      */
     private final List<TeacherContext> teachers = new ArrayList<>();
     private final LongSparseArray<TeacherContext> id_teachers = new LongSparseArray<>();
+    private final LongSparseArray<TeacherContext.TeacherListener> id_teacher_listener = new LongSparseArray<>();
     /**
      * The lesson models associated to the teacher.
      */
@@ -128,11 +116,18 @@ public class ExPLoRAAService extends Service implements LocationListener {
      */
     private final List<TeachingLessonContext> teaching_lessons = new ArrayList<>();
     private final LongSparseArray<TeachingLessonContext> id_teaching_lessons = new LongSparseArray<>();
+    private final LongSparseArray<TeachingLessonContext.TeachingLessonListener> id_teaching_lesson_listener = new LongSparseArray<>();
     /**
      * The following students.
      */
     private final List<StudentContext> students = new ArrayList<>();
     private final LongSparseArray<StudentContext> id_students = new LongSparseArray<>();
+    private final LongSparseArray<StudentContext.StudentListener> id_student_listener = new LongSparseArray<>();
+    private final Collection<StimuliListener> stimuli_listeners = new ArrayList<>();
+    private final Collection<FollowingLessonsListener> following_lessons_listeners = new ArrayList<>();
+    private final Collection<TeachersListener> teachers_listeners = new ArrayList<>();
+    private final Collection<TeachingLessonsListener> teaching_lessons_listeners = new ArrayList<>();
+    private final Collection<StudentsListener> students_listeners = new ArrayList<>();
     private boolean logging_in = false;
     private BroadcastReceiver connection_receiver = new BroadcastReceiver() {
         @Override
@@ -148,6 +143,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
             }
         }
     };
+    Handler main_handler = new Handler(getApplicationContext().getMainLooper());
 
     public static String convertTimeToString(long time) {
         long second = (time / 1000) % 60;
@@ -260,7 +256,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
 
                 // we clear the stimuli..
                 stimuli.clear();
-                sendBroadcast(new Intent(CLEARED_STIMULI));
+                for (StimuliListener l : stimuli_listeners) l.stimuliCleared();
 
                 // we clear the following lessons..
                 if (mqtt.isConnected()) for (FollowingLessonContext l_ctx : following_lessons) {
@@ -270,7 +266,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 }
                 following_lessons.clear();
                 id_following_lessons.clear();
-                sendBroadcast(new Intent(CLEARED_FOLLOWING_LESSONS));
+                for (FollowingLessonsListener l : following_lessons_listeners)
+                    l.followingLessonsCleared();
 
                 // we clear the teachers..
                 if (mqtt.isConnected()) for (TeacherContext s_ctx : teachers) {
@@ -278,7 +275,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 }
                 teachers.clear();
                 id_teachers.clear();
-                sendBroadcast(new Intent(CLEARED_TEACHERS));
+                for (TeachersListener l : teachers_listeners)
+                    l.teachersCleared();
 
                 models.clear();
 
@@ -290,7 +288,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 }
                 teaching_lessons.clear();
                 id_teaching_lessons.clear();
-                sendBroadcast(new Intent(CLEARED_TEACHING_LESSONS));
+                for (TeachingLessonsListener l : teaching_lessons_listeners)
+                    l.teachingLessonsCleared();
 
                 // we clear the students..
                 if (mqtt.isConnected()) for (StudentContext s_ctx : students) {
@@ -298,7 +297,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 }
                 students.clear();
                 id_students.clear();
-                sendBroadcast(new Intent(CLEARED_STUDENTS));
+                for (StudentsListener l : students_listeners)
+                    l.studentsCleared();
 
                 if (mqtt.isConnected()) mqtt.disconnect();
                 mqtt.close();
@@ -345,48 +345,88 @@ public class ExPLoRAAService extends Service implements LocationListener {
                                 case RemoveLesson:
                                     // a teacher has removed a lesson for this student..
                                     final Message.RemoveLesson lost_lesson = (Message.RemoveLesson) m;
-                                    removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson));
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            removeFollowingLesson(id_following_lessons.get(lost_lesson.lesson));
+                                        }
+                                    });
                                     break;
                                 case FollowLesson:
                                     // a new student is following a lesson of this teacher..
                                     final Message.FollowLesson follow_lesson = (Message.FollowLesson) m;
-                                    id_teaching_lessons.get(follow_lesson.lesson).addStudent(new StudentContext(ExPLoRAAService.this, follow_lesson.student));
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            id_teaching_lessons.get(follow_lesson.lesson).addStudent(new StudentContext(ExPLoRAAService.this, follow_lesson.student));
+                                        }
+                                    });
                                     break;
                                 case UnfollowLesson:
                                     // a student is not following a lesson of this user anymore..
                                     final Message.UnfollowLesson unfollow_lesson = (Message.UnfollowLesson) m;
-                                    id_teaching_lessons.get(unfollow_lesson.lesson).removeStudent(id_students.get(unfollow_lesson.student));
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            id_teaching_lessons.get(unfollow_lesson.lesson).removeStudent(id_students.get(unfollow_lesson.student));
+                                        }
+                                    });
                                     break;
                                 case Token:
                                     // a new token has been created for a teaching lesson..
                                     final Message.Token token = (Message.Token) m;
-                                    id_teaching_lessons.get(token.lesson_id).addToken(token);
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            id_teaching_lessons.get(token.lesson_id).addToken(token);
+                                        }
+                                    });
                                     break;
                                 case TokenUpdate:
                                     // a token of a teaching lesson has been updated..
                                     final Message.TokenUpdate token_update = (Message.TokenUpdate) m;
-                                    id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min != null ? token_update.min : Long.MIN_VALUE, token_update.max != null ? token_update.max : Long.MAX_VALUE);
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min != null ? token_update.min : Long.MIN_VALUE, token_update.max != null ? token_update.max : Long.MAX_VALUE);
+                                        }
+                                    });
                                     break;
                                 case RemoveToken:
                                     // a token of a teaching lesson has been removed..
                                     final Message.RemoveToken remove_token = (Message.RemoveToken) m;
-                                    id_teaching_lessons.get(remove_token.lesson_id).removeToken(id_teaching_lessons.get(remove_token.lesson_id).getToken(remove_token.id).getToken());
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            id_teaching_lessons.get(remove_token.lesson_id).removeToken(id_teaching_lessons.get(remove_token.lesson_id).getToken(remove_token.id).getToken());
+                                        }
+                                    });
                                     break;
                                 case Stimulus:
                                     // a new stimulus has been created for a following lesson..
                                     final Message.Stimulus stimulus = (Message.Stimulus) m;
-                                    id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            id_following_lessons.get(stimulus.lesson_id).addStimulus(stimulus);
+                                        }
+                                    });
                                     break;
                                 case RemoveStimulus:
                                     // a stimulus has been removed for a following lesson..
                                     final Message.RemoveStimulus hide_stimulus = (Message.RemoveStimulus) m;
-                                    Message.Stimulus s = null;
-                                    for (Message.Stimulus c_s : id_following_lessons.get(hide_stimulus.lesson_id).getStimuli())
-                                        if (c_s.id == hide_stimulus.id) {
-                                            s = c_s;
-                                            break;
+                                    main_handler.post(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            Message.Stimulus s = null;
+                                            for (Message.Stimulus c_s : id_following_lessons.get(hide_stimulus.lesson_id).getStimuli())
+                                                if (c_s.id == hide_stimulus.id) {
+                                                    s = c_s;
+                                                    break;
+                                                }
+                                            id_following_lessons.get(hide_stimulus.lesson_id).removeStimulus(s);
                                         }
-                                    id_following_lessons.get(hide_stimulus.lesson_id).removeStimulus(s);
+                                    });
                                     break;
                                 case Answer:
                                     break;
@@ -420,89 +460,89 @@ public class ExPLoRAAService extends Service implements LocationListener {
     void addStimulus(@NonNull final Message.Stimulus stimulus) {
         final int pos = stimuli.size();
         stimuli.add(stimulus);
-        Intent added_stimulus_intent = new Intent(ADDED_STIMULUS);
-        added_stimulus_intent.putExtra("position", pos);
-        sendBroadcast(added_stimulus_intent);
+        for (StimuliListener listener : stimuli_listeners)
+            listener.stimulusAdded(pos, stimulus);
 
-        NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ExPLoRAAService.this);
-        TaskStackBuilder task_stack_builder = TaskStackBuilder.create(ExPLoRAAService.this);
-        switch (stimulus.stimulus_type) {
-            case Text:
-                Intent text_intent = new Intent(ExPLoRAAService.this, TextStimulusActivity.class);
-                text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
-                task_stack_builder.addNextIntentWithParentStack(text_intent);
-                PendingIntent text_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
+        if (stimuli_listeners.isEmpty()) {
+            NotificationManagerCompat notificationManager = NotificationManagerCompat.from(ExPLoRAAService.this);
+            TaskStackBuilder task_stack_builder = TaskStackBuilder.create(ExPLoRAAService.this);
+            switch (stimulus.stimulus_type) {
+                case Text:
+                    Intent text_intent = new Intent(ExPLoRAAService.this, TextStimulusActivity.class);
+                    text_intent.putExtra("content", ((Message.Stimulus.TextStimulus) stimulus).content);
+                    task_stack_builder.addNextIntentWithParentStack(text_intent);
+                    PendingIntent text_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                //PendingIntent text_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, text_intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                final Notification text_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
-                        .setSmallIcon(R.drawable.ic_backpacker)
-                        .setContentTitle(getString(R.string.app_name))
-                        .setContentText(((Message.Stimulus.TextStimulus) stimulus).content)
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText(((Message.Stimulus.TextStimulus) stimulus).content))
-                        .setContentIntent(text_pending_intent)
-                        .setGroup(getString(R.string.app_name))
-                        .setAutoCancel(true)
-                        .build();
+                    //PendingIntent text_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, text_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    final Notification text_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                            .setSmallIcon(R.drawable.ic_backpacker)
+                            .setContentTitle(getString(R.string.app_name))
+                            .setContentText(((Message.Stimulus.TextStimulus) stimulus).content)
+                            .setStyle(new NotificationCompat.BigTextStyle()
+                                    .bigText(((Message.Stimulus.TextStimulus) stimulus).content))
+                            .setContentIntent(text_pending_intent)
+                            .setGroup(getString(R.string.app_name))
+                            .setAutoCancel(true)
+                            .build();
 
-                notificationManager.notify(pos, text_notification);
-                break;
-            case Question:
-                Intent question_intent = new Intent(ExPLoRAAService.this, QuestionStimulusActivity.class);
-                question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
-                task_stack_builder.addNextIntentWithParentStack(question_intent);
-                PendingIntent question_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
+                    notificationManager.notify(pos, text_notification);
+                    break;
+                case Question:
+                    Intent question_intent = new Intent(ExPLoRAAService.this, QuestionStimulusActivity.class);
+                    question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
+                    task_stack_builder.addNextIntentWithParentStack(question_intent);
+                    PendingIntent question_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
-                answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
-                question_intent.putExtra("answers", answers);
-                if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
-                    question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
-                }
-                //PendingIntent question_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, question_intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                final Notification question_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
-                        .setSmallIcon(R.drawable.ic_backpacker)
-                        .setContentTitle(getString(R.string.app_name))
-                        .setContentText(((Message.Stimulus.QuestionStimulus) stimulus).question)
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText(((Message.Stimulus.QuestionStimulus) stimulus).question))
-                        .setContentIntent(question_pending_intent)
-                        .setGroup(getString(R.string.app_name))
-                        .setAutoCancel(true)
-                        .build();
+                    ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
+                    answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
+                    question_intent.putExtra("answers", answers);
+                    if (((Message.Stimulus.QuestionStimulus) stimulus).answer != null) {
+                        question_intent.putExtra("answer", ((Message.Stimulus.QuestionStimulus) stimulus).answer);
+                    }
+                    //PendingIntent question_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, question_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    final Notification question_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                            .setSmallIcon(R.drawable.ic_backpacker)
+                            .setContentTitle(getString(R.string.app_name))
+                            .setContentText(((Message.Stimulus.QuestionStimulus) stimulus).question)
+                            .setStyle(new NotificationCompat.BigTextStyle()
+                                    .bigText(((Message.Stimulus.QuestionStimulus) stimulus).question))
+                            .setContentIntent(question_pending_intent)
+                            .setGroup(getString(R.string.app_name))
+                            .setAutoCancel(true)
+                            .build();
 
-                notificationManager.notify(pos, question_notification);
-                break;
-            case URL:
-                Intent url_intent = new Intent(ExPLoRAAService.this, URLStimulusActivity.class);
-                url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
-                url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
-                task_stack_builder.addNextIntentWithParentStack(url_intent);
-                PendingIntent url_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
+                    notificationManager.notify(pos, question_notification);
+                    break;
+                case URL:
+                    Intent url_intent = new Intent(ExPLoRAAService.this, URLStimulusActivity.class);
+                    url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
+                    url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
+                    task_stack_builder.addNextIntentWithParentStack(url_intent);
+                    PendingIntent url_pending_intent = task_stack_builder.getPendingIntent(pos, PendingIntent.FLAG_UPDATE_CURRENT);
 
-                //PendingIntent url_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, url_intent, PendingIntent.FLAG_UPDATE_CURRENT);
-                final Notification url_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
-                        .setSmallIcon(R.drawable.ic_backpacker)
-                        .setContentTitle(getString(R.string.app_name))
-                        .setContentText(((Message.Stimulus.URLStimulus) stimulus).content)
-                        .setStyle(new NotificationCompat.BigTextStyle()
-                                .bigText(((Message.Stimulus.URLStimulus) stimulus).content))
-                        .setContentIntent(url_pending_intent)
-                        .setGroup(getString(R.string.app_name))
-                        .setAutoCancel(true)
-                        .build();
+                    //PendingIntent url_pending_intent = PendingIntent.getActivity(ExPLoRAAService.this, stimulus.id, url_intent, PendingIntent.FLAG_UPDATE_CURRENT);
+                    final Notification url_notification = new NotificationCompat.Builder(ExPLoRAAService.this, getString(R.string.app_name))
+                            .setSmallIcon(R.drawable.ic_backpacker)
+                            .setContentTitle(getString(R.string.app_name))
+                            .setContentText(((Message.Stimulus.URLStimulus) stimulus).content)
+                            .setStyle(new NotificationCompat.BigTextStyle()
+                                    .bigText(((Message.Stimulus.URLStimulus) stimulus).content))
+                            .setContentIntent(url_pending_intent)
+                            .setGroup(getString(R.string.app_name))
+                            .setAutoCancel(true)
+                            .build();
 
-                notificationManager.notify(pos, url_notification);
-                break;
+                    notificationManager.notify(pos, url_notification);
+                    break;
+            }
         }
     }
 
     void removeStimulus(@NonNull final Message.Stimulus stimulus) {
         final int pos = stimuli.indexOf(stimulus);
         stimuli.remove(pos);
-        Intent removed_stimulus_intent = new Intent(REMOVED_STIMULUS);
-        removed_stimulus_intent.putExtra("position", pos);
-        sendBroadcast(removed_stimulus_intent);
+        for (StimuliListener listener : stimuli_listeners)
+            listener.stimulusRemoved(pos, stimulus);
 
         NotificationManagerCompat.from(ExPLoRAAService.this).cancel(pos);
     }
@@ -517,6 +557,33 @@ public class ExPLoRAAService extends Service implements LocationListener {
         id_following_lessons.put(l_ctx.getLesson().id, l_ctx);
         if (id_teachers.get(l_ctx.getLesson().teacher.user.id) == null)
             addTeacher(new TeacherContext(ExPLoRAAService.this, l_ctx.getLesson().teacher.user));
+        FollowingLessonContext.FollowingLessonListener following_lesson_listener = new FollowingLessonContext.FollowingLessonListener() {
+            @Override
+            public void timeChanged(long t) {
+                for (FollowingLessonsListener listener : following_lessons_listeners)
+                    listener.followingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void stateChanged(Lesson.LessonState state) {
+                for (FollowingLessonsListener listener : following_lessons_listeners)
+                    listener.followingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void addedStimulus(int position, Message.Stimulus e) {
+                for (FollowingLessonsListener listener : following_lessons_listeners)
+                    listener.followingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void removedStimulus(int position, Message.Stimulus e) {
+                for (FollowingLessonsListener listener : following_lessons_listeners)
+                    listener.followingLessonUpdated(pos, l_ctx);
+            }
+        };
+        l_ctx.addListener(following_lesson_listener);
+        id_following_lesson_listener.put(l_ctx.getLesson().id, following_lesson_listener);
         try {
             // we subscribe to the lesson's time..
             mqtt.subscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time", new IMqttMessageListener() {
@@ -535,9 +602,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         } catch (MqttException ex) {
             Log.w(TAG, "MQTT subscription failed..", ex);
         }
-        Intent added_following_lesson_intent = new Intent(ADDED_FOLLOWING_LESSON);
-        added_following_lesson_intent.putExtra("position", pos);
-        sendBroadcast(added_following_lesson_intent);
+        for (FollowingLessonsListener listener : following_lessons_listeners)
+            listener.followingLessonAdded(pos, l_ctx);
     }
 
     public FollowingLessonContext getFollowingLesson(final long id) {
@@ -553,6 +619,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         for (Message.Stimulus st : l_ctx.getStimuli()) removeStimulus(st);
         int pos = following_lessons.indexOf(l_ctx);
         following_lessons.remove(pos);
+        l_ctx.removeListener(id_following_lesson_listener.get(l_ctx.getLesson().id));
+        id_following_lesson_listener.remove(l_ctx.getLesson().id);
         id_following_lessons.remove(l_ctx.getLesson().id);
         if (mqtt.isConnected()) {
             try {
@@ -572,15 +640,23 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 to_remove_teachers.add(t_ctx.getTeacher().id);
         for (Long to_remove_teacher : to_remove_teachers)
             removeTeacher(id_teachers.get(to_remove_teacher));
-        Intent removed_following_lesson_intent = new Intent(REMOVED_FOLLOWING_LESSON);
-        removed_following_lesson_intent.putExtra("position", pos);
-        sendBroadcast(removed_following_lesson_intent);
+        for (FollowingLessonsListener listener : following_lessons_listeners)
+            listener.followingLessonRemoved(pos, l_ctx);
     }
 
     private void addTeacher(@NonNull final TeacherContext t_ctx) {
         final int pos = teachers.size();
         teachers.add(t_ctx);
         id_teachers.put(t_ctx.getTeacher().id, t_ctx);
+        TeacherContext.TeacherListener l = new TeacherContext.TeacherListener() {
+            @Override
+            public void onlineChanged(boolean on_line) {
+                for (TeachersListener listener : teachers_listeners)
+                    listener.teacherUpdated(pos, t_ctx);
+            }
+        };
+        t_ctx.addListener(l);
+        id_teacher_listener.put(t_ctx.getTeacher().id, l);
         try {
             mqtt.subscribe(t_ctx.getTeacher().id + "/output/on-line", new IMqttMessageListener() {
                 @Override
@@ -591,24 +667,24 @@ public class ExPLoRAAService extends Service implements LocationListener {
         } catch (MqttException ex) {
             Log.w(TAG, "MQTT subscription failed..", ex);
         }
-        Intent added_teacher_intent = new Intent(ADDED_TEACHER);
-        added_teacher_intent.putExtra("position", pos);
-        sendBroadcast(added_teacher_intent);
+        for (TeachersListener listener : teachers_listeners)
+            listener.teacherAdded(pos, t_ctx);
     }
 
     private void removeTeacher(@NonNull final TeacherContext t_ctx) {
         int pos = teachers.indexOf(t_ctx);
         teachers.remove(pos);
         id_teachers.remove(t_ctx.getTeacher().id);
+        t_ctx.removeListener(id_teacher_listener.get(t_ctx.getTeacher().id));
+        id_teacher_listener.remove(t_ctx.getTeacher().id);
         if (mqtt.isConnected()) try {
             // we might be removing teachers as a consequence of a connection loss..
             mqtt.unsubscribe(t_ctx.getTeacher().id + "/output/on-line");
         } catch (MqttException ex) {
             Log.w(TAG, "MQTT unsubscription failed..", ex);
         }
-        Intent removed_teacher_intent = new Intent(REMOVED_TEACHER);
-        removed_teacher_intent.putExtra("position", pos);
-        sendBroadcast(removed_teacher_intent);
+        for (TeachersListener listener : teachers_listeners)
+            listener.teacherRemoved(pos, t_ctx);
     }
 
     public TeacherContext getTeacher(final long id) {
@@ -634,6 +710,51 @@ public class ExPLoRAAService extends Service implements LocationListener {
         if (l_ctx.getLesson().students != null)
             for (Follow follow : l_ctx.getLesson().students.values())
                 l_ctx.addStudent(id_students.get(follow.user.id) != null ? id_students.get(follow.user.id) : new StudentContext(this, follow.user));
+        TeachingLessonContext.TeachingLessonListener l = new TeachingLessonContext.TeachingLessonListener() {
+            @Override
+            public void timeChanged(long t) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void stateChanged(Lesson.LessonState state) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void studentAdded(int pos, StudentContext s_ctx) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void studentRemoved(int pos, StudentContext s_ctx) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void addedToken(int pos, TeachingLessonContext.TokenRow tk) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void removedToken(int pos, TeachingLessonContext.TokenRow tk) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+
+            @Override
+            public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
+                for (TeachingLessonsListener listener : teaching_lessons_listeners)
+                    listener.teachingLessonUpdated(pos, l_ctx);
+            }
+        };
+        l_ctx.addListener(l);
+        id_teaching_lesson_listener.put(l_ctx.getLesson().id, l);
         try {
             // we subscribe to the lesson's time..
             mqtt.subscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time", new IMqttMessageListener() {
@@ -652,9 +773,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         } catch (MqttException ex) {
             Log.w(TAG, "MQTT subscription failed..", ex);
         }
-        Intent added_teaching_lesson_intent = new Intent(ADDED_TEACHING_LESSON);
-        added_teaching_lesson_intent.putExtra("position", pos);
-        sendBroadcast(added_teaching_lesson_intent);
+        for (TeachingLessonsListener listener : teaching_lessons_listeners)
+            listener.teachingLessonAdded(pos, l_ctx);
     }
 
     public TeachingLessonContext getTeachingLesson(final long id) {
@@ -669,6 +789,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         int pos = teaching_lessons.indexOf(l_ctx);
         teaching_lessons.remove(pos);
         id_teaching_lessons.remove(l_ctx.getLesson().id);
+        l_ctx.removeListener(id_teaching_lesson_listener.get(l_ctx.getLesson().id));
+        id_teaching_lesson_listener.remove(l_ctx.getLesson().id);
         if (user != null && mqtt.isConnected()) try {
             // we unsubscribe from the lesson's time and state..
             mqtt.unsubscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
@@ -685,15 +807,23 @@ public class ExPLoRAAService extends Service implements LocationListener {
                 to_remove_students.add(s_ctx.getStudent().id);
         for (Long to_remove_student : to_remove_students)
             removeStudent(id_students.get(to_remove_student));
-        Intent removed_teaching_lesson_intent = new Intent(REMOVED_TEACHING_LESSON);
-        removed_teaching_lesson_intent.putExtra("position", pos);
-        sendBroadcast(removed_teaching_lesson_intent);
+        for (TeachingLessonsListener listener : teaching_lessons_listeners)
+            listener.teachingLessonRemoved(pos, l_ctx);
     }
 
     void addStudent(@NonNull final StudentContext s_ctx) {
         final int pos = teachers.size();
         students.add(s_ctx);
         id_students.put(s_ctx.getStudent().id, s_ctx);
+        StudentContext.StudentListener l = new StudentContext.StudentListener() {
+            @Override
+            public void onlineChanged(boolean on_line) {
+                for (StudentsListener listener : students_listeners)
+                    listener.studentUpdated(pos, s_ctx);
+            }
+        };
+        s_ctx.addListener(l);
+        id_student_listener.put(s_ctx.getStudent().id, l);
         try {
             // we subscribe to be notified whether the student gets online/offline..
             mqtt.subscribe(s_ctx.getStudent().id + "/output/on-line", new IMqttMessageListener() {
@@ -707,15 +837,16 @@ public class ExPLoRAAService extends Service implements LocationListener {
         } catch (MqttException ex) {
             Log.w(TAG, "MQTT subscription failed..", ex);
         }
-        Intent added_student_intent = new Intent(ADDED_STUDENT);
-        added_student_intent.putExtra("position", pos);
-        sendBroadcast(added_student_intent);
+        for (StudentsListener listener : students_listeners)
+            listener.studentAdded(pos, s_ctx);
     }
 
     void removeStudent(@NonNull final StudentContext s_ctx) {
         int pos = students.indexOf(s_ctx);
         students.remove(pos);
         id_students.remove(s_ctx.getStudent().id);
+        s_ctx.removeListener(id_student_listener.get(s_ctx.getStudent().id));
+        id_student_listener.remove(s_ctx.getStudent().id);
         try {
             if (mqtt.isConnected()) {
                 mqtt.unsubscribe(s_ctx.getStudent().id + "/output/on-line");
@@ -723,9 +854,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
         } catch (MqttException ex) {
             Log.w(TAG, "MQTT unsubscription failed..", ex);
         }
-        Intent removed_student_intent = new Intent(REMOVED_STUDENT);
-        removed_student_intent.putExtra("position", pos);
-        sendBroadcast(removed_student_intent);
+        for (StudentsListener listener : students_listeners)
+            listener.studentRemoved(pos, s_ctx);
     }
 
     public StudentContext getStudent(final long id) {
@@ -1117,5 +1247,98 @@ public class ExPLoRAAService extends Service implements LocationListener {
             c_par_values.put("GPS", gps_pos);
         }
         return c_par_values;
+    }
+
+    public void addStimuliListener(StimuliListener l) {
+        stimuli_listeners.add(l);
+    }
+
+    public void removeStimuliListener(StimuliListener l) {
+        stimuli_listeners.remove(l);
+    }
+
+    public void addFollowingLessonsListener(FollowingLessonsListener l) {
+        following_lessons_listeners.add(l);
+    }
+
+    public void removeFollowingLessonsListener(FollowingLessonsListener l) {
+        following_lessons_listeners.remove(l);
+    }
+
+    public void addTeachersListener(TeachersListener l) {
+        teachers_listeners.add(l);
+    }
+
+    public void removeTeachersListener(TeachersListener l) {
+        teachers_listeners.remove(l);
+    }
+
+    public void addTeachingLessonsListener(TeachingLessonsListener l) {
+        teaching_lessons_listeners.add(l);
+    }
+
+    public void removeTeachingLessonsListener(TeachingLessonsListener l) {
+        teaching_lessons_listeners.remove(l);
+    }
+
+    public void addStudentsListener(StudentsListener l) {
+        students_listeners.add(l);
+    }
+
+    public void removeStudentsListener(StudentsListener l) {
+        students_listeners.remove(l);
+    }
+
+    public interface StimuliListener {
+
+        void stimulusAdded(int pos, Message.Stimulus stimulus);
+
+        void stimulusRemoved(int pos, Message.Stimulus stimulus);
+
+        void stimuliCleared();
+    }
+
+    public interface FollowingLessonsListener {
+
+        void followingLessonAdded(int pos, FollowingLessonContext ctx);
+
+        void followingLessonUpdated(int pos, FollowingLessonContext ctx);
+
+        void followingLessonRemoved(int pos, FollowingLessonContext ctx);
+
+        void followingLessonsCleared();
+    }
+
+    public interface TeachersListener {
+
+        void teacherAdded(int pos, TeacherContext ctx);
+
+        void teacherUpdated(int pos, TeacherContext ctx);
+
+        void teacherRemoved(int pos, TeacherContext ctx);
+
+        void teachersCleared();
+    }
+
+    public interface TeachingLessonsListener {
+
+        void teachingLessonAdded(int pos, TeachingLessonContext ctx);
+
+        void teachingLessonUpdated(int pos, TeachingLessonContext ctx);
+
+        void teachingLessonRemoved(int pos, TeachingLessonContext ctx);
+
+        void teachingLessonsCleared();
+    }
+
+    public interface StudentsListener {
+
+        void studentAdded(int pos, StudentContext ctx);
+
+        void studentUpdated(int pos, StudentContext ctx);
+
+        void studentRemoved(int pos, StudentContext ctx);
+
+        void studentsCleared();
     }
 }

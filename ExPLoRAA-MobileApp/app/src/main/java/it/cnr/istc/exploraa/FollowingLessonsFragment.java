@@ -1,9 +1,6 @@
 package it.cnr.istc.exploraa;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -27,58 +24,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-public class FollowingLessonsFragment extends Fragment {
+public class FollowingLessonsFragment extends Fragment implements ExPLoRAAService.FollowingLessonsListener {
 
     private final FollowingLessonsAdapter following_lessons_adapter = new FollowingLessonsAdapter();
     private MenuItem remove_following_lessons_menu_item;
-    private BroadcastReceiver following_lesson_added_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            following_lessons_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
-        }
-    };
-    private BroadcastReceiver following_lesson_updated_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            assert getActivity() != null;
-            final FollowingLessonContext lesson = ExPLoRAAContext.getInstance().getService().getFollowingLesson(intent.getLongExtra("lesson", 0));
-            following_lessons_adapter.notifyItemChanged(following_lessons_adapter.lessons.indexOf(lesson));
-        }
-    };
-    private BroadcastReceiver following_lesson_removed_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            following_lessons_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
-        }
-    };
-    private BroadcastReceiver following_lessons_cleared_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            following_lessons_adapter.notifyDataSetChanged();
-        }
-    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setHasOptionsMenu(true);
-
-        assert getActivity() != null;
-        getActivity().registerReceiver(following_lesson_added_receiver, new IntentFilter(ExPLoRAAService.ADDED_FOLLOWING_LESSON));
-        getActivity().registerReceiver(following_lesson_updated_receiver, new IntentFilter(FollowingLessonContext.UPDATED_FOLLOWING_LESSON));
-        getActivity().registerReceiver(following_lesson_removed_receiver, new IntentFilter(ExPLoRAAService.REMOVED_FOLLOWING_LESSON));
-        getActivity().registerReceiver(following_lessons_cleared_receiver, new IntentFilter(ExPLoRAAService.CLEARED_FOLLOWING_LESSONS));
+        ExPLoRAAContext.getInstance().getService().addFollowingLessonsListener(this);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        assert getActivity() != null;
-        getActivity().unregisterReceiver(following_lesson_added_receiver);
-        getActivity().unregisterReceiver(following_lesson_updated_receiver);
-        getActivity().unregisterReceiver(following_lesson_removed_receiver);
-        getActivity().unregisterReceiver(following_lessons_cleared_receiver);
+        ExPLoRAAContext.getInstance().getService().removeFollowingLessonsListener(this);
     }
 
     @Override
@@ -129,6 +90,26 @@ public class FollowingLessonsFragment extends Fragment {
 
     void setLessons(List<FollowingLessonContext> lessons) {
         following_lessons_adapter.setLessons(lessons);
+    }
+
+    @Override
+    public void followingLessonAdded(int pos, FollowingLessonContext ctx) {
+        following_lessons_adapter.notifyItemInserted(pos);
+    }
+
+    @Override
+    public void followingLessonUpdated(int pos, FollowingLessonContext ctx) {
+        following_lessons_adapter.notifyItemChanged(pos);
+    }
+
+    @Override
+    public void followingLessonRemoved(int pos, FollowingLessonContext ctx) {
+        following_lessons_adapter.notifyItemRemoved(pos);
+    }
+
+    @Override
+    public void followingLessonsCleared() {
+        following_lessons_adapter.notifyDataSetChanged();
     }
 
     private class FollowingLessonsAdapter extends RecyclerView.Adapter<FollowingLessonView> {

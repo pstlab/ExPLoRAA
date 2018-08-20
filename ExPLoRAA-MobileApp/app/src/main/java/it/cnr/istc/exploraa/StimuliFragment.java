@@ -1,9 +1,6 @@
 package it.cnr.istc.exploraa;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -21,47 +18,21 @@ import java.util.List;
 
 import it.cnr.istc.exploraa.api.Message;
 
-public class StimuliFragment extends Fragment {
+public class StimuliFragment extends Fragment implements ExPLoRAAService.StimuliListener {
 
     private RecyclerView stimuli_recycler_view;
     private final StimuliAdapter stimuli_adapter = new StimuliAdapter();
-    private BroadcastReceiver stimulus_added_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            stimuli_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
-        }
-    };
-    private BroadcastReceiver stimulus_removed_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            stimuli_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
-        }
-    };
-    private BroadcastReceiver stimului_cleared_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            stimuli_adapter.notifyDataSetChanged();
-        }
-    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        assert getActivity() != null;
-        getActivity().registerReceiver(stimulus_added_receiver, new IntentFilter(ExPLoRAAService.ADDED_STIMULUS));
-        getActivity().registerReceiver(stimulus_removed_receiver, new IntentFilter(ExPLoRAAService.REMOVED_STIMULUS));
-        getActivity().registerReceiver(stimului_cleared_receiver, new IntentFilter(ExPLoRAAService.CLEARED_STIMULI));
+        ExPLoRAAContext.getInstance().getService().addStimuliListener(this);
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-
-        assert getActivity() != null;
-        getActivity().unregisterReceiver(stimulus_added_receiver);
-        getActivity().unregisterReceiver(stimulus_removed_receiver);
-        getActivity().unregisterReceiver(stimului_cleared_receiver);
+        ExPLoRAAContext.getInstance().getService().removeStimuliListener(this);
     }
 
     @Override
@@ -84,6 +55,21 @@ public class StimuliFragment extends Fragment {
 
     void setStimuli(List<Message.Stimulus> stimuli) {
         stimuli_adapter.setStimuli(stimuli);
+    }
+
+    @Override
+    public void stimulusAdded(int pos, Message.Stimulus stimulus) {
+        stimuli_adapter.notifyItemInserted(pos);
+    }
+
+    @Override
+    public void stimulusRemoved(int pos, Message.Stimulus stimulus) {
+        stimuli_adapter.notifyItemRemoved(pos);
+    }
+
+    @Override
+    public void stimuliCleared() {
+        stimuli_adapter.notifyDataSetChanged();
     }
 
     private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {

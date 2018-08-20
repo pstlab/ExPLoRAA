@@ -88,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
 
-                ExPLoRAAContext.getInstance().stopService();
+                ExPLoRAAContext.getInstance().stopService(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

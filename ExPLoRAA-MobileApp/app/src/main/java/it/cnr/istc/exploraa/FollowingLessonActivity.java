@@ -1,19 +1,12 @@
 package it.cnr.istc.exploraa;
 
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,82 +19,35 @@ import java.util.List;
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.Message;
 
-public class FollowingLessonActivity extends AppCompatActivity {
+public class FollowingLessonActivity extends AppCompatActivity implements FollowingLessonContext.FollowingLessonListener {
 
-    private static final String TAG = "FollowingLessonActivity";
-    private long lesson_id;
+    private FollowingLessonContext ctx;
     private ImageView following_lesson_status_image_view;
     private TextView following_lesson_name;
     private TextView following_lesson_time;
     private final StimuliAdapter stimuli_adapter = new StimuliAdapter();
-    private ExPLoRAAService service;
-    private ServiceConnection service_connection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder binder) {
-            service = ((ExPLoRAAService.ExPLoRAABinder) binder).getService();
-
-            FollowingLessonContext ctx = service.getFollowingLesson(lesson_id);
-            following_lesson_name.setText(ctx.getLesson().name);
-            following_lesson_time.setText(ExPLoRAAService.convertTimeToString(ctx.getTime()));
-            switch (ctx.getState()) {
-                case Running:
-                    following_lesson_status_image_view.setImageResource(R.drawable.ic_play);
-                    break;
-                case Paused:
-                    following_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
-                    break;
-                case Stopped:
-                    following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
-                    break;
-            }
-            stimuli_adapter.setStimuli(ctx.getStimuli());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            service = null;
-        }
-    };
-    private BroadcastReceiver time_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            following_lesson_time.setText(ExPLoRAAService.convertTimeToString(intent.getLongExtra("time", 0)));
-        }
-    };
-    private BroadcastReceiver state_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            switch (Lesson.LessonState.valueOf(intent.getStringExtra("state"))) {
-                case Running:
-                    following_lesson_status_image_view.setImageResource(R.drawable.ic_play);
-                    break;
-                case Paused:
-                    following_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
-                    break;
-                case Stopped:
-                    following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
-                    break;
-            }
-        }
-    };
-    private BroadcastReceiver stimulus_added_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            stimuli_adapter.notifyItemInserted(intent.getIntExtra("position", 0));
-        }
-    };
-    private BroadcastReceiver stimulus_removed_receiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            stimuli_adapter.notifyItemRemoved(intent.getIntExtra("position", 0));
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_following_lesson);
-        lesson_id = getIntent().getLongExtra("lesson_id", -1);
+        long lesson_id = getIntent().getLongExtra("lesson_id", -1);
+        ctx = ExPLoRAAContext.getInstance().getService().getFollowingLesson(lesson_id);
+        ctx.addListener(this);
+        following_lesson_name.setText(ctx.getLesson().name);
+        following_lesson_time.setText(ExPLoRAAService.convertTimeToString(ctx.getTime()));
+        switch (ctx.getState()) {
+            case Running:
+                following_lesson_status_image_view.setImageResource(R.drawable.ic_play);
+                break;
+            case Paused:
+                following_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
+                break;
+            case Stopped:
+                following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
+                break;
+        }
+        stimuli_adapter.setStimuli(ctx.getStimuli());
 
         following_lesson_status_image_view = findViewById(R.id.activity_following_lesson_status_image_view);
         following_lesson_name = findViewById(R.id.activity_following_lesson_name);
@@ -114,27 +60,42 @@ public class FollowingLessonActivity extends AppCompatActivity {
         following_lesson_stimuli_recycler_view.setLayoutManager(new LinearLayoutManager(this));
         following_lesson_stimuli_recycler_view.setAdapter(stimuli_adapter);
         following_lesson_stimuli_recycler_view.addItemDecoration(new DividerItemDecoration(this, DividerItemDecoration.VERTICAL));
-
-        registerReceiver(time_receiver, new IntentFilter(FollowingLessonContext.FOLLOWING_LESSON_TIME_CHANGED + lesson_id));
-        registerReceiver(state_receiver, new IntentFilter(FollowingLessonContext.FOLLOWING_LESSON_STATE_CHANGED + lesson_id));
-        registerReceiver(stimulus_added_receiver, new IntentFilter(FollowingLessonContext.ADDED_LESSON_STIMULUS + lesson_id));
-        registerReceiver(stimulus_removed_receiver, new IntentFilter(FollowingLessonContext.REMOVED_LESSON_STIMULUS + lesson_id));
-
-        // we bind the ExPLoRAA service..
-        if (!bindService(new Intent(this, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
-            Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        if (service != null) {
-            unbindService(service_connection);
+        ctx.removeListener(this);
+    }
+
+    @Override
+    public void timeChanged(long t) {
+        following_lesson_time.setText(ExPLoRAAService.convertTimeToString(t));
+    }
+
+    @Override
+    public void stateChanged(Lesson.LessonState state) {
+        switch (state) {
+            case Running:
+                following_lesson_status_image_view.setImageResource(R.drawable.ic_play);
+                break;
+            case Paused:
+                following_lesson_status_image_view.setImageResource(R.drawable.ic_pause);
+                break;
+            case Stopped:
+                following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
+                break;
         }
-        unregisterReceiver(time_receiver);
-        unregisterReceiver(state_receiver);
-        unregisterReceiver(stimulus_added_receiver);
-        unregisterReceiver(stimulus_removed_receiver);
+    }
+
+    @Override
+    public void addedStimulus(int pos, Message.Stimulus e) {
+        stimuli_adapter.notifyItemInserted(pos);
+    }
+
+    @Override
+    public void removedStimulus(int pos, Message.Stimulus e) {
+        stimuli_adapter.notifyItemRemoved(pos);
     }
 
     private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {
