@@ -24,7 +24,6 @@ public class ExPLoRAAContext {
     }
 
     private static final String TAG = "ExPLoRAAApplication";
-    private Context ctx;
     private ExPLoRAAService service;
     private ServiceConnection service_connection = new ServiceConnection() {
         @Override
@@ -34,9 +33,9 @@ public class ExPLoRAAContext {
             for (ServiceListener l : service_listeners)
                 l.serviceConnected(service);
 
-            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
-            if (shared_prefs.contains(ctx.getString(R.string.email)) && shared_prefs.contains(ctx.getString(R.string.password)))
-                service.login(shared_prefs.getString(ctx.getString(R.string.email), null), shared_prefs.getString(ctx.getString(R.string.password), null));
+            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(service);
+            if (shared_prefs.contains(service.getString(R.string.email)) && shared_prefs.contains(service.getString(R.string.password)))
+                service.login(shared_prefs.getString(service.getString(R.string.email), null), shared_prefs.getString(service.getString(R.string.password), null));
         }
 
         @Override
@@ -57,21 +56,19 @@ public class ExPLoRAAContext {
 
     public void startService(@NonNull Context ctx) {
         Log.i(TAG, "Starting service..");
-        this.ctx = ctx;
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-            ctx.startForegroundService(new Intent(ctx, ExPLoRAAService.class));
+            ctx.getApplicationContext().startForegroundService(new Intent(ctx.getApplicationContext(), ExPLoRAAService.class));
         else
-            ctx.startService(new Intent(ctx, ExPLoRAAService.class));
-        if (!ctx.bindService(new Intent(ctx, ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
+            ctx.getApplicationContext().startService(new Intent(ctx.getApplicationContext(), ExPLoRAAService.class));
+        if (!ctx.getApplicationContext().bindService(new Intent(ctx.getApplicationContext(), ExPLoRAAService.class), service_connection, Context.BIND_AUTO_CREATE))
             Log.e(TAG, "Error: The requested service doesn't exist, or this client isn't allowed access to it.");
     }
 
-    public void stopService() {
+    public void stopService(@NonNull Context ctx) {
         Log.i(TAG, "Stopping service..");
         assert service != null;
-        ctx.unbindService(service_connection);
-        ctx.stopService(new Intent(ctx, ExPLoRAAService.class));
-        this.ctx = null;
+        ctx.getApplicationContext().unbindService(service_connection);
+        ctx.getApplicationContext().stopService(new Intent(ctx.getApplicationContext(), ExPLoRAAService.class));
     }
 
     public void addServiceListener(ServiceListener l) {

@@ -12,6 +12,6 @@ public class ExPLoRAAServiceReceiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         Log.i(TAG, "Received " + intent.getAction() + " intent..");
-        ExPLoRAAContext.getInstance().startService(context.getApplicationContext());
+        ExPLoRAAContext.getInstance().startService(context);
     }
 }

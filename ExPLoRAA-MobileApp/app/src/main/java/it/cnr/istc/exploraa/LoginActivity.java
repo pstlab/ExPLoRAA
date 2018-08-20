@@ -62,7 +62,7 @@ public class LoginActivity extends AppCompatActivity implements ExPLoRAAContext.
     public void login(View v) {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-        else ExPLoRAAContext.getInstance().startService(getApplication());
+        else ExPLoRAAContext.getInstance().startService(this);
     }
 
     public void new_user(View v) {
@@ -75,7 +75,7 @@ public class LoginActivity extends AppCompatActivity implements ExPLoRAAContext.
         switch (requestCode) {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    ExPLoRAAContext.getInstance().startService(getApplication());
+                    ExPLoRAAContext.getInstance().startService(this);
         }
     }
 

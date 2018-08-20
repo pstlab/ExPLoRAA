@@ -74,14 +74,14 @@ public class NewUserActivity extends AppCompatActivity implements ExPLoRAAContex
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
         else
-            ExPLoRAAContext.getInstance().startService(getApplication());
+            ExPLoRAAContext.getInstance().startService(this);
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS:
-                ExPLoRAAContext.getInstance().startService(getApplication());
+                ExPLoRAAContext.getInstance().startService(this);
         }
     }
 

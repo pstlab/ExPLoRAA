@@ -18,21 +18,17 @@ package it.cnr.istc.exploraa;
 
 import android.Manifest;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.os.IBinder;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 
 /**
  * @author Riccardo De Benedictis
@@ -67,7 +63,7 @@ public class NavigatorActivity extends AppCompatActivity {
                 finish();
             } else if (ContextCompat.checkSelfPermission(NavigatorActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
                 ActivityCompat.requestPermissions(NavigatorActivity.this, new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS);
-            else ExPLoRAAContext.getInstance().startService(getApplication());
+            else ExPLoRAAContext.getInstance().startService(this);
         }
     }
 
@@ -82,7 +78,7 @@ public class NavigatorActivity extends AppCompatActivity {
         switch (requestCode) {
             case ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    ExPLoRAAContext.getInstance().startService(getApplication());
+                    ExPLoRAAContext.getInstance().startService(this);
                 else
                     finish();
         }
