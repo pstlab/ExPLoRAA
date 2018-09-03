@@ -1242,6 +1242,9 @@ public class ExPLoRAAService extends Service implements LocationListener {
         if (current_location == null) {
             // A new location is always better than no location
             return true;
+        } else if (current_location.distanceTo(location) < 5) {
+            // less than 5 meters from last known location..
+            return false;
         }
 
         // Check whether the new location fix is newer or older
@@ -1328,9 +1331,10 @@ public class ExPLoRAAService extends Service implements LocationListener {
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Map<String, String> gps_pos = new HashMap<>(2);
             final Location last_location = ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
-            if (last_location != null) {
+            if (last_location != null && isBetterLocation(last_location)) {
                 gps_pos.put("latitude", Double.toString(last_location.getLatitude()));
                 gps_pos.put("longitude", Double.toString(last_location.getLongitude()));
+                current_location = last_location;
             } else {
                 gps_pos.put("latitude", Double.toString(0));
                 gps_pos.put("longitude", Double.toString(0));
