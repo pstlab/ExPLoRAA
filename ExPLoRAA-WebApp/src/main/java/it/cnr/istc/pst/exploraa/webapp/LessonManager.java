@@ -56,12 +56,12 @@ public class LessonManager implements TemporalListener {
      * their triggering condition becomes satisfied.
      */
     private final Collection<SolverToken> triggerable_tokens = new ArrayList<>();
-    private AnswerContext answer_context = null;
-    private final Map<SolverToken, AnswerContext> answer_contexts = new IdentityHashMap<>();
+    private TriggeredContext triggered_context = null;
+    private final Map<SolverToken, TriggeredContext> triggered_contexts = new IdentityHashMap<>();
     /**
      * For each question, the corresponding answer.
      */
-    private final Map<SolverToken, Integer> answers = new IdentityHashMap<>();
+    private final Map<SolverToken, Integer> triggered = new IdentityHashMap<>();
     private final Deque<SolverToken> prop_q = new ArrayDeque<>();
     private final List<Long> lesson_timeline_pulses = new ArrayList<>();
     private final List<Collection<SolverToken>> lesson_timeline_values = new ArrayList<>();
@@ -117,7 +117,7 @@ public class LessonManager implements TemporalListener {
     private void expand_token(final SolverToken tk) {
         Map<String, SolverToken> c_tks = new HashMap<>();
         c_tks.put(THIS, tk);
-        // we create the tokens..
+        // we create the (sub) tokens..
         for (String id : tk.template.ids) {
             SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id), null);
             tokens.add(c_tk);
@@ -137,17 +137,15 @@ public class LessonManager implements TemporalListener {
             }
         }
 
-        if (answer_context != null) {
-            answer_context.tokens.add(tk);
+        if (triggered_context != null) {
+            triggered_context.tokens.add(tk);
         }
     }
 
     private void build() {
         while (!prop_q.isEmpty()) {
             SolverToken tk = prop_q.pop();
-            if (tk.template.trigger_condition != null) {
-                triggerable_tokens.add(tk);
-            } else {
+            if (tk.template.trigger_condition == null) {
                 expand_token(tk);
             }
         }
@@ -211,7 +209,15 @@ public class LessonManager implements TemporalListener {
             // we are moving forward..
             long next_pulse = lesson_timeline_pulses.get(idx);
             while (next_pulse <= t) {
-                lesson_timeline_values.get(idx).forEach(tk -> listeners.forEach(l -> l.executeToken(tk)));
+                lesson_timeline_values.get(idx).forEach(tk -> listeners.forEach(l -> {
+                    if (tk.template.trigger_condition == null) {
+                        // this token can be executed..
+                        l.executeToken(tk);
+                    } else {
+                        // this token will be executed when its triggering condition will become satisfied..
+                        triggerable_tokens.add(tk);
+                    }
+                }));
                 idx++;
                 if (idx < lesson_timeline_pulses.size()) {
                     next_pulse = lesson_timeline_pulses.get(idx);
@@ -228,11 +234,11 @@ public class LessonManager implements TemporalListener {
             while (last_pulse > t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx - 1)) {
                     listeners.forEach(l -> l.hideToken(tk));
-                    AnswerContext ctx = answer_contexts.remove(tk);
+                    TriggeredContext ctx = triggered_contexts.remove(tk);
                     if (ctx != null) {
                         // token 'tk' is an answer, we remove all the consequences of the answer..
                         to_disable.addAll(ctx.tokens);
-                        answers.remove(ctx.getQuestion());
+                        triggered.remove(ctx.getQuestion());
                     }
                 }
                 idx--;
@@ -261,10 +267,10 @@ public class LessonManager implements TemporalListener {
 
     public void answerQuestion(final int question_id, final int answer) {
         SolverToken q_tk = tokens.get(question_id - 2);
-        answers.put(q_tk, answer);
+        triggered.put(q_tk, answer);
         LessonModel.StimulusTemplate.QuestionStimulusTemplate.Answer answr = ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) q_tk.template).answers.get(answer);
 
-        answer_context = new AnswerContext(q_tk, answer);
+        triggered_context = new TriggeredContext(q_tk, answer);
 
         // this token represents the effects of the answer on the lesson..
         SolverToken c_tk = new SolverToken(null, network.newTimePoint(), event_templates.get(answr.event), question_id);
@@ -275,11 +281,44 @@ public class LessonManager implements TemporalListener {
         network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
         build();
 
-        answer_contexts.put(c_tk, answer_context);
-        answer_context = null;
+        triggered_contexts.put(c_tk, triggered_context);
+        triggered_context = null;
 
         // we extract the lesson timeline..
         extract_timeline();
+    }
+
+    /**
+     * Notify the lesson manager that a user has a new parameter value, possibly
+     * triggering triggerable tokens.
+     *
+     * @param vals the current values of the parameters.
+     */
+    public void newParameterValue(Map<String, Map<String, String>> vals) {
+        Collection<SolverToken> to_remove = new ArrayList<>();
+        for (SolverToken tk : triggerable_tokens) {
+            if (isSatisfied(tk.template.trigger_condition, vals)) {
+                triggered.put(tk, -1);
+
+                triggered_context = new TriggeredContext(tk, -1);
+
+                // this token represents the effects of the triggered token on the lesson..
+                SolverToken c_tk = new SolverToken(null, network.newTimePoint(), tk.template, tk.tp);
+                tokens.add(c_tk);
+                listeners.forEach(l -> l.newToken(c_tk));
+                prop_q.push(c_tk);
+
+                network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
+                build();
+
+                triggered_contexts.put(c_tk, triggered_context);
+                triggered_context = null;
+
+                // we extract the lesson timeline..
+                extract_timeline();
+            }
+        }
+        triggerable_tokens.removeAll(to_remove);
     }
 
     @Override
@@ -308,13 +347,42 @@ public class LessonManager implements TemporalListener {
         listeners.remove(listener);
     }
 
-    private class AnswerContext {
+    private static boolean isSatisfied(LessonModel.Condition cond, Map<String, Map<String, String>> vals) {
+        switch (cond.type) {
+            case And:
+                return ((LessonModel.Condition.AndCondition) cond).conditions.stream().allMatch(c -> isSatisfied(c, vals));
+            case Or:
+                return ((LessonModel.Condition.AndCondition) cond).conditions.stream().anyMatch(c -> isSatisfied(c, vals));
+            case Not:
+                return !isSatisfied(((LessonModel.Condition.NotCondition) cond).condition, vals);
+            case Numeric:
+                String[] num_par_name = ((LessonModel.Condition.NumericCondition) cond).variable.split("\\.");
+                double c_numeric_val = Double.parseDouble(vals.get(num_par_name[0]).get(num_par_name[1]));
+                switch (((LessonModel.Condition.NumericCondition) cond).numeric_condition_type) {
+                    case GEq:
+                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
+                    case Eq:
+                        return c_numeric_val == ((LessonModel.Condition.NumericCondition) cond).value;
+                    case LEq:
+                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
+                    default:
+                        throw new AssertionError(((LessonModel.Condition.NumericCondition) cond).numeric_condition_type.name());
+                }
+            case Nominal:
+                String[] nom_par_name = ((LessonModel.Condition.NominalCondition) cond).variable.split("\\.");
+                return vals.get(nom_par_name[0]).get(nom_par_name[1]).equals(((LessonModel.Condition.NominalCondition) cond).value);
+            default:
+                throw new AssertionError(cond.type.name());
+        }
+    }
+
+    private class TriggeredContext {
 
         private final SolverToken question;
         private final int answer;
         final Collection<SolverToken> tokens = new ArrayList<>();
 
-        private AnswerContext(SolverToken question, int answer) {
+        private TriggeredContext(SolverToken question, int answer) {
             this.question = question;
             this.answer = answer;
         }
