@@ -17,18 +17,22 @@
             "trigger_condition": {
                 "type": "And",
                 "conditions": [{
+                        "type": "Numeric",
                         "numeric_condition_type": "GEq",
                         "variable": "GPS.latitude",
                         "value": "41.890248"
                     }, {
+                        "type": "Numeric",
                         "numeric_condition_type": "LEq",
                         "variable": "GPS.latitude",
                         "value": "41.890254"
                     }, {
+                        "type": "Numeric",
                         "numeric_condition_type": "GEq",
                         "variable": "GPS.longitude",
                         "value": "12.492370"
                     }, {
+                        "type": "Numeric",
                         "numeric_condition_type": "LEq",
                         "variable": "GPS.longitude",
                         "value": "12.492376"
@@ -42,18 +46,22 @@
             "execution_condition": {
                 "type": "And",
                 "conditions": [{
+                        "type": "Numeric",
                         "numeric_condition_type": "GEq",
                         "variable": "GPS.latitude",
                         "value": "41.890248"
                     }, {
+                        "type": "Numeric",
                         "numeric_condition_type": "LEq",
                         "variable": "GPS.latitude",
                         "value": "41.890254"
                     }, {
+                        "type": "Numeric",
                         "numeric_condition_type": "GEq",
                         "variable": "GPS.longitude",
                         "value": "12.492370"
                     }, {
+                        "type": "Numeric",
                         "numeric_condition_type": "LEq",
                         "variable": "GPS.longitude",
                         "value": "12.492376"
