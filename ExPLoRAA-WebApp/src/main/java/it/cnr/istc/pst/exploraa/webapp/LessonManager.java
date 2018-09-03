@@ -61,7 +61,7 @@ public class LessonManager implements TemporalListener {
     /**
      * For each question, the corresponding answer.
      */
-    private final Map<SolverToken, Integer> triggered = new IdentityHashMap<>();
+    private final Set<SolverToken> triggered = new HashSet<>();
     private final Deque<SolverToken> prop_q = new ArrayDeque<>();
     private final List<Long> lesson_timeline_pulses = new ArrayList<>();
     private final List<Collection<SolverToken>> lesson_timeline_values = new ArrayList<>();
@@ -238,7 +238,7 @@ public class LessonManager implements TemporalListener {
                     if (ctx != null) {
                         // token 'tk' is an answer, we remove all the consequences of the answer..
                         to_disable.addAll(ctx.tokens);
-                        triggered.remove(ctx.getQuestion());
+                        triggered.remove(ctx.getSourceToken());
                     }
                 }
                 idx--;
@@ -267,10 +267,10 @@ public class LessonManager implements TemporalListener {
 
     public void answerQuestion(final int question_id, final int answer) {
         SolverToken q_tk = tokens.get(question_id - 2);
-        triggered.put(q_tk, answer);
+        triggered.add(q_tk);
         LessonModel.StimulusTemplate.QuestionStimulusTemplate.Answer answr = ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) q_tk.template).answers.get(answer);
 
-        triggered_context = new TriggeredContext(q_tk, answer);
+        triggered_context = new TriggeredContext(q_tk);
 
         // this token represents the effects of the answer on the lesson..
         SolverToken c_tk = new SolverToken(null, network.newTimePoint(), event_templates.get(answr.event), question_id);
@@ -298,9 +298,9 @@ public class LessonManager implements TemporalListener {
         Collection<SolverToken> to_remove = new ArrayList<>();
         for (SolverToken tk : triggerable_tokens) {
             if (isSatisfied(tk.template.trigger_condition, vals)) {
-                triggered.put(tk, -1);
+                triggered.add(tk);
 
-                triggered_context = new TriggeredContext(tk, -1);
+                triggered_context = new TriggeredContext(tk);
 
                 // this token represents the effects of the triggered token on the lesson..
                 SolverToken c_tk = new SolverToken(null, network.newTimePoint(), tk.template, tk.tp);
@@ -378,21 +378,15 @@ public class LessonManager implements TemporalListener {
 
     private class TriggeredContext {
 
-        private final SolverToken question;
-        private final int answer;
+        private final SolverToken source_token;
         final Collection<SolverToken> tokens = new ArrayList<>();
 
-        private TriggeredContext(SolverToken question, int answer) {
-            this.question = question;
-            this.answer = answer;
+        private TriggeredContext(SolverToken question) {
+            this.source_token = question;
         }
 
-        public SolverToken getQuestion() {
-            return question;
-        }
-
-        public int getAnswer() {
-            return answer;
+        public SolverToken getSourceToken() {
+            return source_token;
         }
 
         public Collection<SolverToken> getTokens() {
