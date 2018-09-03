@@ -23,7 +23,6 @@ public class FollowingLessonActivity extends AppCompatActivity implements Follow
 
     private FollowingLessonContext ctx;
     private ImageView following_lesson_status_image_view;
-    private TextView following_lesson_name;
     private TextView following_lesson_time;
     private final StimuliAdapter stimuli_adapter = new StimuliAdapter();
 
@@ -31,6 +30,12 @@ public class FollowingLessonActivity extends AppCompatActivity implements Follow
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_following_lesson);
+
+        following_lesson_status_image_view = findViewById(R.id.activity_following_lesson_status_image_view);
+        TextView following_lesson_name = findViewById(R.id.activity_following_lesson_name);
+        following_lesson_time = findViewById(R.id.activity_following_lesson_time);
+        RecyclerView following_lesson_stimuli_recycler_view = findViewById(R.id.activity_following_lesson_stimuli_recycler_view);
+
         long lesson_id = getIntent().getLongExtra("lesson_id", -1);
         ctx = ExPLoRAAContext.getInstance().getService().getFollowingLesson(lesson_id);
         ctx.addListener(this);
@@ -48,11 +53,6 @@ public class FollowingLessonActivity extends AppCompatActivity implements Follow
                 break;
         }
         stimuli_adapter.setStimuli(ctx.getStimuli());
-
-        following_lesson_status_image_view = findViewById(R.id.activity_following_lesson_status_image_view);
-        following_lesson_name = findViewById(R.id.activity_following_lesson_name);
-        following_lesson_time = findViewById(R.id.activity_following_lesson_time);
-        RecyclerView following_lesson_stimuli_recycler_view = findViewById(R.id.activity_following_lesson_stimuli_recycler_view);
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView

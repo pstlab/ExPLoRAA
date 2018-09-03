@@ -143,7 +143,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
             }
         }
     };
-    Handler main_handler = new Handler(getApplicationContext().getMainLooper());
+    private Handler main_handler;
 
     public static String convertTimeToString(long time) {
         long second = (time / 1000) % 60;
@@ -186,6 +186,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
             if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
                 login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
         }
+
+        main_handler = new Handler(getApplicationContext().getMainLooper());
 
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
@@ -589,14 +591,24 @@ public class ExPLoRAAService extends Service implements LocationListener {
             mqtt.subscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time", new IMqttMessageListener() {
                 @Override
                 public void messageArrived(final String topic, final MqttMessage message) {
-                    l_ctx.setTime(Long.parseLong(new String(message.getPayload())));
+                    main_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setTime(Long.parseLong(new String(message.getPayload())));
+                        }
+                    });
                 }
             });
             // we subscribe to the lesson's state..
             mqtt.subscribe(l_ctx.getLesson().teacher.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state", new IMqttMessageListener() {
                 @Override
                 public void messageArrived(final String topic, final MqttMessage message) {
-                    l_ctx.setState(Lesson.LessonState.valueOf(new String(message.getPayload())));
+                    main_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setState(Lesson.LessonState.valueOf(new String(message.getPayload())));
+                        }
+                    });
                 }
             });
         } catch (MqttException ex) {
@@ -660,8 +672,13 @@ public class ExPLoRAAService extends Service implements LocationListener {
         try {
             mqtt.subscribe(t_ctx.getTeacher().id + "/output/on-line", new IMqttMessageListener() {
                 @Override
-                public void messageArrived(String topic, MqttMessage message) {
-                    t_ctx.setOnLine(Boolean.parseBoolean(new String(message.getPayload())));
+                public void messageArrived(final String topic, final MqttMessage message) {
+                    main_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            t_ctx.setOnLine(Boolean.parseBoolean(new String(message.getPayload())));
+                        }
+                    });
                 }
             });
         } catch (MqttException ex) {
@@ -760,14 +777,24 @@ public class ExPLoRAAService extends Service implements LocationListener {
             mqtt.subscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time", new IMqttMessageListener() {
                 @Override
                 public void messageArrived(final String topic, final MqttMessage message) {
-                    l_ctx.setTime(Long.parseLong(new String(message.getPayload())));
+                    main_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setTime(Long.parseLong(new String(message.getPayload())));
+                        }
+                    });
                 }
             });
             // we subscribe to the lesson's state..
             mqtt.subscribe(user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state", new IMqttMessageListener() {
                 @Override
                 public void messageArrived(final String topic, final MqttMessage message) {
-                    l_ctx.setState(Lesson.LessonState.valueOf(new String(message.getPayload())));
+                    main_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            l_ctx.setState(Lesson.LessonState.valueOf(new String(message.getPayload())));
+                        }
+                    });
                 }
             });
         } catch (MqttException ex) {
@@ -829,7 +856,12 @@ public class ExPLoRAAService extends Service implements LocationListener {
             mqtt.subscribe(s_ctx.getStudent().id + "/output/on-line", new IMqttMessageListener() {
                 @Override
                 public void messageArrived(final String topic, final MqttMessage message) {
-                    s_ctx.setOnLine(Boolean.parseBoolean(new String(message.getPayload())));
+                    main_handler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            s_ctx.setOnLine(Boolean.parseBoolean(new String(message.getPayload())));
+                        }
+                    });
                 }
             });
 

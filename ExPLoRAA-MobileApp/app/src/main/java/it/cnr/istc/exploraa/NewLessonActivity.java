@@ -35,32 +35,7 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
     private static final String TAG = "NewLessonActivity";
     private static final int OPEN_DOCUMENT_REQUEST_CODE = 42;
     private Spinner new_lesson_type_spinner;
-    private ArrayAdapter<LessonModel> adapter = new ArrayAdapter<LessonModel>(this, 0) {
-
-        @Override
-        public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            return getCustomView(position, convertView, parent);
-        }
-
-        @NonNull
-        @Override
-        public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
-            return getCustomView(position, convertView, parent);
-        }
-
-        private View getCustomView(int position, View convertView, ViewGroup parent) {
-            View listItem = convertView;
-            if (listItem == null)
-                listItem = LayoutInflater.from(getContext()).inflate(R.layout.lesson_model_row, parent, false);
-
-            LessonModel model = service.getModels().get(position);
-
-            TextView lesson_model_name = listItem.findViewById(R.id.lesson_model_name);
-            lesson_model_name.setText(model.name);
-
-            return listItem;
-        }
-    };
+    private ArrayAdapter<LessonModel> adapter;
     private EditText new_lesson_name;
     private Button add_lesson_button;
     private ExPLoRAAService service;
@@ -88,6 +63,32 @@ public class NewLessonActivity extends AppCompatActivity implements AdapterView.
         new_lesson_name = findViewById(R.id.new_lesson_name);
         add_lesson_button = findViewById(R.id.add_lesson_button);
 
+        adapter = new ArrayAdapter<LessonModel>(this, 0) {
+
+            @Override
+            public View getDropDownView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                return getCustomView(position, convertView, parent);
+            }
+
+            @NonNull
+            @Override
+            public View getView(int position, @Nullable View convertView, @NonNull ViewGroup parent) {
+                return getCustomView(position, convertView, parent);
+            }
+
+            private View getCustomView(int position, View convertView, ViewGroup parent) {
+                View listItem = convertView;
+                if (listItem == null)
+                    listItem = LayoutInflater.from(getContext()).inflate(R.layout.lesson_model_row, parent, false);
+
+                LessonModel model = service.getModels().get(position);
+
+                TextView lesson_model_name = listItem.findViewById(R.id.lesson_model_name);
+                lesson_model_name.setText(model.name);
+
+                return listItem;
+            }
+        };
         new_lesson_type_spinner.setAdapter(adapter);
 
         new_lesson_name.addTextChangedListener(this);
