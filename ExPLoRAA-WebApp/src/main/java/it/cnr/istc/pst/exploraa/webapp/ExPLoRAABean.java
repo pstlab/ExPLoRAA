@@ -302,6 +302,7 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void newParameterValue(long user_id, String par, Map<String, String> val) {
+        LOG.log(Level.INFO, "New parameter value for user: {0} parameter: {1} value: {2}", new Object[]{user_id, par, val});
         parameter_values.get(user_id).put(par, val);
     }
 
