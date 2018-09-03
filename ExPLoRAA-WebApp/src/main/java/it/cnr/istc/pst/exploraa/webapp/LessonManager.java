@@ -78,6 +78,10 @@ public class LessonManager implements TemporalListener {
         return lesson;
     }
 
+    public Collection<SolverToken> getTriggerableTokens() {
+        return Collections.unmodifiableCollection(triggerable_tokens);
+    }
+
     public void solve() {
         for (LessonModel.StimulusTemplate event_template : lesson.model.stimuli.values()) {
             if (event_templates.containsKey(event_template.name)) {
@@ -288,37 +292,26 @@ public class LessonManager implements TemporalListener {
         extract_timeline();
     }
 
-    /**
-     * Notify the lesson manager that a user has a new parameter value, possibly
-     * triggering triggerable tokens.
-     *
-     * @param vals the current values of the parameters.
-     */
-    public void newParameterValue(Map<String, Map<String, String>> vals) {
-        Collection<SolverToken> to_remove = new ArrayList<>();
-        for (SolverToken tk : triggerable_tokens) {
-            if (isSatisfied(tk.template.trigger_condition, vals)) {
-                triggered.add(tk);
+    public void trigger(SolverToken tk) {
+        triggered.add(tk);
+        triggerable_tokens.remove(tk);
 
-                triggered_context = new TriggeredContext(tk);
+        triggered_context = new TriggeredContext(tk);
 
-                // this token represents the effects of the triggered token on the lesson..
-                SolverToken c_tk = new SolverToken(null, network.newTimePoint(), tk.template, tk.tp);
-                tokens.add(c_tk);
-                listeners.forEach(l -> l.newToken(c_tk));
-                prop_q.push(c_tk);
+        // this token represents the effects of the triggered token on the lesson..
+        SolverToken c_tk = new SolverToken(null, network.newTimePoint(), tk.template, tk.tp);
+        tokens.add(c_tk);
+        listeners.forEach(l -> l.newToken(c_tk));
+        prop_q.push(c_tk);
 
-                network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
-                build();
+        network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
+        build();
 
-                triggered_contexts.put(c_tk, triggered_context);
-                triggered_context = null;
+        triggered_contexts.put(c_tk, triggered_context);
+        triggered_context = null;
 
-                // we extract the lesson timeline..
-                extract_timeline();
-            }
-        }
-        triggerable_tokens.removeAll(to_remove);
+        // we extract the lesson timeline..
+        extract_timeline();
     }
 
     @Override
@@ -345,35 +338,6 @@ public class LessonManager implements TemporalListener {
 
     public void removeSolverListener(LessonManagerListener listener) {
         listeners.remove(listener);
-    }
-
-    private static boolean isSatisfied(LessonModel.Condition cond, Map<String, Map<String, String>> vals) {
-        switch (cond.type) {
-            case And:
-                return ((LessonModel.Condition.AndCondition) cond).conditions.stream().allMatch(c -> isSatisfied(c, vals));
-            case Or:
-                return ((LessonModel.Condition.AndCondition) cond).conditions.stream().anyMatch(c -> isSatisfied(c, vals));
-            case Not:
-                return !isSatisfied(((LessonModel.Condition.NotCondition) cond).condition, vals);
-            case Numeric:
-                String[] num_par_name = ((LessonModel.Condition.NumericCondition) cond).variable.split("\\.");
-                double c_numeric_val = Double.parseDouble(vals.get(num_par_name[0]).get(num_par_name[1]));
-                switch (((LessonModel.Condition.NumericCondition) cond).numeric_condition_type) {
-                    case GEq:
-                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
-                    case Eq:
-                        return c_numeric_val == ((LessonModel.Condition.NumericCondition) cond).value;
-                    case LEq:
-                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
-                    default:
-                        throw new AssertionError(((LessonModel.Condition.NumericCondition) cond).numeric_condition_type.name());
-                }
-            case Nominal:
-                String[] nom_par_name = ((LessonModel.Condition.NominalCondition) cond).variable.split("\\.");
-                return vals.get(nom_par_name[0]).get(nom_par_name[1]).equals(((LessonModel.Condition.NominalCondition) cond).value);
-            default:
-                throw new AssertionError(cond.type.name());
-        }
     }
 
     private class TriggeredContext {

@@ -306,7 +306,12 @@ public class ExPLoRAABean {
         parameter_values.get(user_id).put(par, val);
         UserEntity user = em.find(UserEntity.class, user_id);
         for (FollowEntity fl : user.getFollowedLessons()) {
-            lessons.get(fl.getLesson().getId()).newParameterValue(parameter_values.get(user_id));
+            for (LessonManager.SolverToken tk : new ArrayList<>(lessons.get(fl.getLesson().getId()).getTriggerableTokens())) {
+                if (isSatisfied(tk.template.trigger_condition, parameter_values.get(user_id))) {
+                    // the token 'tk' should be triggered..
+                    lessons.get(fl.getLesson().getId()).trigger(tk);
+                }
+            }
         }
     }
 
@@ -363,7 +368,7 @@ public class ExPLoRAABean {
                     Set<Long> students = new HashSet<>();
                     for (Follow follow : lesson.students.values()) {
                         for (String interest : follow.interests) {
-                            if (tk.template.topics.contains(interest)) {
+                            if (tk.template.topics.contains(interest) && (tk.template.trigger_condition == null || isSatisfied(tk.template.trigger_condition, parameter_values.get(follow.user.id)))) {
                                 students.add(follow.user.id);
                             }
                         }
@@ -585,5 +590,34 @@ public class ExPLoRAABean {
     @Lock(LockType.READ)
     public LessonManager getLessonManager(long lesson_id) {
         return lessons.get(lesson_id);
+    }
+
+    private static boolean isSatisfied(LessonModel.Condition cond, Map<String, Map<String, String>> vals) {
+        switch (cond.type) {
+            case And:
+                return ((LessonModel.Condition.AndCondition) cond).conditions.stream().allMatch(c -> isSatisfied(c, vals));
+            case Or:
+                return ((LessonModel.Condition.OrCondition) cond).conditions.stream().anyMatch(c -> isSatisfied(c, vals));
+            case Not:
+                return !isSatisfied(((LessonModel.Condition.NotCondition) cond).condition, vals);
+            case Numeric:
+                String[] num_par_name = ((LessonModel.Condition.NumericCondition) cond).variable.split("\\.");
+                double c_numeric_val = Double.parseDouble(vals.get(num_par_name[0]).get(num_par_name[1]));
+                switch (((LessonModel.Condition.NumericCondition) cond).numeric_condition_type) {
+                    case GEq:
+                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
+                    case Eq:
+                        return c_numeric_val == ((LessonModel.Condition.NumericCondition) cond).value;
+                    case LEq:
+                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
+                    default:
+                        throw new AssertionError(((LessonModel.Condition.NumericCondition) cond).numeric_condition_type.name());
+                }
+            case Nominal:
+                String[] nom_par_name = ((LessonModel.Condition.NominalCondition) cond).variable.split("\\.");
+                return vals.get(nom_par_name[0]).get(nom_par_name[1]).equals(((LessonModel.Condition.NominalCondition) cond).value);
+            default:
+                throw new AssertionError(cond.type.name());
+        }
     }
 }
