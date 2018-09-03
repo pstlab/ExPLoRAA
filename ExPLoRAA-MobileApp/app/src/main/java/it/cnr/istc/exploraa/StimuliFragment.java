@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.util.SortedList;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -54,31 +55,67 @@ public class StimuliFragment extends Fragment implements ExPLoRAAService.Stimuli
     }
 
     void setStimuli(List<Message.Stimulus> stimuli) {
-        stimuli_adapter.setStimuli(stimuli);
+        stimuli_adapter.stimuli.beginBatchedUpdates();
+        stimuli_adapter.stimuli.addAll(stimuli);
+        stimuli_adapter.stimuli.endBatchedUpdates();
     }
 
     @Override
     public void stimulusAdded(int pos, Message.Stimulus stimulus) {
-        stimuli_adapter.notifyItemInserted(pos);
+        stimuli_adapter.stimuli.add(stimulus);
     }
 
     @Override
     public void stimulusRemoved(int pos, Message.Stimulus stimulus) {
-        stimuli_adapter.notifyItemRemoved(pos);
+        stimuli_adapter.stimuli.remove(stimulus);
     }
 
     @Override
     public void stimuliCleared() {
-        stimuli_adapter.notifyDataSetChanged();
+        stimuli_adapter.stimuli.clear();
     }
 
     private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {
 
-        private List<Message.Stimulus> stimuli = new ArrayList<>();
+        private SortedList<Message.Stimulus> stimuli;
 
-        private void setStimuli(List<Message.Stimulus> stimuli) {
-            this.stimuli = stimuli;
-            notifyDataSetChanged();
+        public StimuliAdapter() {
+            this.stimuli = new SortedList<>(Message.Stimulus.class, new SortedList.Callback<Message.Stimulus>() {
+                @Override
+                public int compare(Message.Stimulus o1, Message.Stimulus o2) {
+                    return Long.compare(o1.time, o2.time);
+                }
+
+                @Override
+                public void onChanged(int position, int count) {
+                    notifyItemRangeChanged(position, count);
+                }
+
+                @Override
+                public boolean areContentsTheSame(Message.Stimulus oldItem, Message.Stimulus newItem) {
+                    return false;
+                }
+
+                @Override
+                public boolean areItemsTheSame(Message.Stimulus item1, Message.Stimulus item2) {
+                    return false;
+                }
+
+                @Override
+                public void onInserted(int position, int count) {
+                    notifyItemRangeInserted(position, count);
+                }
+
+                @Override
+                public void onRemoved(int position, int count) {
+                    notifyItemRangeRemoved(position, count);
+                }
+
+                @Override
+                public void onMoved(int fromPosition, int toPosition) {
+                    notifyItemMoved(fromPosition, toPosition);
+                }
+            });
         }
 
         @NonNull

@@ -3,6 +3,7 @@ package it.cnr.istc.exploraa;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.util.SortedList;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,9 +15,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import java.util.ArrayList;
-import java.util.List;
 
 import it.cnr.istc.exploraa.api.Lesson;
 import it.cnr.istc.exploraa.api.LessonModel;
@@ -55,7 +53,9 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
                 teaching_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
                 break;
         }
-        teaching_lesson_tokens_adapter.setTokens(ctx.getTokens());
+        teaching_lesson_tokens_adapter.tokens.beginBatchedUpdates();
+        teaching_lesson_tokens_adapter.tokens.addAll(ctx.getTokens());
+        teaching_lesson_tokens_adapter.tokens.endBatchedUpdates();
 
         // use this setting to improve performance if you know that changes
         // in content do not change the layout size of the RecyclerView
@@ -154,26 +154,60 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
     @Override
     public void addedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.notifyItemInserted(pos);
+        teaching_lesson_tokens_adapter.tokens.add(tk);
     }
 
     @Override
     public void removedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.notifyItemRemoved(pos);
+        teaching_lesson_tokens_adapter.tokens.remove(tk);
     }
 
     @Override
     public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.notifyItemChanged(pos);
+        teaching_lesson_tokens_adapter.tokens.recalculatePositionOfItemAt(teaching_lesson_tokens_adapter.tokens.indexOf(tk));
     }
 
     private class TokensAdapter extends RecyclerView.Adapter<TokenView> {
 
-        private List<TeachingLessonContext.TokenRow> tokens = new ArrayList<>();
+        private SortedList<TeachingLessonContext.TokenRow> tokens;
 
-        private void setTokens(List<TeachingLessonContext.TokenRow> tokens) {
-            this.tokens = tokens;
-            notifyDataSetChanged();
+        TokensAdapter() {
+            tokens = new SortedList<>(TeachingLessonContext.TokenRow.class, new SortedList.Callback<TeachingLessonContext.TokenRow>() {
+                @Override
+                public int compare(TeachingLessonContext.TokenRow o1, TeachingLessonContext.TokenRow o2) {
+                    return Long.compare(o1.getTime(), o2.getTime());
+                }
+
+                @Override
+                public void onChanged(int position, int count) {
+                    notifyItemRangeChanged(position, count);
+                }
+
+                @Override
+                public boolean areContentsTheSame(TeachingLessonContext.TokenRow oldItem, TeachingLessonContext.TokenRow newItem) {
+                    return false;
+                }
+
+                @Override
+                public boolean areItemsTheSame(TeachingLessonContext.TokenRow item1, TeachingLessonContext.TokenRow item2) {
+                    return false;
+                }
+
+                @Override
+                public void onInserted(int position, int count) {
+                    notifyItemRangeInserted(position, count);
+                }
+
+                @Override
+                public void onRemoved(int position, int count) {
+                    notifyItemRangeRemoved(position, count);
+                }
+
+                @Override
+                public void onMoved(int fromPosition, int toPosition) {
+                    notifyItemMoved(fromPosition, toPosition);
+                }
+            });
         }
 
         @NonNull

@@ -381,6 +381,7 @@ public class LessonModel {
             in.nextName();
             switch (Condition.ConditionType.valueOf(in.nextString())) {
                 case And:
+                    in.nextName();
                     List<Condition> and_conditions = new ArrayList<>();
                     in.beginArray();
                     while (in.peek() != JsonToken.END_ARRAY)
@@ -389,6 +390,7 @@ public class LessonModel {
                     c = new Condition.AndCondition(and_conditions);
                     break;
                 case Or:
+                    in.nextName();
                     List<Condition> or_conditions = new ArrayList<>();
                     in.beginArray();
                     while (in.peek() != JsonToken.END_ARRAY)
