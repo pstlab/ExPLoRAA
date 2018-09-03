@@ -121,23 +121,27 @@ public class LessonManager implements TemporalListener {
     private void expand_token(final SolverToken tk) {
         Map<String, SolverToken> c_tks = new HashMap<>();
         c_tks.put(THIS, tk);
-        // we create the (sub) tokens..
-        for (String id : tk.template.ids) {
-            SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id), null);
-            tokens.add(c_tk);
-            listeners.forEach(l -> l.newToken(c_tk));
-            c_tks.put(id, c_tk);
-            prop_q.push(c_tk);
+        if (tk.template.ids != null) {
+            // we create the (sub) tokens..
+            for (String id : tk.template.ids) {
+                SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id), null);
+                tokens.add(c_tk);
+                listeners.forEach(l -> l.newToken(c_tk));
+                c_tks.put(id, c_tk);
+                prop_q.push(c_tk);
+            }
         }
 
-        // we enforce the temporal relations..
-        for (LessonModel.Relation rel : tk.template.relations) {
-            double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
-            double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
-            if (rel.from.equals(THIS)) {
-                network.addConstraint(tk.tp, c_tks.get(rel.to).tp, lb, ub);
-            } else {
-                network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, lb, ub);
+        if (tk.template.relations != null) {
+            // we enforce the temporal relations..
+            for (LessonModel.Relation rel : tk.template.relations) {
+                double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
+                double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
+                if (rel.from.equals(THIS)) {
+                    network.addConstraint(tk.tp, c_tks.get(rel.to).tp, lb, ub);
+                } else {
+                    network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, lb, ub);
+                }
             }
         }
 

@@ -304,12 +304,13 @@ public class ExPLoRAABean {
     public void newParameterValue(long user_id, String par, Map<String, String> val) {
         LOG.log(Level.INFO, "New parameter value for user: {0} parameter: {1} value: {2}", new Object[]{user_id, par, val});
         parameter_values.get(user_id).put(par, val);
-        UserEntity user = em.find(UserEntity.class, user_id);
-        for (FollowEntity fl : user.getFollowedLessons()) {
-            for (LessonManager.SolverToken tk : new ArrayList<>(lessons.get(fl.getLesson().getId()).getTriggerableTokens())) {
-                if (isSatisfied(tk.template.trigger_condition, parameter_values.get(user_id))) {
-                    // the token 'tk' should be triggered..
-                    lessons.get(fl.getLesson().getId()).trigger(tk);
+        for (LessonManager lm : lessons.values()) {
+            if (lm.getLesson().students.containsKey(user_id)) {
+                for (LessonManager.SolverToken tk : new ArrayList<>(lm.getTriggerableTokens())) {
+                    if (isSatisfied(tk.template.trigger_condition, parameter_values.get(user_id))) {
+                        // the token 'tk' should be triggered..
+                        lm.trigger(tk);
+                    }
                 }
             }
         }
