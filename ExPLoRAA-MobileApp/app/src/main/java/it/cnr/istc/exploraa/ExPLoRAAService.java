@@ -72,6 +72,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class ExPLoRAAService extends Service implements LocationListener {
 
     private static final String TAG = "ExPLoRAAService";
+    private static final int LOCATION_TIME = 1000 * 60 * 2; // two minutes..
     public static final String LOGIN = "Login";
     public static final String USER_CREATION = "User creation";
     public static final Gson GSON = new GsonBuilder().registerTypeAdapter(Message.class, Message.ADAPTER).registerTypeAdapter(LessonModel.class, LessonModel.ADAPTER).create();
@@ -91,6 +92,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
      * The current user's parameter values.
      */
     private final Map<String, Map<String, String>> par_vals = new HashMap<>();
+    private Location current_location;
     /**
      * The received stimuli.
      */
@@ -1218,7 +1220,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
 
     @Override
     public void onLocationChanged(Location location) {
-        if (mqtt != null && mqtt.isConnected()) {
+        if (mqtt != null && mqtt.isConnected() && isBetterLocation(location)) {
             Map<String, String> gps_pos = new HashMap<>(2);
             gps_pos.put("latitude", Double.toString(location.getLatitude()));
             gps_pos.put("longitude", Double.toString(location.getLongitude()));
@@ -1227,7 +1229,64 @@ public class ExPLoRAAService extends Service implements LocationListener {
             } catch (MqttException e) {
                 Log.w(TAG, "GPS update MQTT communication failed..", e);
             }
+            current_location = location;
         }
+    }
+
+    /**
+     * Determines whether one Location reading is better than the current Location fix
+     *
+     * @param location The new Location that you want to evaluate
+     */
+    private boolean isBetterLocation(Location location) {
+        if (current_location == null) {
+            // A new location is always better than no location
+            return true;
+        }
+
+        // Check whether the new location fix is newer or older
+        long time_delta = location.getTime() - current_location.getTime();
+        boolean is_significantly_newer = time_delta > LOCATION_TIME;
+        boolean is_significantly_older = time_delta < -LOCATION_TIME;
+        boolean is_newer = time_delta > 0;
+
+        // If it's been more than two minutes since the current location, use the new location
+        // because the user has likely moved
+        if (is_significantly_newer) {
+            return true;
+            // If the new location is more than two minutes older, it must be worse
+        } else if (is_significantly_older) {
+            return false;
+        }
+
+        // Check whether the new location fix is more or less accurate
+        int accuracy_delta = (int) (location.getAccuracy() - current_location.getAccuracy());
+        boolean is_less_accurate = accuracy_delta > 0;
+        boolean is_more_accurate = accuracy_delta < 0;
+        boolean is_significantly_less_accurate = accuracy_delta > 200;
+
+        // Check if the old and new location are from the same provider
+        boolean is_from_same_provider = isSameProvider(location.getProvider(), current_location.getProvider());
+
+        // Determine location quality using a combination of timeliness and accuracy
+        if (is_more_accurate) {
+            return true;
+        } else if (is_newer && !is_less_accurate) {
+            return true;
+        } else if (is_newer && !is_significantly_less_accurate && is_from_same_provider) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Checks whether two providers are the same
+     */
+    private boolean isSameProvider(String provider1, String provider2) {
+        if (provider1 == null) {
+            return provider2 == null;
+        }
+        return provider1.equals(provider2);
     }
 
     @Override
