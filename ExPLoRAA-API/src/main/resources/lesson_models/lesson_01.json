@@ -1,0 +1,94 @@
+{
+    "name": "Test lesson",
+    "stimuli": [{
+            "type": "Text",
+            "name": "st_0",
+            "topics": ["Art", "History"],
+            "content": "This is a first stimulus about art and history."
+        }, {
+            "type": "Text",
+            "name": "st_1",
+            "topics": ["Religion"],
+            "content": "This is a first stimulus about religion."
+        }, {
+            "type": "Text",
+            "name": "st_2",
+            "topics": ["Art", "History"],
+            "trigger_condition": {
+                "type": "And",
+                "conditions": [{
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890248"
+                    }, {
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890254"
+                    }, {
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492370"
+                    }, {
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492376"
+                    }]
+            },
+            "content": "This is a first location dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum."
+        }, {
+            "type": "Text",
+            "name": "st_3",
+            "topics": ["Religion"],
+            "execution_condition": {
+                "type": "And",
+                "conditions": [{
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890248"
+                    }, {
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890254"
+                    }, {
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492370"
+                    }, {
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492376"
+                    }]
+            },
+            "content": "This is a stimulus about religion which is executed only if its execution condition is satisfied."
+        }],
+    "ids": ["st_0", "st_1", "st_2", "st_3"],
+    "relations": [
+        {
+            "from": "this",
+            "to": "st_0",
+            "lb": 6,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_0",
+            "to": "st_1",
+            "lb": 4,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_1",
+            "to": "st_2",
+            "lb": 4,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_1",
+            "to": "st_3",
+            "lb": 6,
+            "ub": 12,
+            "unit": "SECONDS"
+        }]
+}
