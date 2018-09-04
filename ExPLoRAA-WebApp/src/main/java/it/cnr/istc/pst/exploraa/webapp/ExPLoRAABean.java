@@ -309,7 +309,7 @@ public class ExPLoRAABean {
                 for (LessonManager.SolverToken tk : new ArrayList<>(lm.getTriggerableTokens())) {
                     if (isSatisfied(tk.template.trigger_condition, parameter_values.get(user_id))) {
                         // the token 'tk' should be triggered..
-                        lm.trigger(tk);
+                        lm.trigger(user_id, tk);
                     }
                 }
             }
@@ -317,12 +317,12 @@ public class ExPLoRAABean {
     }
 
     @Lock(LockType.WRITE)
-    public void answerQuestion(long lesson_id, int question_id, int answer_id) {
+    public void answerQuestion(long user_id, long lesson_id, int question_id, int answer_id) {
         try {
             // we notify the teacher that a student has answered a question..
             mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.Stimulus.QuestionStimulus.Answer(lesson_id, question_id, answer_id)).getBytes(), 1, false);
             // we compute the answer's consequences..
-            lessons.get(lesson_id).answerQuestion(question_id, answer_id);
+            lessons.get(lesson_id).answerQuestion(user_id, question_id, answer_id);
             // we set the answer to the question event..
             ((Message.Stimulus.QuestionStimulus) lessons.get(lesson_id).getLesson().stimuli.stream().filter(e -> e.id == question_id).findAny().get()).answer = answer_id;
         } catch (MqttException ex) {
@@ -432,6 +432,8 @@ public class ExPLoRAABean {
                     } catch (MqttException ex) {
                         LOG.log(Level.SEVERE, null, ex);
                     }
+                } else {
+                    manager.makeUntriggerable(tk);
                 }
             }
 

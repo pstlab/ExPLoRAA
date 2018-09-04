@@ -38,7 +38,7 @@
                         "value": "12.492376"
                     }]
             },
-            "content": "This is a first location dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum."
+            "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum."
         }, {
             "type": "Text",
             "name": "st_3",

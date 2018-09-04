@@ -632,7 +632,7 @@ public class Context {
     }
 
     public void answerQuestion(Message.Stimulus.QuestionStimulus question, int answer) {
-        resource.answer_question(question.lesson_id, question.id, answer);
+        resource.answer_question(user.get().id, question.lesson_id, question.id, answer);
     }
 
     public void setTime(Lesson lesson, TeachingLessonContext.TokenRow row, long time) {

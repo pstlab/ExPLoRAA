@@ -410,10 +410,10 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @PUT
     @Path("answer_question")
     @Override
-    public void answer_question(@FormParam("lesson_id") long lesson_id, @FormParam("question_id") int question_id, @FormParam("answer_id") int answer_id) {
+    public void answer_question(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id, @FormParam("question_id") int question_id, @FormParam("answer_id") int answer_id) {
         try {
             utx.begin();
-            ctx.answerQuestion(lesson_id, question_id, answer_id);
+            ctx.answerQuestion(user_id, lesson_id, question_id, answer_id);
             utx.commit();
         } catch (NotSupportedException | SystemException | RollbackException | HeuristicMixedException | HeuristicRollbackException | SecurityException | IllegalStateException ex) {
             try {

@@ -119,8 +119,9 @@ class ExPLoRAAResource implements ExPLoRAA {
     }
 
     @Override
-    public void answer_question(long lesson_id, int question_id, int answer_id) {
+    public void answer_question(long user_id, long lesson_id, int question_id, int answer_id) {
         Form form = new Form();
+        form.param("user_id", Long.toString(user_id));
         form.param("lesson_id", Long.toString(lesson_id));
         form.param("question_id", Long.toString(question_id));
         form.param("answer_id", Long.toString(answer_id));
