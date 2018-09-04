@@ -164,7 +164,9 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
     @Override
     public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.tokens.recalculatePositionOfItemAt(teaching_lesson_tokens_adapter.tokens.indexOf(tk));
+        int c_pos = teaching_lesson_tokens_adapter.tokens.indexOf(tk);
+        teaching_lesson_tokens_adapter.notifyItemChanged(c_pos);
+        teaching_lesson_tokens_adapter.tokens.recalculatePositionOfItemAt(c_pos);
     }
 
     private class TokensAdapter extends RecyclerView.Adapter<TokenView> {
@@ -190,7 +192,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
                 @Override
                 public boolean areItemsTheSame(TeachingLessonContext.TokenRow item1, TeachingLessonContext.TokenRow item2) {
-                    return false;
+                    return item1 == item2;
                 }
 
                 @Override

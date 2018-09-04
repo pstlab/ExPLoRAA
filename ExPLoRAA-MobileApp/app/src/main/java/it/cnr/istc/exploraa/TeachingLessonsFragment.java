@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.util.SortedList;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,8 +19,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -57,11 +56,7 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
                 startActivity(new Intent(getActivity(), NewLessonActivity.class));
                 return true;
             case R.id.remove_teaching_lessons_menu_item:
-                Collection<TeachingLessonContext> to_remove = new ArrayList<>(teaching_lessons_adapter.selected_lessons.size());
-                final List<TeachingLessonContext> c_lessons = ExPLoRAAContext.getInstance().getService().getTeachingLessons();
-                for (int pos : teaching_lessons_adapter.selected_lessons)
-                    to_remove.add(c_lessons.get(pos));
-                for (TeachingLessonContext ctx : to_remove)
+                for (TeachingLessonContext ctx : teaching_lessons_adapter.selected_lessons)
                     ExPLoRAAContext.getInstance().getService().remove_teaching_lesson(ctx);
                 teaching_lessons_adapter.selected_lessons.clear();
                 remove_teaching_lessons_menu_item.setVisible(false);
@@ -90,37 +85,71 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
     }
 
     void setLessons(List<TeachingLessonContext> lessons) {
-        teaching_lessons_adapter.setLessons(lessons);
+        teaching_lessons_adapter.lessons.addAll(lessons);
     }
 
     @Override
     public void teachingLessonAdded(int pos, TeachingLessonContext ctx) {
-        teaching_lessons_adapter.notifyItemInserted(pos);
+        teaching_lessons_adapter.lessons.add(ctx);
     }
 
     @Override
     public void teachingLessonUpdated(int pos, TeachingLessonContext ctx) {
-        teaching_lessons_adapter.notifyItemChanged(pos);
+        teaching_lessons_adapter.lessons.updateItemAt(teaching_lessons_adapter.lessons.indexOf(ctx), ctx);
     }
 
     @Override
     public void teachingLessonRemoved(int pos, TeachingLessonContext ctx) {
-        teaching_lessons_adapter.notifyItemRemoved(pos);
+        teaching_lessons_adapter.lessons.remove(ctx);
     }
 
     @Override
     public void teachingLessonsCleared() {
-        teaching_lessons_adapter.notifyDataSetChanged();
+        teaching_lessons_adapter.lessons.clear();
     }
 
     private class TeachingLessonsAdapter extends RecyclerView.Adapter<TeachingLessonView> {
 
-        private List<TeachingLessonContext> lessons = new ArrayList<>();
-        private Set<Integer> selected_lessons = new HashSet<>();
+        private SortedList<TeachingLessonContext> lessons;
+        private Set<TeachingLessonContext> selected_lessons = new HashSet<>();
 
-        private void setLessons(List<TeachingLessonContext> lessons) {
-            this.lessons = lessons;
-            notifyDataSetChanged();
+        public TeachingLessonsAdapter() {
+            this.lessons = new SortedList<>(TeachingLessonContext.class, new SortedList.Callback<TeachingLessonContext>() {
+                @Override
+                public int compare(TeachingLessonContext o1, TeachingLessonContext o2) {
+                    return o1.getLesson().name.compareToIgnoreCase(o2.getLesson().name);
+                }
+
+                @Override
+                public void onChanged(int position, int count) {
+                    notifyItemRangeChanged(position, count);
+                }
+
+                @Override
+                public boolean areContentsTheSame(TeachingLessonContext oldItem, TeachingLessonContext newItem) {
+                    return false;
+                }
+
+                @Override
+                public boolean areItemsTheSame(TeachingLessonContext item1, TeachingLessonContext item2) {
+                    return item1 == item2;
+                }
+
+                @Override
+                public void onInserted(int position, int count) {
+                    notifyItemRangeInserted(position, count);
+                }
+
+                @Override
+                public void onRemoved(int position, int count) {
+                    notifyItemRangeRemoved(position, count);
+                }
+
+                @Override
+                public void onMoved(int fromPosition, int toPosition) {
+                    notifyItemMoved(fromPosition, toPosition);
+                }
+            });
         }
 
         @NonNull
@@ -182,26 +211,24 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
                 intent.putExtra("lesson_id", lesson.getLesson().id);
                 startActivity(intent);
             } else {
-                int pos = getAdapterPosition();
-                if (teaching_lessons_adapter.selected_lessons.contains(pos)) {
-                    teaching_lessons_adapter.selected_lessons.remove(pos);
+                if (teaching_lessons_adapter.selected_lessons.contains(lesson)) {
+                    teaching_lessons_adapter.selected_lessons.remove(lesson);
                     if (teaching_lessons_adapter.selected_lessons.isEmpty())
                         remove_teaching_lessons_menu_item.setVisible(false);
-                } else teaching_lessons_adapter.selected_lessons.add(pos);
-                teaching_lessons_adapter.notifyItemChanged(pos);
+                } else teaching_lessons_adapter.selected_lessons.add(lesson);
+                teaching_lessons_adapter.lessons.updateItemAt(teaching_lessons_adapter.lessons.indexOf(lesson), lesson);
             }
         }
 
         @Override
         public boolean onLongClick(View v) {
-            int pos = getAdapterPosition();
-            if (teaching_lessons_adapter.selected_lessons.contains(pos))
-                teaching_lessons_adapter.selected_lessons.remove(pos);
+            if (teaching_lessons_adapter.selected_lessons.contains(lesson))
+                teaching_lessons_adapter.selected_lessons.remove(lesson);
             else {
-                teaching_lessons_adapter.selected_lessons.add(pos);
+                teaching_lessons_adapter.selected_lessons.add(lesson);
                 remove_teaching_lessons_menu_item.setVisible(true);
             }
-            teaching_lessons_adapter.notifyItemChanged(pos);
+            teaching_lessons_adapter.lessons.updateItemAt(teaching_lessons_adapter.lessons.indexOf(lesson), lesson);
             return true;
         }
     }

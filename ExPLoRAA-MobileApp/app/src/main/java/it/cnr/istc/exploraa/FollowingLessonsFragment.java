@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.util.SortedList;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -58,9 +59,7 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
             case R.id.remove_following_lessons_menu_item:
                 Collection<FollowingLessonContext> to_remove = new ArrayList<>(following_lessons_adapter.selected_lessons.size());
                 final List<FollowingLessonContext> c_lessons = ExPLoRAAContext.getInstance().getService().getFollowingLessons();
-                for (int pos : following_lessons_adapter.selected_lessons)
-                    to_remove.add(c_lessons.get(pos));
-                for (FollowingLessonContext ctx : to_remove)
+                for (FollowingLessonContext ctx : following_lessons_adapter.selected_lessons)
                     ExPLoRAAContext.getInstance().getService().unfollow_lesson(ctx);
                 following_lessons_adapter.selected_lessons.clear();
                 remove_following_lessons_menu_item.setVisible(false);
@@ -89,37 +88,71 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
     }
 
     void setLessons(List<FollowingLessonContext> lessons) {
-        following_lessons_adapter.setLessons(lessons);
+        following_lessons_adapter.lessons.addAll(lessons);
     }
 
     @Override
     public void followingLessonAdded(int pos, FollowingLessonContext ctx) {
-        following_lessons_adapter.notifyItemInserted(pos);
+        following_lessons_adapter.lessons.add(ctx);
     }
 
     @Override
     public void followingLessonUpdated(int pos, FollowingLessonContext ctx) {
-        following_lessons_adapter.notifyItemChanged(pos);
+        following_lessons_adapter.lessons.updateItemAt(following_lessons_adapter.lessons.indexOf(ctx), ctx);
     }
 
     @Override
     public void followingLessonRemoved(int pos, FollowingLessonContext ctx) {
-        following_lessons_adapter.notifyItemRemoved(pos);
+        following_lessons_adapter.lessons.remove(ctx);
     }
 
     @Override
     public void followingLessonsCleared() {
-        following_lessons_adapter.notifyDataSetChanged();
+        following_lessons_adapter.lessons.clear();
     }
 
     private class FollowingLessonsAdapter extends RecyclerView.Adapter<FollowingLessonView> {
 
-        private List<FollowingLessonContext> lessons = new ArrayList<>();
-        private Set<Integer> selected_lessons = new HashSet<>();
+        private SortedList<FollowingLessonContext> lessons;
+        private Set<FollowingLessonContext> selected_lessons = new HashSet<>();
 
-        private void setLessons(List<FollowingLessonContext> lessons) {
-            this.lessons = lessons;
-            notifyDataSetChanged();
+        public FollowingLessonsAdapter() {
+            this.lessons = new SortedList<>(FollowingLessonContext.class, new SortedList.Callback<FollowingLessonContext>() {
+                @Override
+                public int compare(FollowingLessonContext o1, FollowingLessonContext o2) {
+                    return o1.getLesson().name.compareToIgnoreCase(o2.getLesson().name);
+                }
+
+                @Override
+                public void onChanged(int position, int count) {
+                    notifyItemRangeChanged(position, count);
+                }
+
+                @Override
+                public boolean areContentsTheSame(FollowingLessonContext oldItem, FollowingLessonContext newItem) {
+                    return false;
+                }
+
+                @Override
+                public boolean areItemsTheSame(FollowingLessonContext item1, FollowingLessonContext item2) {
+                    return item1 == item2;
+                }
+
+                @Override
+                public void onInserted(int position, int count) {
+                    notifyItemRangeInserted(position, count);
+                }
+
+                @Override
+                public void onRemoved(int position, int count) {
+                    notifyItemRangeRemoved(position, count);
+                }
+
+                @Override
+                public void onMoved(int fromPosition, int toPosition) {
+                    notifyItemMoved(fromPosition, toPosition);
+                }
+            });
         }
 
         @NonNull
@@ -130,7 +163,7 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
 
         @Override
         public void onBindViewHolder(@NonNull FollowingLessonView holder, int position) {
-            holder.setLesson(position, lessons.get(position));
+            holder.setLesson(lessons.get(position));
         }
 
         @Override
@@ -153,7 +186,7 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
             following_lesson_status_image_view = view.findViewById(R.id.following_lesson_status_image_view);
         }
 
-        private void setLesson(int pos, FollowingLessonContext lesson) {
+        private void setLesson(FollowingLessonContext lesson) {
             this.lesson = lesson;
             title.setText(lesson.getLesson().name);
             switch (lesson.getState()) {
@@ -167,7 +200,7 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
                     following_lesson_status_image_view.setImageResource(R.drawable.ic_stop);
                     break;
             }
-            if (following_lessons_adapter.selected_lessons.contains(pos))
+            if (following_lessons_adapter.selected_lessons.contains(lesson))
                 itemView.setBackgroundColor(Color.LTGRAY);
             else
                 itemView.setBackground(null);
@@ -181,26 +214,24 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
                 intent.putExtra("lesson_id", lesson.getLesson().id);
                 startActivity(intent);
             } else {
-                int pos = getAdapterPosition();
-                if (following_lessons_adapter.selected_lessons.contains(pos)) {
-                    following_lessons_adapter.selected_lessons.remove(pos);
+                if (following_lessons_adapter.selected_lessons.contains(lesson)) {
+                    following_lessons_adapter.selected_lessons.remove(lesson);
                     if (following_lessons_adapter.selected_lessons.isEmpty())
                         remove_following_lessons_menu_item.setVisible(false);
-                } else following_lessons_adapter.selected_lessons.add(pos);
-                following_lessons_adapter.notifyItemChanged(pos);
+                } else following_lessons_adapter.selected_lessons.add(lesson);
+                following_lessons_adapter.lessons.updateItemAt(following_lessons_adapter.lessons.indexOf(lesson), lesson);
             }
         }
 
         @Override
         public boolean onLongClick(View v) {
-            int pos = getAdapterPosition();
-            if (following_lessons_adapter.selected_lessons.contains(pos))
-                following_lessons_adapter.selected_lessons.remove(pos);
+            if (following_lessons_adapter.selected_lessons.contains(lesson))
+                following_lessons_adapter.selected_lessons.remove(lesson);
             else {
-                following_lessons_adapter.selected_lessons.add(pos);
+                following_lessons_adapter.selected_lessons.add(lesson);
                 remove_following_lessons_menu_item.setVisible(true);
             }
-            following_lessons_adapter.notifyItemChanged(pos);
+            following_lessons_adapter.lessons.updateItemAt(following_lessons_adapter.lessons.indexOf(lesson), lesson);
             return true;
         }
     }

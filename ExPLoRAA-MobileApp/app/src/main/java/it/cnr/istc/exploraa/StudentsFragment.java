@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v7.util.SortedList;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -14,7 +15,6 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class StudentsFragment extends Fragment implements ExPLoRAAService.StudentsListener {
@@ -53,36 +53,70 @@ public class StudentsFragment extends Fragment implements ExPLoRAAService.Studen
     }
 
     void setStudents(List<StudentContext> students) {
-        students_adapter.setStudents(students);
+        students_adapter.students.addAll(students);
     }
 
     @Override
     public void studentAdded(int pos, StudentContext ctx) {
-        students_adapter.notifyItemInserted(pos);
+        students_adapter.students.add(ctx);
     }
 
     @Override
     public void studentUpdated(int pos, StudentContext ctx) {
-        students_adapter.notifyItemChanged(pos);
+        students_adapter.students.updateItemAt(students_adapter.students.indexOf(ctx), ctx);
     }
 
     @Override
     public void studentRemoved(int pos, StudentContext ctx) {
-        students_adapter.notifyItemRemoved(pos);
+        students_adapter.students.remove(ctx);
     }
 
     @Override
     public void studentsCleared() {
-        students_adapter.notifyDataSetChanged();
+        students_adapter.students.clear();
     }
 
     private class StudentsAdapter extends RecyclerView.Adapter<StudentView> {
 
-        private List<StudentContext> students = new ArrayList<>();
+        private SortedList<StudentContext> students;
 
-        private void setStudents(List<StudentContext> students) {
-            this.students = students;
-            notifyDataSetChanged();
+        public StudentsAdapter() {
+            this.students = new SortedList<>(StudentContext.class, new SortedList.Callback<StudentContext>() {
+                @Override
+                public int compare(StudentContext o1, StudentContext o2) {
+                    return (o1.getStudent().last_name + " " + o1.getStudent().first_name).compareTo(o2.getStudent().last_name + " " + o2.getStudent().first_name);
+                }
+
+                @Override
+                public void onChanged(int position, int count) {
+                    notifyItemRangeChanged(position, count);
+                }
+
+                @Override
+                public boolean areContentsTheSame(StudentContext oldItem, StudentContext newItem) {
+                    return false;
+                }
+
+                @Override
+                public boolean areItemsTheSame(StudentContext item1, StudentContext item2) {
+                    return item1 == item2;
+                }
+
+                @Override
+                public void onInserted(int position, int count) {
+                    notifyItemRangeInserted(position, count);
+                }
+
+                @Override
+                public void onRemoved(int position, int count) {
+                    notifyItemRangeRemoved(position, count);
+                }
+
+                @Override
+                public void onMoved(int fromPosition, int toPosition) {
+                    notifyItemMoved(fromPosition, toPosition);
+                }
+            });
         }
 
         @NonNull
@@ -117,7 +151,7 @@ public class StudentsFragment extends Fragment implements ExPLoRAAService.Studen
 
         private void setStudent(StudentContext student) {
             this.student = student;
-            name.setText(student.getStudent().first_name + " " + student.getStudent().last_name);
+            name.setText(getString(R.string.full_name, student.getStudent().first_name, student.getStudent().last_name));
             student_connection_status_image_view.setImageResource(student.isOnLine() ? android.R.drawable.presence_online : android.R.drawable.presence_offline);
         }
 

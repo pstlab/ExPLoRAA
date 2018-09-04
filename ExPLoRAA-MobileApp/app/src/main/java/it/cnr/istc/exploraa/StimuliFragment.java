@@ -55,9 +55,7 @@ public class StimuliFragment extends Fragment implements ExPLoRAAService.Stimuli
     }
 
     void setStimuli(List<Message.Stimulus> stimuli) {
-        stimuli_adapter.stimuli.beginBatchedUpdates();
         stimuli_adapter.stimuli.addAll(stimuli);
-        stimuli_adapter.stimuli.endBatchedUpdates();
     }
 
     @Override
@@ -98,7 +96,7 @@ public class StimuliFragment extends Fragment implements ExPLoRAAService.Stimuli
 
                 @Override
                 public boolean areItemsTheSame(Message.Stimulus item1, Message.Stimulus item2) {
-                    return false;
+                    return item1 == item2;
                 }
 
                 @Override
