@@ -369,61 +369,69 @@ public class ExPLoRAABean {
                     Set<Long> students = new HashSet<>();
                     for (Follow follow : lesson.students.values()) {
                         for (String interest : follow.interests) {
-                            if (tk.template.topics.contains(interest) && (tk.template.execution_condition == null || isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
+                            if (tk.template.topics.contains(interest) && (tk.template.execution_condition == null || isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id))) && (tk.template.trigger_condition == null || isSatisfied(tk.template.trigger_condition, parameter_values.get(follow.user.id)))) {
                                 students.add(follow.user.id);
                             }
                         }
                     }
-                    String tk_json = null;
-                    switch (tk.template.type) {
-                        case Text:
-                            Message.Stimulus.TextStimulus text = new Message.Stimulus.TextStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).content);
-                            lesson.stimuli.add(text);
-                            // we marshall this text stimulus as a normal message..
-                            tk_json = JSONB.toJson(text, Message.class);
-                            break;
-                        case URL:
-                            Message.Stimulus.URLStimulus url = new Message.Stimulus.URLStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).content, ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).url);
-                            lesson.stimuli.add(url);
-                            // we marshall this url stimulus as a normal message..
-                            tk_json = JSONB.toJson(url, Message.class);
-                            break;
-                        case Question:
-                            Message.Stimulus.QuestionStimulus question = new Message.Stimulus.QuestionStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).question, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).answers.stream().map(ans -> ans.answer).collect(Collectors.toList()), null);
-                            lesson.stimuli.add(question);
-                            // we marshall this question stimulus as a normal message..
-                            tk_json = JSONB.toJson(question, Message.class);
-                            break;
-                        default:
-                            throw new AssertionError(tk.template.type.name());
-                    }
-                    try {
-                        // we notify the student interested to the token that the token has to be executed..
-                        for (Long student : students) {
-                            mqtt.publish(student + "/input", tk_json.getBytes(), 1, false);
+                    if (tk.template.trigger_condition != null && students.isEmpty()) {
+                        // we make the token triggerable..
+                        manager.makeTriggerable(tk);
+                    } else {
+                        // we execute the token..
+                        String tk_json = null;
+                        switch (tk.template.type) {
+                            case Text:
+                                Message.Stimulus.TextStimulus text = new Message.Stimulus.TextStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).content);
+                                lesson.stimuli.add(text);
+                                // we marshall this text stimulus as a normal message..
+                                tk_json = JSONB.toJson(text, Message.class);
+                                break;
+                            case URL:
+                                Message.Stimulus.URLStimulus url = new Message.Stimulus.URLStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).content, ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).url);
+                                lesson.stimuli.add(url);
+                                // we marshall this url stimulus as a normal message..
+                                tk_json = JSONB.toJson(url, Message.class);
+                                break;
+                            case Question:
+                                Message.Stimulus.QuestionStimulus question = new Message.Stimulus.QuestionStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).question, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).answers.stream().map(ans -> ans.answer).collect(Collectors.toList()), null);
+                                lesson.stimuli.add(question);
+                                // we marshall this question stimulus as a normal message..
+                                tk_json = JSONB.toJson(question, Message.class);
+                                break;
+                            default:
+                                throw new AssertionError(tk.template.type.name());
                         }
-                    } catch (MqttException ex) {
-                        LOG.log(Level.SEVERE, null, ex);
+                        try {
+                            // we notify the student interested to the token that the token has to be executed..
+                            for (Long student : students) {
+                                mqtt.publish(student + "/input", tk_json.getBytes(), 1, false);
+                            }
+                        } catch (MqttException ex) {
+                            LOG.log(Level.SEVERE, null, ex);
+                        }
                     }
                 }
             }
 
             @Override
             public void hideToken(LessonManager.SolverToken tk) {
-                Message.Stimulus stimulus = lesson.stimuli.stream().filter(e -> e.id == tk.tp).findAny().get();
-                // we remove the stimulus from the lesson..
-                lesson.stimuli.remove(stimulus);
-                if (tk.question != null) {
-                    // the token represents the answer of a question: we set the answer of the question event at null..
-                    ((Message.Stimulus.QuestionStimulus) lesson.stimuli.stream().filter(e -> e.id == tk.question).findAny().get()).answer = null;
-                }
-                try {
-                    // we notify the target students that a stimulus has to be hidden..
-                    for (Long student : stimulus.students) {
-                        mqtt.publish(student + "/input", JSONB.toJson(new Message.RemoveStimulus(lesson.id, tk.tp)).getBytes(), 1, false);
+                if (tk.template.trigger_condition == null || !manager.isTriggerable(tk)) {
+                    Message.Stimulus stimulus = lesson.stimuli.stream().filter(e -> e.id == tk.tp).findAny().get();
+                    // we remove the stimulus from the lesson..
+                    lesson.stimuli.remove(stimulus);
+                    if (tk.question != null) {
+                        // the token represents the answer of a question: we set the answer of the question event at null..
+                        ((Message.Stimulus.QuestionStimulus) lesson.stimuli.stream().filter(e -> e.id == tk.question).findAny().get()).answer = null;
                     }
-                } catch (MqttException ex) {
-                    LOG.log(Level.SEVERE, null, ex);
+                    try {
+                        // we notify the target students that a stimulus has to be hidden..
+                        for (Long student : stimulus.students) {
+                            mqtt.publish(student + "/input", JSONB.toJson(new Message.RemoveStimulus(lesson.id, tk.tp)).getBytes(), 1, false);
+                        }
+                    } catch (MqttException ex) {
+                        LOG.log(Level.SEVERE, null, ex);
+                    }
                 }
             }
 
@@ -610,7 +618,7 @@ public class ExPLoRAABean {
                     case Eq:
                         return c_numeric_val == ((LessonModel.Condition.NumericCondition) cond).value;
                     case LEq:
-                        return c_numeric_val >= ((LessonModel.Condition.NumericCondition) cond).value;
+                        return c_numeric_val <= ((LessonModel.Condition.NumericCondition) cond).value;
                     default:
                         throw new AssertionError(((LessonModel.Condition.NumericCondition) cond).numeric_condition_type.name());
                 }
