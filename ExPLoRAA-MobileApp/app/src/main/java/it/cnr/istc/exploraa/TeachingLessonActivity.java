@@ -144,12 +144,10 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
     @Override
     public void studentAdded(int pos, StudentContext s_ctx) {
-
     }
 
     @Override
     public void studentRemoved(int pos, StudentContext s_ctx) {
-
     }
 
     @Override
@@ -164,9 +162,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
     @Override
     public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        int c_pos = teaching_lesson_tokens_adapter.tokens.indexOf(tk);
-        teaching_lesson_tokens_adapter.notifyItemChanged(c_pos);
-        teaching_lesson_tokens_adapter.tokens.recalculatePositionOfItemAt(c_pos);
+        teaching_lesson_tokens_adapter.tokens.updateItemAt(teaching_lesson_tokens_adapter.tokens.indexOf(tk), tk);
     }
 
     private class TokensAdapter extends RecyclerView.Adapter<TokenView> {
@@ -246,8 +242,8 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
         private void setToken(TeachingLessonContext.TokenRow token) {
             token_time.setText(ExPLoRAAService.convertTimeToString(token.getTime()));
-            token_min.setText(ExPLoRAAService.convertTimeToString(token.getMin()));
-            token_max.setText(ExPLoRAAService.convertTimeToString(token.getMax()));
+            token_min.setText(token.getMin() != null ? ExPLoRAAService.convertTimeToString(token.getMin()) : "-inf");
+            token_max.setText(token.getMax() != null ? ExPLoRAAService.convertTimeToString(token.getMax()) : "+inf");
             final LessonModel.StimulusTemplate stimulus = ctx.getLesson().model.stimuli.get(token.getToken().refEvent);
             switch (stimulus.type) {
                 case Root:
