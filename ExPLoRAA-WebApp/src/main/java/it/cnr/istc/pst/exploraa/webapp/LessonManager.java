@@ -217,15 +217,15 @@ public class LessonManager implements TemporalListener {
             // we are moving forward..
             long next_pulse = lesson_timeline_pulses.get(idx);
             while (next_pulse <= t) {
-                lesson_timeline_values.get(idx).forEach(tk -> listeners.forEach(l -> {
+                for (SolverToken tk : lesson_timeline_values.get(idx)) {
                     if (tk.template.trigger_condition == null) {
                         // this token can be executed..
-                        l.executeToken(tk);
+                        listeners.forEach(l -> l.executeToken(tk));
                     } else {
                         // this token will be executed when its triggering condition will become satisfied..
                         triggerable_tokens.add(tk);
                     }
-                }));
+                }
                 idx++;
                 if (idx < lesson_timeline_pulses.size()) {
                     next_pulse = lesson_timeline_pulses.get(idx);
@@ -238,15 +238,21 @@ public class LessonManager implements TemporalListener {
         if (t < t_now && idx > 0) {
             // we are moving backward..
             long last_pulse = lesson_timeline_pulses.get(idx - 1);
-            Collection<SolverToken> to_disable = new ArrayList<>();
+            // these are the potential consequences of the triggered tokens..
+            Collection<SolverToken> tr_consequences = new ArrayList<>();
             while (last_pulse > t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx - 1)) {
-                    listeners.forEach(l -> l.hideToken(tk));
                     TriggeredContext ctx = triggered_contexts.remove(tk);
                     if (ctx != null) {
-                        // token 'tk' is an answer, we remove all the consequences of the answer..
-                        to_disable.addAll(ctx.tokens);
+                        // token 'tk' is a triggered token, we remove all the consequences of the triggered context..
+                        tr_consequences.addAll(ctx.tokens);
                         triggered.remove(ctx.getSourceToken());
+                    } else if (tk.template.trigger_condition == null) {
+                        // this token has been executed.. so we hide it..
+                        listeners.forEach(l -> l.hideToken(tk));
+                    } else {
+                        // 'tk' represents a triggerable token which has not yet been triggered..
+                        triggerable_tokens.remove(tk);
                     }
                 }
                 idx--;
@@ -258,14 +264,14 @@ public class LessonManager implements TemporalListener {
                 }
             }
 
-            if (!to_disable.isEmpty()) {
+            if (!tr_consequences.isEmpty()) {
                 // we remove these tokens and re-extract the lesson timeline..
-                for (SolverToken tk : to_disable) {
+                for (SolverToken tk : tr_consequences) {
                     tk.enabled = false;
                     listeners.forEach(l -> l.removeToken(tk));
                 }
 
-                // we extract the lesson timeline..
+                // we re-extract the lesson timeline..
                 extract_timeline();
             }
         }

@@ -369,7 +369,7 @@ public class ExPLoRAABean {
                     Set<Long> students = new HashSet<>();
                     for (Follow follow : lesson.students.values()) {
                         for (String interest : follow.interests) {
-                            if (tk.template.topics.contains(interest) && (tk.template.trigger_condition == null || isSatisfied(tk.template.trigger_condition, parameter_values.get(follow.user.id)))) {
+                            if (tk.template.topics.contains(interest) && (tk.template.execution_condition == null || isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
                                 students.add(follow.user.id);
                             }
                         }
