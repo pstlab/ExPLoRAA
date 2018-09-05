@@ -51,7 +51,15 @@ public class LessonManager implements TemporalListener {
      * For each time point, the corresponding token.
      */
     private final List<SolverToken> tokens = new ArrayList<>();
+    /**
+     * These are the answerable tokens. For each answerable token, the users who
+     * answered the question and the answer id.
+     */
     private final Map<SolverToken, Map<Long, Integer>> answerable_tokens = new IdentityHashMap<>();
+    /**
+     * These are the triggerable tokens. For each triggerable token, the users
+     * who triggered the token.
+     */
     private final Map<SolverToken, Set<Long>> triggerable_tokens = new IdentityHashMap<>();
     /**
      * The current context, if any..
@@ -264,20 +272,24 @@ public class LessonManager implements TemporalListener {
                             break;
                         case Question:
                             // we remove the token from the 'answerable' ones..
-                            answerable_tokens.put(tk, new HashMap<>());
+                            answerable_tokens.remove(tk);
                             break;
                         case Trigger:
                             // we remove the token from the 'triggerable' ones..
-                            triggerable_tokens.put(tk, new HashSet<>());
+                            triggerable_tokens.remove(tk);
                             break;
                         default:
                             throw new AssertionError(tk.template.type.name());
                     }
                     TriggerContext ctx = triggered_contexts.remove(tk);
                     if (ctx != null) {
-                        // token 'tk' is a triggered token, we remove all the consequences of the triggered context..
+                        // token 'tk' has been added as a consequence of an answer or of a trigger.
                         tr_consequences.addAll(ctx.tokens);
-                        triggerable_tokens.get(ctx.source_token).remove(ctx.user_id);
+                        if (answerable_tokens.containsKey(ctx.source_token)) {
+                            answerable_tokens.get(ctx.source_token).remove(ctx.user_id);
+                        } else if (triggerable_tokens.containsKey(ctx.source_token)) {
+                            triggerable_tokens.get(ctx.source_token).remove(ctx.user_id);
+                        }
                     }
                     // this token has been executed.. so we hide it..
                     listeners.forEach(l -> l.hideToken(tk));
