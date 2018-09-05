@@ -23,7 +23,6 @@ import java.util.Set;
 import javax.json.Json;
 import javax.json.JsonArray;
 import javax.json.JsonArrayBuilder;
-import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
 import javax.json.JsonString;
@@ -198,18 +197,16 @@ public abstract class Message {
         public StimulusType stimulus_type;
         public long lesson_id;
         public int id;
-        public Set<Long> students;
         public long time;
 
         public Stimulus() {
         }
 
-        public Stimulus(StimulusType stimulus_type, long lesson_id, int id, Set<Long> students, long time) {
+        public Stimulus(StimulusType stimulus_type, long lesson_id, int id, long time) {
             super(MessageType.Stimulus);
             this.stimulus_type = stimulus_type;
             this.lesson_id = lesson_id;
             this.id = id;
-            this.students = students;
             this.time = time;
         }
 
@@ -224,8 +221,8 @@ public abstract class Message {
             public TextStimulus() {
             }
 
-            public TextStimulus(long lesson_id, int id, Set<Long> students, long time, String content) {
-                super(StimulusType.Text, lesson_id, id, students, time);
+            public TextStimulus(long lesson_id, int id, long time, String content) {
+                super(StimulusType.Text, lesson_id, id, time);
                 this.content = content;
             }
         }
@@ -239,8 +236,8 @@ public abstract class Message {
             public QuestionStimulus() {
             }
 
-            public QuestionStimulus(long lesson_id, int id, Set<Long> students, long time, String question, List<String> answers, Integer answer) {
-                super(StimulusType.Question, lesson_id, id, students, time);
+            public QuestionStimulus(long lesson_id, int id, long time, String question, List<String> answers, Integer answer) {
+                super(StimulusType.Question, lesson_id, id, time);
                 this.question = question;
                 this.answers = answers;
                 this.answer = answer;
@@ -272,8 +269,8 @@ public abstract class Message {
             public URLStimulus() {
             }
 
-            public URLStimulus(long lesson_id, int id, Set<Long> students, long time, String content, String url) {
-                super(StimulusType.URL, lesson_id, id, students, time);
+            public URLStimulus(long lesson_id, int id, long time, String content, String url) {
+                super(StimulusType.URL, lesson_id, id, time);
                 this.content = content;
                 this.url = url;
             }
@@ -361,11 +358,6 @@ public abstract class Message {
                     c_object.add("stimulus_type", st.stimulus_type.name());
                     c_object.add("lesson_id", st.lesson_id);
                     c_object.add("id", st.id);
-                    JsonArrayBuilder students_builder = Json.createArrayBuilder();
-                    for (Long student : st.students) {
-                        students_builder.add(student);
-                    }
-                    c_object.add("students", students_builder);
                     c_object.add("time", st.time);
                     switch (st.stimulus_type) {
                         case Text:
@@ -432,15 +424,10 @@ public abstract class Message {
                 case Stimulus:
                     long lesson_id = obj.getJsonNumber("lesson_id").longValue();
                     int id = obj.getInt("id");
-                    JsonArray students_array = obj.getJsonArray("students");
-                    Set<Long> students = new HashSet<>(students_array.size());
-                    for (JsonValue answer_value : students_array) {
-                        students.add(((JsonNumber) answer_value).longValue());
-                    }
                     long time = obj.getJsonNumber("time").longValue();
                     switch (Stimulus.StimulusType.valueOf(obj.getString("stimulus_type"))) {
                         case Text:
-                            return new Stimulus.TextStimulus(lesson_id, id, students, time, obj.getString("content"));
+                            return new Stimulus.TextStimulus(lesson_id, id, time, obj.getString("content"));
                         case Question:
                             String question = obj.getString("question");
                             JsonArray answers_array = obj.getJsonArray("answers");
@@ -448,9 +435,9 @@ public abstract class Message {
                             for (JsonValue answer_value : answers_array) {
                                 answers.add(((JsonString) answer_value).getString());
                             }
-                            return new Stimulus.QuestionStimulus(lesson_id, id, students, time, question, answers, obj.containsKey("answer") ? obj.getInt("answer") : null);
+                            return new Stimulus.QuestionStimulus(lesson_id, id, time, question, answers, obj.containsKey("answer") ? obj.getInt("answer") : null);
                         case URL:
-                            return new Stimulus.URLStimulus(lesson_id, id, students, time, obj.getString("content"), obj.getString("url"));
+                            return new Stimulus.URLStimulus(lesson_id, id, time, obj.getString("content"), obj.getString("url"));
                         default:
                             throw new AssertionError(MessageType.valueOf(obj.getString("message_type")).name());
                     }

@@ -16,8 +16,11 @@
  */
 package it.cnr.istc.pst.exploraa.webapp;
 
+import it.cnr.istc.pst.exploraa.api.Follow;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
+import it.cnr.istc.pst.exploraa.api.Message;
+import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.time.TemporalListener;
 import it.cnr.istc.pst.time.TemporalNetwork;
 import java.util.ArrayDeque;
@@ -35,6 +38,7 @@ import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -62,6 +66,11 @@ public class LessonManager implements TemporalListener {
      */
     private final Map<SolverToken, Set<Long>> triggerable_tokens = new IdentityHashMap<>();
     /**
+     * These are the dispatched tokens. For each dispatched token, the
+     * dispatched event.
+     */
+    private final Map<SolverToken, DispatchEvent> dispatched_tokens = new IdentityHashMap<>();
+    /**
      * The current context, if any..
      */
     private TriggerContext triggered_context = null;
@@ -80,6 +89,35 @@ public class LessonManager implements TemporalListener {
 
     public Lesson getLesson() {
         return lesson;
+    }
+
+    public List<Message.Stimulus> getStimuli(long user_id) {
+        dispatched_tokens.entrySet().stream().filter(entry -> entry.getValue().students.contains(user_id)).map(entry -> {
+            switch (entry.getKey().template.type) {
+                case Text:
+                    return new Message.Stimulus.TextStimulus(lesson.id, entry.getKey().tp, entry.getValue().time, ((LessonModel.StimulusTemplate.TextStimulusTemplate) entry.getKey().template).content);
+                case URL:
+                    return new Message.Stimulus.URLStimulus(lesson.id, entry.getKey().tp, entry.getValue().time, ((LessonModel.StimulusTemplate.URLStimulusTemplate) entry.getKey().template).content, ((LessonModel.StimulusTemplate.URLStimulusTemplate) entry.getKey().template).url);
+                case Question:
+                    return new Message.Stimulus.QuestionStimulus(lesson.id, entry.getKey().tp, entry.getValue().time, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) entry.getKey().template).question, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) entry.getKey().template).answers.stream().map(ans -> ans.answer).collect(Collectors.toList()), answerable_tokens.get(entry.getKey()).get(user_id));
+                default:
+                    throw new AssertionError(entry.getKey().template.type.name());
+            }
+        });
+        return null;
+    }
+
+    private Message.Stimulus toStimulus(SolverToken tk, long user_id) {
+        switch (tk.template.type) {
+            case Text:
+                return new Message.Stimulus.TextStimulus(lesson.id, tk.tp, dispatched_tokens.get(tk).time, ((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).content);
+            case URL:
+                return new Message.Stimulus.URLStimulus(lesson.id, tk.tp, dispatched_tokens.get(tk).time, ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).content, ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).url);
+            case Question:
+                return new Message.Stimulus.QuestionStimulus(lesson.id, tk.tp, dispatched_tokens.get(tk).time, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).question, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).answers.stream().map(ans -> ans.answer).collect(Collectors.toList()), answerable_tokens.get(tk).get(user_id));
+            default:
+                throw new AssertionError(tk.template.type.name());
+        }
     }
 
     public void solve() {
@@ -280,7 +318,9 @@ public class LessonManager implements TemporalListener {
                         }
                     }
                     // this token has been executed.. so we hide it..
-                    listeners.forEach(l -> l.hideToken(tk));
+                    for (Long student : dispatched_tokens.remove(tk).students) {
+                        listeners.forEach(l -> l.hideStimulus(toStimulus(tk, student), student));
+                    }
                 }
                 idx--;
                 if (idx > 0) {
@@ -306,9 +346,8 @@ public class LessonManager implements TemporalListener {
         listeners.forEach(l -> l.newTime(t_now));
     }
 
-    public Integer getAnswer(long user_id, final int question_id) {
-        SolverToken q_tk = tokens.get(question_id - 2);
-        return answerable_tokens.get(q_tk).get(user_id);
+    public void dispatchToken(SolverToken tk, Set<Long> users) {
+        dispatched_tokens.put(tk, new DispatchEvent(System.currentTimeMillis(), users));
     }
 
     public void answerQuestion(long user_id, final int question_id, final int answer) {
@@ -378,6 +417,25 @@ public class LessonManager implements TemporalListener {
         extract_timeline();
     }
 
+    void follow(User student, Set<String> interests) {
+        lesson.students.put(student.id, new Follow(student, lesson, interests));
+        for (Map.Entry<SolverToken, DispatchEvent> entry : dispatched_tokens.entrySet()) {
+            for (String interest : interests) {
+                if (entry.getKey().template.topics.contains(interest)) {
+                    entry.getValue().students.add(student.id);
+                    break;
+                }
+            }
+        }
+    }
+
+    void unfollow(long student) {
+        lesson.students.remove(student);
+        for (DispatchEvent de : dispatched_tokens.values()) {
+            de.students.remove(student);
+        }
+    }
+
     @Override
     public void newValue(int tp, double val) {
         if (tp != 0 && tp != 1) {
@@ -404,7 +462,7 @@ public class LessonManager implements TemporalListener {
         listeners.remove(listener);
     }
 
-    private class TriggerContext {
+    private static class TriggerContext {
 
         private final SolverToken source_token;
         private final long user_id;
@@ -425,6 +483,17 @@ public class LessonManager implements TemporalListener {
 
         public Collection<SolverToken> getTokens() {
             return Collections.unmodifiableCollection(tokens);
+        }
+    }
+
+    public static class DispatchEvent {
+
+        private final long time;
+        private final Set<Long> students;
+
+        private DispatchEvent(long time, Set<Long> students) {
+            this.time = time;
+            this.students = students;
         }
     }
 

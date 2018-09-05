@@ -20,7 +20,6 @@ import it.cnr.istc.pst.exploraa.api.ExPLoRAA;
 import it.cnr.istc.pst.exploraa.api.Follow;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
-import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Teach;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.webapp.db.FollowEntity;
@@ -94,21 +93,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 LessonManager lm = ctx.getLessonManager(follow.getLesson().getId());
                 Lesson l = lm.getLesson();
-
-                // we filter those stimuli for which the student is interested..
-                List<Message.Stimulus> stimuli = l.stimuli.stream().filter(s -> s.students.contains(ue.getId())).map(s -> {
-                    switch (s.stimulus_type) {
-                        case Text:
-                            return new Message.Stimulus.TextStimulus(s.lesson_id, s.id, s.students, s.time, ((Message.Stimulus.TextStimulus) s).content);
-                        case Question:
-                            return new Message.Stimulus.QuestionStimulus(s.lesson_id, s.id, s.students, s.time, ((Message.Stimulus.QuestionStimulus) s).question, ((Message.Stimulus.QuestionStimulus) s).answers, lm.getAnswer(ue.getId(), s.id));
-                        case URL:
-                            return new Message.Stimulus.URLStimulus(s.lesson_id, s.id, s.students, s.time, ((Message.Stimulus.URLStimulus) s).content, ((Message.Stimulus.URLStimulus) s).url);
-                        default:
-                            throw new AssertionError(s.stimulus_type.name());
-                    }
-                }).collect(Collectors.toList());
-                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, stimuli, null, new Teach(teacher, null), null, l.state, l.time);
+                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, lm.getStimuli(ue.getId()), null, new Teach(teacher, null), null, l.state, l.time);
                 follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
@@ -193,19 +178,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
                 User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
                 LessonManager lm = ctx.getLessonManager(follow.getLesson().getId());
                 Lesson l = lm.getLesson();
-                List<Message.Stimulus> stimuli = l.stimuli.stream().filter(s -> s.students.contains(ue.getId())).map(s -> {
-                    switch (s.stimulus_type) {
-                        case Text:
-                            return new Message.Stimulus.TextStimulus(s.lesson_id, s.id, s.students, s.time, ((Message.Stimulus.TextStimulus) s).content);
-                        case Question:
-                            return new Message.Stimulus.QuestionStimulus(s.lesson_id, s.id, s.students, s.time, ((Message.Stimulus.QuestionStimulus) s).question, ((Message.Stimulus.QuestionStimulus) s).answers, lm.getAnswer(ue.getId(), s.id));
-                        case URL:
-                            return new Message.Stimulus.URLStimulus(s.lesson_id, s.id, s.students, s.time, ((Message.Stimulus.URLStimulus) s).content, ((Message.Stimulus.URLStimulus) s).url);
-                        default:
-                            throw new AssertionError(s.stimulus_type.name());
-                    }
-                }).collect(Collectors.toList());
-                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, stimuli, null, new Teach(teacher, null), null, l.state, l.time);
+                Lesson followed_lesson = new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, lm.getStimuli(ue.getId()), null, new Teach(teacher, null), null, l.state, l.time);
                 follows.put(followed_lesson.id, new Follow(teacher, followed_lesson, new HashSet<>(follow.getInterests())));
             }
             Map<Long, Teach> teachs = new HashMap<>();
@@ -390,8 +363,9 @@ public class ExPLoRAAResource implements ExPLoRAA {
             utx.commit();
 
             User teacher = new User(follow.getLesson().getTeachedBy().getTeacher().getId(), follow.getLesson().getTeachedBy().getTeacher().getEmail(), follow.getLesson().getTeachedBy().getTeacher().getFirstName(), follow.getLesson().getTeachedBy().getTeacher().getLastName(), ctx.isOnline(follow.getLesson().getTeachedBy().getTeacher().getId()), null, null, null, null, null);
-            Lesson l = ctx.getLessonManager(follow.getLesson().getId()).getLesson();
-            return new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, l.stimuli.stream().filter(st -> st.students.contains(student.getId())).collect(Collectors.toList()), null, new Teach(teacher, null), null, l.state, l.time);
+            LessonManager lm = ctx.getLessonManager(follow.getLesson().getId());
+            Lesson l = lm.getLesson();
+            return new Lesson(follow.getLesson().getId(), follow.getLesson().getName(), null, l.topics, lm.getStimuli(user_id), null, new Teach(teacher, null), null, l.state, l.time);
         } catch (IllegalStateException | SecurityException | JsonbException | HeuristicMixedException | HeuristicRollbackException | NotSupportedException | RollbackException | SystemException ex) {
             try {
                 utx.rollback();

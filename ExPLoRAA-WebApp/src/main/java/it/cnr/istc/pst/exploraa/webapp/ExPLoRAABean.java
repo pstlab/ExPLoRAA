@@ -40,7 +40,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 import javax.annotation.Resource;
@@ -364,6 +363,7 @@ public class ExPLoRAABean {
             @Override
             public void executeToken(LessonManager.SolverToken tk) {
                 if (tk.template.type != LessonModel.StimulusTemplate.StimulusTemplateType.Root) {
+                    // the students both interested and having proper parameter values for this stimulus..
                     Set<Long> students = new HashSet<>();
                     for (Follow follow : lesson.students.values()) {
                         for (String interest : follow.interests) {
@@ -383,64 +383,26 @@ public class ExPLoRAABean {
                         }
                     } else {
                         // we execute the token..
-                        String tk_json = null;
-                        switch (tk.template.type) {
-                            case Text:
-                                Message.Stimulus.TextStimulus text = new Message.Stimulus.TextStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).content);
-                                lesson.stimuli.add(text);
-                                // we marshall this text stimulus as a normal message..
-                                tk_json = JSONB.toJson(text, Message.class);
-                                break;
-                            case URL:
-                                Message.Stimulus.URLStimulus url = new Message.Stimulus.URLStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).content, ((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).url);
-                                lesson.stimuli.add(url);
-                                // we marshall this url stimulus as a normal message..
-                                tk_json = JSONB.toJson(url, Message.class);
-                                break;
-                            case Question:
-                                Message.Stimulus.QuestionStimulus question = new Message.Stimulus.QuestionStimulus(lesson.id, tk.tp, students, System.currentTimeMillis(), ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).question, ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).answers.stream().map(ans -> ans.answer).collect(Collectors.toList()), null);
-                                lesson.stimuli.add(question);
-                                // we marshall this question stimulus as a normal message..
-                                tk_json = JSONB.toJson(question, Message.class);
-                                break;
-                            default:
-                                throw new AssertionError(tk.template.type.name());
-                        }
-                        try {
-                            // we notify the student interested to the token that the token has to be executed..
-                            for (Long student : students) {
-                                mqtt.publish(student + "/input", tk_json.getBytes(), 1, false);
-                            }
-                        } catch (MqttException ex) {
-                            LOG.log(Level.SEVERE, null, ex);
-                        }
+                        manager.dispatchToken(tk, students);
                     }
                 }
             }
 
             @Override
-            public void hideToken(LessonManager.SolverToken tk) {
-                switch (tk.template.type) {
-                    case Text:
-                    case URL:
-                    case Question:
-                        Message.Stimulus stimulus = lesson.stimuli.stream().filter(e -> e.id == tk.tp).findAny().get();
-                        // we remove the stimulus from the lesson..
-                        lesson.stimuli.remove(stimulus);
-                        try {
-                            // we notify the target students that a stimulus has to be hidden..
-                            for (Long student : stimulus.students) {
-                                mqtt.publish(student + "/input", JSONB.toJson(new Message.RemoveStimulus(lesson.id, tk.tp)).getBytes(), 1, false);
-                            }
-                        } catch (MqttException ex) {
-                            LOG.log(Level.SEVERE, null, ex);
-                        }
-                        break;
-                    case Root:
-                    case Trigger:
-                        break;
-                    default:
-                        throw new AssertionError(tk.template.type.name());
+            public void executeStimulus(Message.Stimulus s, long user_id) {
+                try {
+                    mqtt.publish(user_id + "/input", JSONB.toJson(s, Message.class).getBytes(), 1, false);
+                } catch (MqttException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
+                }
+            }
+
+            @Override
+            public void hideStimulus(Message.Stimulus s, long user_id) {
+                try {
+                    mqtt.publish(user_id + "/input", JSONB.toJson(new Message.RemoveStimulus(lesson.id, s.id)).getBytes(), 1, false);
+                } catch (MqttException ex) {
+                    LOG.log(Level.SEVERE, null, ex);
                 }
             }
 
@@ -470,29 +432,16 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void follow(User student, long lesson, Set<String> interests) {
-        Lesson l = lessons.get(lesson).getLesson();
-
-        // we add the new student to the lesson..
-        l.students.put(student.id, new Follow(student, lessons.get(lesson).getLesson(), interests));
-
-        // we add the student to the sent stimuli..
-        for (Message.Stimulus stimulus : l.stimuli) {
-            Message.Token tk = l.tokens.stream().filter(c_tk -> c_tk.id == stimulus.id).findAny().get();
-            LessonModel.StimulusTemplate stimulus_template = l.model.stimuli.get(tk.refEvent);
-            for (String interest : interests) {
-                if (stimulus_template.topics.contains(interest)) {
-                    stimulus.students.add(student.id);
-                    break;
-                }
-            }
-        }
+        LessonManager lm = lessons.get(lesson);
+        lm.follow(student, interests);
+        Lesson l = lm.getLesson();
 
         try {
             // we notify the teacher of a new user following a lesson..
-            mqtt.publish(lessons.get(lesson).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.FollowLesson(student, lesson, interests)).getBytes(), 1, false);
+            mqtt.publish(l.teacher.user.id + "/input", JSONB.toJson(new Message.FollowLesson(student, lesson, interests)).getBytes(), 1, false);
             // we notify other students that have a new classmate..
             User classmate = new User(student.id, student.email, student.first_name, student.last_name, student.online, null, null, null, null, null);
-            for (Long student_id : lessons.get(lesson).getLesson().students.keySet()) {
+            for (Long student_id : l.students.keySet()) {
                 if (student_id != student.id) {
                     mqtt.publish(student_id + "/input", JSONB.toJson(new Message.FollowLesson(classmate, lesson, interests)).getBytes(), 1, false);
                 }
@@ -504,16 +453,15 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void unfollow(long student, long lesson) {
-        Lesson l = lessons.get(lesson).getLesson();
-        l.students.remove(student);
-        for (Message.Stimulus stimulus : l.stimuli) {
-            stimulus.students.remove(student);
-        }
+        LessonManager lm = lessons.get(lesson);
+        lm.unfollow(student);
+        Lesson l = lm.getLesson();
+
         try {
             // we notify the teacher of a user unfollowing a lesson..
             mqtt.publish(l.teacher.user.id + "/input", JSONB.toJson(new Message.UnfollowLesson(student, lesson)).getBytes(), 1, false);
             // we notify other students that have lost a classmate..
-            for (Long student_id : lessons.get(lesson).getLesson().students.keySet()) {
+            for (Long student_id : l.students.keySet()) {
                 if (student_id != student) {
                     mqtt.publish(student_id + "/input", JSONB.toJson(new Message.UnfollowLesson(student, lesson)).getBytes(), 1, false);
                 }
@@ -525,10 +473,12 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void solveLesson(long lesson_id) {
-        lessons.get(lesson_id).solve();
+        LessonManager lm = lessons.get(lesson_id);
+        lm.solve();
+        Lesson l = lm.getLesson();
         try {
-            mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input/lesson-" + lesson_id + "/time", Long.toString(0).getBytes(), 1, true);
-            mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Stopped.toString().getBytes(), 1, true);
+            mqtt.publish(l.teacher.user.id + "/input/lesson-" + lesson_id + "/time", Long.toString(0).getBytes(), 1, true);
+            mqtt.publish(l.teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Stopped.toString().getBytes(), 1, true);
         } catch (MqttException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -537,9 +487,10 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void play(long lesson_id) {
-        lessons.get(lesson_id).getLesson().state = Lesson.LessonState.Running;
+        Lesson l = lessons.get(lesson_id).getLesson();
+        l.state = Lesson.LessonState.Running;
         try {
-            mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Running.toString().getBytes(), 1, true);
+            mqtt.publish(l.teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Running.toString().getBytes(), 1, true);
         } catch (MqttException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -547,9 +498,10 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void pause(long lesson_id) {
-        lessons.get(lesson_id).getLesson().state = Lesson.LessonState.Paused;
+        Lesson l = lessons.get(lesson_id).getLesson();
+        l.state = Lesson.LessonState.Paused;
         try {
-            mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Paused.toString().getBytes(), 1, true);
+            mqtt.publish(l.teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Paused.toString().getBytes(), 1, true);
         } catch (MqttException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -557,10 +509,12 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void stop(long lesson_id) {
-        lessons.get(lesson_id).getLesson().state = Lesson.LessonState.Stopped;
-        lessons.get(lesson_id).goTo(0);
+        LessonManager lm = lessons.get(lesson_id);
+        Lesson l = lm.getLesson();
+        l.state = Lesson.LessonState.Stopped;
+        lm.goTo(0);
         try {
-            mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Stopped.toString().getBytes(), 1, true);
+            mqtt.publish(l.teacher.user.id + "/input/lesson-" + lesson_id + "/state", Lesson.LessonState.Stopped.toString().getBytes(), 1, true);
         } catch (MqttException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }
@@ -578,11 +532,11 @@ public class ExPLoRAABean {
 
     @Lock(LockType.WRITE)
     public void removeLesson(long lesson_id) {
-        Lesson lesson = lessons.get(lesson_id).getLesson();
+        Lesson l = lessons.get(lesson_id).getLesson();
         // we notify all the students that a new lesson has been created..
-        for (Long student_id : lesson.students.keySet()) {
+        for (Long student_id : l.students.keySet()) {
             try {
-                mqtt.publish(student_id + "/input", JSONB.toJson(new Message.RemoveLesson(lesson.id)).getBytes(), 1, false);
+                mqtt.publish(student_id + "/input", JSONB.toJson(new Message.RemoveLesson(l.id)).getBytes(), 1, false);
             } catch (MqttException ex) {
                 LOG.log(Level.SEVERE, null, ex);
             }

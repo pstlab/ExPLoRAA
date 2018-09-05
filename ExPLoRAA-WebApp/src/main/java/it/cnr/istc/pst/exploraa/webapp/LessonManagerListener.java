@@ -16,6 +16,8 @@
  */
 package it.cnr.istc.pst.exploraa.webapp;
 
+import it.cnr.istc.pst.exploraa.api.Message;
+
 /**
  *
  * @author Riccardo De Benedictis
@@ -45,11 +47,20 @@ public interface LessonManagerListener {
     public void executeToken(final LessonManager.SolverToken tk);
 
     /**
-     * Notifies the listener that a token has to be hidden.
+     * Notifies the listener that a stimulus has to be executed.
      *
-     * @param tk the token that has to be hidden.
+     * @param s the stimulus that has to be executed.
+     * @param user_id the user who has to execute the stimulus.
      */
-    public void hideToken(final LessonManager.SolverToken tk);
+    public void executeStimulus(final Message.Stimulus s, final long user_id);
+
+    /**
+     * Notifies the listener that a stimulus has to be hidden.
+     *
+     * @param s the stimulus that has to be hidden.
+     * @param user_id the user who has to hide the stimulus.
+     */
+    public void hideStimulus(final Message.Stimulus s, final long user_id);
 
     /**
      * Notifies the listener that a token has to be removed.
