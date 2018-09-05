@@ -339,7 +339,7 @@ public class ExPLoRAABean {
             public void newToken(LessonManager.SolverToken tk) {
                 Double lb = manager.network.lb(tk.tp);
                 Double ub = manager.network.ub(tk.tp);
-                Message.Token token = new Message.Token(lesson.id, tk.tp, tk.cause != null ? tk.cause.tp : null, lb != Double.NEGATIVE_INFINITY ? lb.longValue() : null, ub != Double.POSITIVE_INFINITY ? ub.longValue() : null, (long) manager.network.value(tk.tp), tk.template.name, tk.question);
+                Message.Token token = new Message.Token(lesson.id, tk.tp, tk.cause != null ? tk.cause.tp : null, lb != Double.NEGATIVE_INFINITY ? lb.longValue() : null, ub != Double.POSITIVE_INFINITY ? ub.longValue() : null, (long) manager.network.value(tk.tp), tk.template.name);
                 lesson.tokens.add(token);
                 try {
                     mqtt.publish(lesson.teacher.user.id + "/input", JSONB.toJson(token).getBytes(), 1, false);
@@ -429,10 +429,6 @@ public class ExPLoRAABean {
                         Message.Stimulus stimulus = lesson.stimuli.stream().filter(e -> e.id == tk.tp).findAny().get();
                         // we remove the stimulus from the lesson..
                         lesson.stimuli.remove(stimulus);
-                        if (tk.question != null) {
-                            // the token represents the answer of a question: we set the answer of the question event at null..
-                            ((Message.Stimulus.QuestionStimulus) lesson.stimuli.stream().filter(e -> e.id == tk.question).findAny().get()).answer = null;
-                        }
                         try {
                             // we notify the target students that a stimulus has to be hidden..
                             for (Long student : stimulus.students) {

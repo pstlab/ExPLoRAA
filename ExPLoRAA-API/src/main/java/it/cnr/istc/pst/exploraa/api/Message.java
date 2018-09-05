@@ -142,12 +142,11 @@ public abstract class Message {
         public Long max;
         public long time;
         public String refEvent;
-        public Integer question;
 
         public Token() {
         }
 
-        public Token(long lesson_id, int id, Integer cause, Long min, Long max, long time, String refEvent, Integer question) {
+        public Token(long lesson_id, int id, Integer cause, Long min, Long max, long time, String refEvent) {
             super(MessageType.Token);
             this.lesson_id = lesson_id;
             this.id = id;
@@ -156,7 +155,6 @@ public abstract class Message {
             this.max = max;
             this.time = time;
             this.refEvent = refEvent;
-            this.question = question;
         }
     }
 
@@ -342,9 +340,6 @@ public abstract class Message {
                     if (((Token) obj).refEvent != null) {
                         c_object.add("refEvent", ((Token) obj).refEvent);
                     }
-                    if (((Token) obj).question != null) {
-                        c_object.add("question", ((Token) obj).question);
-                    }
                     break;
                 case TokenUpdate:
                     c_object.add("lesson_id", ((TokenUpdate) obj).lesson_id);
@@ -429,7 +424,7 @@ public abstract class Message {
                 case RemoveLesson:
                     return new RemoveLesson(obj.getInt("lesson"));
                 case Token:
-                    return new Token(obj.getInt("lesson_id"), obj.getInt("id"), obj.containsKey("cause") ? obj.getInt("cause") : null, obj.containsKey("min") ? new Long(obj.getInt("min")) : null, obj.containsKey("max") ? new Long(obj.getInt("max")) : null, obj.getInt("time"), obj.containsKey("refEvent") ? obj.getString("refEvent") : null, obj.containsKey("question") ? obj.getInt("question") : null);
+                    return new Token(obj.getInt("lesson_id"), obj.getInt("id"), obj.containsKey("cause") ? obj.getInt("cause") : null, obj.containsKey("min") ? new Long(obj.getInt("min")) : null, obj.containsKey("max") ? new Long(obj.getInt("max")) : null, obj.getInt("time"), obj.containsKey("refEvent") ? obj.getString("refEvent") : null);
                 case TokenUpdate:
                     return new TokenUpdate(obj.getInt("lesson_id"), obj.getInt("id"), obj.containsKey("min") ? new Long(obj.getInt("min")) : null, obj.containsKey("max") ? new Long(obj.getInt("max")) : null, obj.getInt("time"));
                 case RemoveToken:

@@ -51,10 +51,7 @@ public class LessonManager implements TemporalListener {
      * For each time point, the corresponding token.
      */
     private final List<SolverToken> tokens = new ArrayList<>();
-    /**
-     * A collection of triggerable tokens. These tokens are expanded whenever
-     * their triggering condition becomes satisfied.
-     */
+    private final Map<SolverToken, Map<Long, Integer>> answerable_tokens = new IdentityHashMap<>();
     private final Map<SolverToken, Set<Long>> triggerable_tokens = new IdentityHashMap<>();
     /**
      * The current context, if any..
@@ -100,7 +97,7 @@ public class LessonManager implements TemporalListener {
         Map<String, SolverToken> c_tks = new HashMap<>();
         // we create the tokens..
         for (String id : lesson.model.ids) {
-            SolverToken tk = new SolverToken(null, network.newTimePoint(), event_templates.get(id), null);
+            SolverToken tk = new SolverToken(null, network.newTimePoint(), event_templates.get(id));
             tokens.add(tk);
             listeners.forEach(l -> l.newToken(tk));
             c_tks.put(id, tk);
@@ -131,7 +128,7 @@ public class LessonManager implements TemporalListener {
         if (tk.template.ids != null) {
             // we create the (sub) tokens..
             for (String id : tk.template.ids) {
-                SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id), null);
+                SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id));
                 tokens.add(c_tk);
                 listeners.forEach(l -> l.newToken(c_tk));
                 c_tks.put(id, c_tk);
@@ -225,9 +222,21 @@ public class LessonManager implements TemporalListener {
             long next_pulse = lesson_timeline_pulses.get(idx);
             while (next_pulse <= t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx)) {
-                    if (tk.template.type == LessonModel.StimulusTemplate.StimulusTemplateType.Trigger) {
-                        // we make the token 'triggerable'..
-                        triggerable_tokens.put(tk, new HashSet<>());
+                    switch (tk.template.type) {
+                        case Root:
+                        case Text:
+                        case URL:
+                            break;
+                        case Question:
+                            // we make the token 'answerable'..
+                            answerable_tokens.put(tk, new HashMap<>());
+                            break;
+                        case Trigger:
+                            // we make the token 'triggerable'..
+                            triggerable_tokens.put(tk, new HashSet<>());
+                            break;
+                        default:
+                            throw new AssertionError(tk.template.type.name());
                     }
                     // this token can be executed..
                     listeners.forEach(l -> l.executeToken(tk));
@@ -248,9 +257,21 @@ public class LessonManager implements TemporalListener {
             Collection<SolverToken> tr_consequences = new ArrayList<>();
             while (last_pulse > t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx - 1)) {
-                    if (tk.template.type == LessonModel.StimulusTemplate.StimulusTemplateType.Trigger) {
-                        // we remove the token from the triggerable ones..
-                        triggerable_tokens.remove(tk);
+                    switch (tk.template.type) {
+                        case Root:
+                        case Text:
+                        case URL:
+                            break;
+                        case Question:
+                            // we remove the token from the 'answerable' ones..
+                            answerable_tokens.put(tk, new HashMap<>());
+                            break;
+                        case Trigger:
+                            // we remove the token from the 'triggerable' ones..
+                            triggerable_tokens.put(tk, new HashSet<>());
+                            break;
+                        default:
+                            throw new AssertionError(tk.template.type.name());
                     }
                     TriggerContext ctx = triggered_contexts.remove(tk);
                     if (ctx != null) {
@@ -287,13 +308,15 @@ public class LessonManager implements TemporalListener {
 
     public void answerQuestion(long user_id, final int question_id, final int answer) {
         SolverToken q_tk = tokens.get(question_id - 2);
+        answerable_tokens.get(q_tk).put(user_id, answer);
+
         LessonModel.StimulusTemplate.QuestionStimulusTemplate.Answer answr = ((LessonModel.StimulusTemplate.QuestionStimulusTemplate) q_tk.template).answers.get(answer);
 
         TriggerContext ctx = new TriggerContext(q_tk, user_id);
-        this.triggered_context = ctx;
+        triggered_context = ctx;
 
         // this token represents the effects of the answer on the lesson..
-        SolverToken c_tk = new SolverToken(null, network.newTimePoint(), event_templates.get(answr.event), question_id);
+        SolverToken c_tk = new SolverToken(null, network.newTimePoint(), event_templates.get(answr.event));
         triggered_contexts.put(c_tk, ctx);
         tokens.add(c_tk);
         listeners.forEach(l -> l.newToken(c_tk));
@@ -302,7 +325,7 @@ public class LessonManager implements TemporalListener {
         network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
         build();
 
-        this.triggered_context = null;
+        triggered_context = null;
 
         // we extract the lesson timeline..
         extract_timeline();
@@ -312,7 +335,7 @@ public class LessonManager implements TemporalListener {
         triggerable_tokens.get(tk).add(user_id);
 
         TriggerContext ctx = new TriggerContext(tk, user_id);
-        this.triggered_context = ctx;
+        triggered_context = ctx;
 
         // we expand the token..
         Map<String, SolverToken> c_tks = new HashMap<>();
@@ -320,7 +343,7 @@ public class LessonManager implements TemporalListener {
         if (tk.template.ids != null) {
             // we create the (sub) tokens..
             for (String id : tk.template.ids) {
-                SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id), null);
+                SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id));
                 triggered_contexts.put(c_tk, ctx);
                 network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
                 tokens.add(c_tk);
@@ -332,7 +355,7 @@ public class LessonManager implements TemporalListener {
 
         build();
 
-        this.triggered_context = null;
+        triggered_context = null;
 
         // we extract the lesson timeline..
         extract_timeline();
@@ -403,18 +426,12 @@ public class LessonManager implements TemporalListener {
          * This is the template of the token.
          */
         public final LessonModel.StimulusTemplate template;
-        /**
-         * An {@code Integer} representing the id of the question, if any, or
-         * {@code null} if the token does not represent an answer to a question.
-         */
-        public final Integer question;
         boolean enabled = true;
 
-        SolverToken(final SolverToken cause, final int tp, final LessonModel.StimulusTemplate template, Integer question) {
+        SolverToken(final SolverToken cause, final int tp, final LessonModel.StimulusTemplate template) {
             this.cause = cause;
             this.tp = tp;
             this.template = template;
-            this.question = question;
         }
 
         public boolean isEnabled() {
