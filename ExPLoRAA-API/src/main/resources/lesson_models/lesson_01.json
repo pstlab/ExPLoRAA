@@ -75,10 +75,10 @@
             "content": "This is a link about religion which is received if you do not believe in god",
             "url": "https://www.uaar.it/"
         }, {
-            "type": "Root",
+            "type": "Trigger",
             "name": "tr_st_0",
             "ids": ["st_2"],
-            "trigger_condition": {
+            "condition": {
                 "type": "And",
                 "conditions": [{
                         "type": "Numeric",
