@@ -324,7 +324,24 @@ public class LessonController implements Initializable {
                     setStyle("");
                 } else {
                     TokenRow row = getTableView().getItems().get(getIndex());
-                    setText(l_ctx.get().getLesson().model.stimuli.get(row.getName()).topics.stream().collect(Collectors.joining(", ")));
+                    LessonModel.StimulusTemplate st = l_ctx.get().getLesson().model.stimuli.get(row.getName());
+                    switch (st.type) {
+                        case Text:
+                            setText(((LessonModel.StimulusTemplate.TextStimulusTemplate) st).topics.stream().collect(Collectors.joining(", ")));
+                            break;
+                        case URL:
+                            setText(((LessonModel.StimulusTemplate.URLStimulusTemplate) st).topics.stream().collect(Collectors.joining(", ")));
+                            break;
+                        case Question:
+                            setText(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) st).topics.stream().collect(Collectors.joining(", ")));
+                            break;
+                        case Root:
+                        case Trigger:
+                            setStyle("");
+                            break;
+                        default:
+                            throw new AssertionError(st.type.name());
+                    }
 
                     styleProperty().bind(Bindings.createStringBinding(() -> {
                         if (row.getExecuted()) {

@@ -232,7 +232,22 @@ public class ExPLoRAAResource implements ExPLoRAA {
 
             Set<String> topics = new HashSet<>();
             for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
-                topics.addAll(template.topics);
+                switch (template.type) {
+                    case Text:
+                        topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        break;
+                    case URL:
+                        topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        break;
+                    case Question:
+                        topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        break;
+                    case Root:
+                    case Trigger:
+                        break;
+                    default:
+                        throw new AssertionError(template.type.name());
+                }
             }
 
             Lesson l = new Lesson(lesson_entity.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher_entity.getEmail(), teacher_entity.getFirstName(), teacher_entity.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
@@ -277,7 +292,22 @@ public class ExPLoRAAResource implements ExPLoRAA {
             LessonModel c_model = ExPLoRAABean.JSONB.fromJson(model_entity.getModel(), LessonModel.class);
             Set<String> topics = new HashSet<>();
             for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
-                topics.addAll(template.topics);
+                switch (template.type) {
+                    case Text:
+                        topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        break;
+                    case URL:
+                        topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        break;
+                    case Question:
+                        topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        break;
+                    case Root:
+                    case Trigger:
+                        break;
+                    default:
+                        throw new AssertionError(template.type.name());
+                }
             }
 
             Lesson l = new Lesson(lesson_entity.getId(), name, c_model, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(teacher_id, teacher_entity.getEmail(), teacher_entity.getFirstName(), teacher_entity.getLastName(), ctx.isOnline(teacher_id), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);

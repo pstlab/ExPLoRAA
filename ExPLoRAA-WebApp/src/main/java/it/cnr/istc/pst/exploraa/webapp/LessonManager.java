@@ -420,11 +420,36 @@ public class LessonManager implements TemporalListener {
     void follow(User student, Set<String> interests) {
         lesson.students.put(student.id, new Follow(student, lesson, interests));
         for (Map.Entry<SolverToken, DispatchEvent> entry : dispatched_tokens.entrySet()) {
-            for (String interest : interests) {
-                if (entry.getKey().template.topics.contains(interest)) {
-                    entry.getValue().students.add(student.id);
+            switch (entry.getKey().template.type) {
+                case Text:
+                    for (String interest : interests) {
+                        if (((LessonModel.StimulusTemplate.TextStimulusTemplate) entry.getKey().template).topics.contains(interest)) {
+                            entry.getValue().students.add(student.id);
+                            break;
+                        }
+                    }
                     break;
-                }
+                case URL:
+                    for (String interest : interests) {
+                        if (((LessonModel.StimulusTemplate.URLStimulusTemplate) entry.getKey().template).topics.contains(interest)) {
+                            entry.getValue().students.add(student.id);
+                            break;
+                        }
+                    }
+                    break;
+                case Question:
+                    for (String interest : interests) {
+                        if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) entry.getKey().template).topics.contains(interest)) {
+                            entry.getValue().students.add(student.id);
+                            break;
+                        }
+                    }
+                    break;
+                case Root:
+                case Trigger:
+                    break;
+                default:
+                    throw new AssertionError(entry.getKey().template.type.name());
             }
         }
     }

@@ -207,7 +207,22 @@ public class ExPLoRAABean {
 
             Set<String> topics = new HashSet<>();
             for (LessonModel.StimulusTemplate template : lm.stimuli.values()) {
-                topics.addAll(template.topics);
+                switch (template.type) {
+                    case Text:
+                        topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        break;
+                    case URL:
+                        topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        break;
+                    case Question:
+                        topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        break;
+                    case Root:
+                    case Trigger:
+                        break;
+                    default:
+                        throw new AssertionError(template.type.name());
+                }
             }
 
             Lesson l = new Lesson(l_entity.getId(), l_entity.getName(), lm, topics, new ArrayList<>(), new ArrayList<>(), new Teach(new User(l_entity.getTeachedBy().getTeacher().getId(), l_entity.getTeachedBy().getTeacher().getEmail(), l_entity.getTeachedBy().getTeacher().getFirstName(), l_entity.getTeachedBy().getTeacher().getLastName(), online.get(l_entity.getTeachedBy().getTeacher().getId()), null, null, null, null, null), null), new HashMap<>(), Lesson.LessonState.Stopped, 0);
@@ -367,8 +382,29 @@ public class ExPLoRAABean {
                     Set<Long> students = new HashSet<>();
                     for (Follow follow : lesson.students.values()) {
                         for (String interest : follow.interests) {
-                            if (tk.template.topics.contains(interest) && (tk.template.execution_condition == null || isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
-                                students.add(follow.user.id);
+                            if (tk.template.execution_condition == null || isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id))) {
+                                switch (tk.template.type) {
+                                    case Root:
+                                    case Trigger:
+                                        break;
+                                    case Text:
+                                        if (((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).topics.contains(interest)) {
+                                            students.add(follow.user.id);
+                                        }
+                                        break;
+                                    case URL:
+                                        if (((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).topics.contains(interest)) {
+                                            students.add(follow.user.id);
+                                        }
+                                        break;
+                                    case Question:
+                                        if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).topics.contains(interest)) {
+                                            students.add(follow.user.id);
+                                        }
+                                        break;
+                                    default:
+                                        throw new AssertionError(tk.template.type.name());
+                                }
                             }
                         }
                     }
