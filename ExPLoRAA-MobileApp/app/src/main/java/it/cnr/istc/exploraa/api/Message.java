@@ -137,12 +137,11 @@ public abstract class Message {
         public Long max;
         public long time;
         public String refEvent;
-        public Integer question;
 
         public Token() {
         }
 
-        public Token(long lesson_id, int id, Integer cause, Long min, Long max, long time, String refEvent, Integer question) {
+        public Token(long lesson_id, int id, Integer cause, Long min, Long max, long time, String refEvent) {
             super(MessageType.Token);
             this.lesson_id = lesson_id;
             this.id = id;
@@ -151,7 +150,6 @@ public abstract class Message {
             this.max = max;
             this.time = time;
             this.refEvent = refEvent;
-            this.question = question;
         }
     }
 
@@ -338,9 +336,6 @@ public abstract class Message {
                     if (((Token) value).refEvent != null) {
                         out.name("refEvent").value(((Token) value).refEvent);
                     }
-                    if (((Token) value).question != null) {
-                        out.name("question").value(((Token) value).question);
-                    }
                     break;
                 case TokenUpdate:
                     out.name("lesson_id").value(((TokenUpdate) value).lesson_id);
@@ -481,9 +476,6 @@ public abstract class Message {
                                 break;
                             case "refEvent":
                                 ((Token) m).refEvent = in.nextString();
-                                break;
-                            case "question":
-                                ((Token) m).question = in.nextInt();
                                 break;
                         }
                     break;
