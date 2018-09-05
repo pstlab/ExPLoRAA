@@ -65,7 +65,6 @@ public class LessonModel {
         public StimulusTemplateType type;
         public String name;
         public Set<String> topics;
-        public Condition trigger_condition;
         public Condition execution_condition;
         public Set<String> ids;
         public List<Relation> relations;
@@ -73,18 +72,21 @@ public class LessonModel {
         public StimulusTemplate() {
         }
 
-        public StimulusTemplate(StimulusTemplateType type, String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations) {
+        public StimulusTemplate(StimulusTemplateType type, String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations) {
             this.type = type;
             this.name = name;
             this.topics = topics;
-            this.trigger_condition = trigger_condition;
             this.execution_condition = execution_condition;
             this.ids = ids;
             this.relations = relations;
         }
 
         public enum StimulusTemplateType {
-            Root, Text, URL, Question
+            Root, Text, URL, Question, Trigger
+        }
+
+        public enum EffectScope {
+            Self, Group
         }
 
         public static class URLStimulusTemplate extends StimulusTemplate {
@@ -95,8 +97,8 @@ public class LessonModel {
             public URLStimulusTemplate() {
             }
 
-            public URLStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String content, String url) {
-                super(StimulusTemplateType.URL, name, topics, trigger_condition, execution_condition, ids, relations);
+            public URLStimulusTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, String content, String url) {
+                super(StimulusTemplateType.URL, name, topics, execution_condition, ids, relations);
                 this.content = content;
                 this.url = url;
             }
@@ -109,8 +111,8 @@ public class LessonModel {
             public TextStimulusTemplate() {
             }
 
-            public TextStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String content) {
-                super(StimulusTemplateType.Text, name, topics, trigger_condition, execution_condition, ids, relations);
+            public TextStimulusTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, String content) {
+                super(StimulusTemplateType.Text, name, topics, execution_condition, ids, relations);
                 this.content = content;
             }
         }
@@ -123,8 +125,8 @@ public class LessonModel {
             public QuestionStimulusTemplate() {
             }
 
-            public QuestionStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String question, List<Answer> answers) {
-                super(StimulusTemplateType.Question, name, topics, trigger_condition, execution_condition, ids, relations);
+            public QuestionStimulusTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, String question, List<Answer> answers) {
+                super(StimulusTemplateType.Question, name, topics, execution_condition, ids, relations);
                 this.question = question;
                 this.answers = answers;
             }
@@ -133,14 +135,31 @@ public class LessonModel {
 
                 public String answer;
                 public String event;
+                public EffectScope scope;
 
                 public Answer() {
                 }
 
-                public Answer(String answer, String event) {
+                public Answer(String answer, String event, EffectScope scope) {
                     this.answer = answer;
                     this.event = event;
+                    this.scope = scope;
                 }
+            }
+        }
+
+        public static class TriggerTemplate extends StimulusTemplate {
+
+            public Condition condition;
+            public EffectScope scope;
+
+            public TriggerTemplate() {
+            }
+
+            public TriggerTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, Condition condition, EffectScope scope) {
+                super(StimulusTemplateType.Trigger, name, topics, execution_condition, ids, relations);
+                this.condition = condition;
+                this.scope = scope;
             }
         }
     }
@@ -409,13 +428,12 @@ public class LessonModel {
             JsonObjectBuilder stimulus_builder = Json.createObjectBuilder();
             stimulus_builder.add("type", obj.type.name());
             stimulus_builder.add("name", obj.name);
-            JsonArrayBuilder topics_builder = Json.createArrayBuilder();
-            for (String topic : obj.topics) {
-                topics_builder.add(topic);
-            }
-            stimulus_builder.add("topics", topics_builder);
-            if (obj.trigger_condition != null) {
-                stimulus_builder.add("trigger_condition", Condition.ADAPTER.adaptToJson(obj.trigger_condition));
+            if (obj.topics != null) {
+                JsonArrayBuilder topics_builder = Json.createArrayBuilder();
+                for (String topic : obj.topics) {
+                    topics_builder.add(topic);
+                }
+                stimulus_builder.add("topics", topics_builder);
             }
             if (obj.execution_condition != null) {
                 stimulus_builder.add("execution_condition", Condition.ADAPTER.adaptToJson(obj.execution_condition));
@@ -452,6 +470,12 @@ public class LessonModel {
                     }
                     stimulus_builder.add("answers", ans_builder);
                     break;
+                case Trigger:
+                    stimulus_builder.add("trigger_condition", Condition.ADAPTER.adaptToJson(((StimulusTemplate.TriggerTemplate) obj).condition));
+                    if (((StimulusTemplate.TriggerTemplate) obj).scope != null) {
+                        stimulus_builder.add("scope", ((StimulusTemplate.TriggerTemplate) obj).scope.name());
+                    }
+                    break;
                 default:
                     throw new AssertionError(obj.type.name());
             }
@@ -461,14 +485,16 @@ public class LessonModel {
         @Override
         public StimulusTemplate adaptFromJson(JsonObject obj) throws Exception {
             String name = obj.getString("name");
-            Set<String> topics = new HashSet<>(obj.getJsonArray("topics").size());
-            JsonArray topics_array = obj.getJsonArray("topics");
+            Set<String> topics = null;
+            if (obj.containsKey("topics")) {
+                topics = new HashSet<>(obj.getJsonArray("topics").size());
+                JsonArray topics_array = obj.getJsonArray("topics");
+                for (JsonValue topic : topics_array) {
+                    topics.add(((JsonString) topic).getString());
+                }
+            }
             Set<String> ids = null;
             List<Relation> relations = null;
-            for (JsonValue topic : topics_array) {
-                topics.add(((JsonString) topic).getString());
-            }
-            Condition trigger_condition = obj.containsKey("trigger_condition") && !obj.isNull("trigger_condition") ? Condition.ADAPTER.adaptFromJson(obj.getJsonObject("trigger_condition")) : null;
             Condition execution_condition = obj.containsKey("execution_condition") && !obj.isNull("execution_condition") ? Condition.ADAPTER.adaptFromJson(obj.getJsonObject("execution_condition")) : null;
             if (obj.containsKey("ids")) {
                 ids = new HashSet<>(obj.getJsonArray("ids").size());
@@ -484,19 +510,22 @@ public class LessonModel {
             }
             switch (StimulusTemplate.StimulusTemplateType.valueOf(obj.getString("type"))) {
                 case Root:
-                    return new StimulusTemplate(StimulusTemplate.StimulusTemplateType.Root, name, topics, trigger_condition, execution_condition, ids, relations);
+                    return new StimulusTemplate(StimulusTemplate.StimulusTemplateType.Root, name, topics, execution_condition, ids, relations);
                 case Text:
-                    return new StimulusTemplate.TextStimulusTemplate(name, topics, trigger_condition, execution_condition, ids, relations, obj.getString("content"));
+                    return new StimulusTemplate.TextStimulusTemplate(name, topics, execution_condition, ids, relations, obj.getString("content"));
                 case URL:
-                    return new StimulusTemplate.URLStimulusTemplate(name, topics, trigger_condition, execution_condition, ids, relations, obj.getString("content"), obj.getString("url"));
+                    return new StimulusTemplate.URLStimulusTemplate(name, topics, execution_condition, ids, relations, obj.getString("content"), obj.getString("url"));
                 case Question:
                     JsonArray answers_array = obj.getJsonArray("answers");
                     List<StimulusTemplate.QuestionStimulusTemplate.Answer> answers = new ArrayList<>(answers_array.size());
                     for (JsonValue ans_value : answers_array) {
                         JsonObject ans_onject = ans_value.asJsonObject();
-                        answers.add(new StimulusTemplate.QuestionStimulusTemplate.Answer(ans_onject.getString("answer"), ans_onject.getString("event")));
+                        answers.add(new StimulusTemplate.QuestionStimulusTemplate.Answer(ans_onject.getString("answer"), ans_onject.getString("event"), ans_onject.containsKey("scope") ? StimulusTemplate.EffectScope.valueOf(ans_onject.getString("scope")) : null));
                     }
-                    return new StimulusTemplate.QuestionStimulusTemplate(name, topics, trigger_condition, execution_condition, ids, relations, obj.getString("question"), answers);
+                    return new StimulusTemplate.QuestionStimulusTemplate(name, topics, execution_condition, ids, relations, obj.getString("question"), answers);
+                case Trigger:
+                    Condition trigger_condition = obj.containsKey("condition") && !obj.isNull("condition") ? Condition.ADAPTER.adaptFromJson(obj.getJsonObject("condition")) : null;
+                    return new StimulusTemplate.TriggerTemplate(name, topics, execution_condition, ids, relations, trigger_condition, obj.containsKey("scope") ? StimulusTemplate.EffectScope.valueOf(obj.getString("scope")) : null);
                 default:
                     throw new AssertionError(StimulusTemplate.StimulusTemplateType.valueOf(obj.getString("type")).name());
             }

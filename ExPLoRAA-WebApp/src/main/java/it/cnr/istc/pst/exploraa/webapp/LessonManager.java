@@ -160,7 +160,7 @@ public class LessonManager implements TemporalListener {
     private void build() {
         while (!prop_q.isEmpty()) {
             SolverToken tk = prop_q.pop();
-            if (tk.template.trigger_condition == null) {
+            if (tk.template.type != LessonModel.StimulusTemplate.StimulusTemplateType.Trigger) {
                 expand_token(tk);
             }
         }
@@ -225,7 +225,7 @@ public class LessonManager implements TemporalListener {
             long next_pulse = lesson_timeline_pulses.get(idx);
             while (next_pulse <= t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx)) {
-                    if (tk.template.trigger_condition != null) {
+                    if (tk.template.type == LessonModel.StimulusTemplate.StimulusTemplateType.Trigger) {
                         // we make the token 'triggerable'..
                         triggerable_tokens.put(tk, new HashSet<>());
                     }
@@ -248,7 +248,7 @@ public class LessonManager implements TemporalListener {
             Collection<SolverToken> tr_consequences = new ArrayList<>();
             while (last_pulse > t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx - 1)) {
-                    if (tk.template.trigger_condition != null) {
+                    if (tk.template.type == LessonModel.StimulusTemplate.StimulusTemplateType.Trigger) {
                         // we remove the token from the triggerable ones..
                         triggerable_tokens.remove(tk);
                     }
@@ -308,7 +308,7 @@ public class LessonManager implements TemporalListener {
         extract_timeline();
     }
 
-    public void trigger(long user_id, SolverToken tk) {
+    public void trigger(SolverToken tk, long user_id) {
         triggerable_tokens.get(tk).add(user_id);
 
         TriggerContext ctx = new TriggerContext(tk, user_id);
@@ -327,19 +327,6 @@ public class LessonManager implements TemporalListener {
                 listeners.forEach(l -> l.newToken(c_tk));
                 c_tks.put(id, c_tk);
                 prop_q.push(c_tk);
-            }
-        }
-
-        if (tk.template.relations != null) {
-            // we enforce the temporal relations..
-            for (LessonModel.Relation rel : tk.template.relations) {
-                double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
-                double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
-                if (rel.from.equals(THIS)) {
-                    network.addConstraint(tk.tp, c_tks.get(rel.to).tp, lb, ub);
-                } else {
-                    network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, lb, ub);
-                }
             }
         }
 
