@@ -13,7 +13,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.ServiceListener {
 
     private static final String TAG = "MainActivity";
     private ViewPager pager;
@@ -63,6 +63,15 @@ public class MainActivity extends AppCompatActivity {
 
         // we clear all the notifications..
         NotificationManagerCompat.from(this).cancelAll();
+
+        ExPLoRAAContext.getInstance().addServiceListener(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        ExPLoRAAContext.getInstance().removeServiceListener(this);
     }
 
     @Override
@@ -93,5 +102,15 @@ public class MainActivity extends AppCompatActivity {
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void serviceConnected(ExPLoRAAService service) {
+    }
+
+    @Override
+    public void serviceDisonnected() {
+        startActivity(new Intent(this, NavigatorActivity.class));
+        finish();
     }
 }

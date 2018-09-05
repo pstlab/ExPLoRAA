@@ -53,11 +53,27 @@ public abstract class Message {
     public static class NewParameter extends Message {
 
         public Parameter parameter;
+
+        public NewParameter() {
+        }
+
+        public NewParameter(Parameter parameter) {
+            message_type = MessageType.NewParameter;
+            this.parameter = parameter;
+        }
     }
 
     public static class RemoveParameter extends Message {
 
         public String parameter;
+
+        public RemoveParameter() {
+        }
+
+        public RemoveParameter(String parameter) {
+            message_type = MessageType.RemoveParameter;
+            this.parameter = parameter;
+        }
     }
 
     public static class FollowLesson extends Message {

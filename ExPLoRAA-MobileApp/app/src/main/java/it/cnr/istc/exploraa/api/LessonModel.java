@@ -532,9 +532,11 @@ public class LessonModel {
                     out.name("answers");
                     out.beginArray();
                     for (StimulusTemplate.QuestionStimulusTemplate.Answer answer : ((StimulusTemplate.QuestionStimulusTemplate) value).answers) {
+                        out.beginObject();
                         out.name("answer").value(answer.answer).name("event").value(answer.event);
                         if (answer.scope != null)
                             out.name("scope").value(answer.scope.name());
+                        out.endObject();
                     }
                     out.endArray();
                     break;
@@ -643,6 +645,10 @@ public class LessonModel {
                             case Question:
                                 st = new StimulusTemplate.QuestionStimulusTemplate();
                                 st.type = StimulusTemplate.StimulusTemplateType.Question;
+                                break;
+                            case Trigger:
+                                st = new StimulusTemplate.TriggerTemplate();
+                                st.type = StimulusTemplate.StimulusTemplateType.Trigger;
                                 break;
                         }
                         break;

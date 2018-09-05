@@ -321,6 +321,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
                         public void connectionLost(Throwable cause) {
                             Log.e(TAG, "Connection lost..", cause);
                             logout();
+                            stopSelf();
                         }
 
                         @Override

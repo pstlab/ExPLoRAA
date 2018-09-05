@@ -42,7 +42,11 @@ public class NavigatorActivity extends AppCompatActivity {
         public void onReceive(Context context, Intent intent) {
             if (intent.getBooleanExtra("successful", false))
                 startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
-            else startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+            else {
+                if (ExPLoRAAContext.getInstance().isServiceRunning())
+                    ExPLoRAAContext.getInstance().stopService(NavigatorActivity.this);
+                startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
+            }
             finish();
         }
     };
