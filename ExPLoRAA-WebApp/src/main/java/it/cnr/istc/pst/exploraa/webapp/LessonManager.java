@@ -289,6 +289,7 @@ public class LessonManager implements TemporalListener {
 
         // this token represents the effects of the answer on the lesson..
         SolverToken c_tk = new SolverToken(null, network.newTimePoint(), event_templates.get(answr.event), question_id);
+        triggered_contexts.put(c_tk, ctx);
         tokens.add(c_tk);
         listeners.forEach(l -> l.newToken(c_tk));
         prop_q.push(c_tk);
@@ -296,7 +297,6 @@ public class LessonManager implements TemporalListener {
         network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
         build();
 
-        triggered_contexts.put(c_tk, ctx);
         this.triggered_context = null;
 
         // we extract the lesson timeline..
@@ -309,16 +309,37 @@ public class LessonManager implements TemporalListener {
         TriggerContext ctx = new TriggerContext(tk, user_id);
         this.triggered_context = ctx;
 
-        // this token represents the effects of the triggered token on the lesson..
-        SolverToken c_tk = new SolverToken(null, network.newTimePoint(), tk.template, null);
-        tokens.add(c_tk);
-        listeners.forEach(l -> l.newToken(c_tk));
-        prop_q.push(c_tk);
+        // we expand the token..
+        Map<String, SolverToken> c_tks = new HashMap<>();
+        c_tks.put(THIS, tk);
+        if (tk.template.ids != null) {
+            // we create the (sub) tokens..
+            for (String id : tk.template.ids) {
+                SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id), null);
+                triggered_contexts.put(c_tk, ctx);
+                network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
+                tokens.add(c_tk);
+                listeners.forEach(l -> l.newToken(c_tk));
+                c_tks.put(id, c_tk);
+                prop_q.push(c_tk);
+            }
+        }
 
-        network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
+        if (tk.template.relations != null) {
+            // we enforce the temporal relations..
+            for (LessonModel.Relation rel : tk.template.relations) {
+                double lb = rel.lb != null ? TimeUnit.MILLISECONDS.convert(rel.lb, rel.unit) : Double.NEGATIVE_INFINITY;
+                double ub = rel.ub != null ? TimeUnit.MILLISECONDS.convert(rel.ub, rel.unit) : Double.POSITIVE_INFINITY;
+                if (rel.from.equals(THIS)) {
+                    network.addConstraint(tk.tp, c_tks.get(rel.to).tp, lb, ub);
+                } else {
+                    network.addConstraint(c_tks.get(rel.from).tp, c_tks.get(rel.to).tp, lb, ub);
+                }
+            }
+        }
+
         build();
 
-        triggered_contexts.put(c_tk, ctx);
         this.triggered_context = null;
 
         // we extract the lesson timeline..
