@@ -1,0 +1,150 @@
+{
+    "name": "Test lesson",
+    "stimuli": [{
+            "type": "Text",
+            "name": "st_0",
+            "topics": ["Art", "History"],
+            "content": "This is a first stimulus about art and history."
+        }, {
+            "type": "Text",
+            "name": "st_1",
+            "topics": ["Religion"],
+            "content": "This is a first stimulus about religion."
+        }, {
+            "type": "Text",
+            "name": "st_2",
+            "topics": ["Art", "History"],
+            "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum."
+        }, {
+            "type": "Text",
+            "name": "st_3",
+            "topics": ["Religion"],
+            "execution_condition": {
+                "type": "And",
+                "conditions": [{
+                        "type": "Numeric",
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890248"
+                    }, {
+                        "type": "Numeric",
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890254"
+                    }, {
+                        "type": "Numeric",
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492370"
+                    }, {
+                        "type": "Numeric",
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492376"
+                    }]
+            },
+            "content": "This is a stimulus about religion which is executed only if its execution condition is satisfied."
+        }, {
+            "type": "URL",
+            "name": "st_4",
+            "topics": ["Art"],
+            "content": "URL",
+            "url": "https://it.wikipedia.org/wiki/Arte"
+        }, {
+            "type": "Question",
+            "name": "st_5",
+            "topics": ["Religion"],
+            "question": "This is a question about religion. Do you believe in god?",
+            "answers": [{
+                    "answer": "Yes",
+                    "event": "st_5_yes"
+                }, {
+                    "answer": "No",
+                    "event": "st_5_no"
+                }]
+        }, {
+            "type": "URL",
+            "name": "st_5_yes",
+            "topics": ["Religion"],
+            "content": "This is a link about religion which is received if you believe in god",
+            "url": "https://it.wikipedia.org/wiki/Religione"
+        }, {
+            "type": "URL",
+            "name": "st_5_no",
+            "topics": ["Religion"],
+            "content": "This is a link about religion which is received if you do not believe in god",
+            "url": "https://www.uaar.it/"
+        }, {
+            "type": "Root",
+            "name": "tr_st_0",
+            "ids": ["st_2"],
+            "trigger_condition": {
+                "type": "And",
+                "conditions": [{
+                        "type": "Numeric",
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890248"
+                    }, {
+                        "type": "Numeric",
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.latitude",
+                        "value": "41.890254"
+                    }, {
+                        "type": "Numeric",
+                        "numeric_condition_type": "GEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492370"
+                    }, {
+                        "type": "Numeric",
+                        "numeric_condition_type": "LEq",
+                        "variable": "GPS.longitude",
+                        "value": "12.492376"
+                    }]
+            }
+        }],
+    "ids": ["st_0", "st_1", "tr_st_0", "st_3", "st_4"],
+    "relations": [
+        {
+            "from": "this",
+            "to": "st_0",
+            "lb": 6,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_0",
+            "to": "st_1",
+            "lb": 4,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_1",
+            "to": "tr_st_0",
+            "lb": 4,
+            "ub": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_1",
+            "to": "st_3",
+            "lb": 6,
+            "ub": 12,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_3",
+            "to": "st_4",
+            "lb": 6,
+            "ub": 12,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_4",
+            "to": "st_5",
+            "lb": 6,
+            "ub": 12,
+            "unit": "SECONDS"
+        }]
+}

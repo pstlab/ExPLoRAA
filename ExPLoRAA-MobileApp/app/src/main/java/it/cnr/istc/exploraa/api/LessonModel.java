@@ -63,7 +63,6 @@ public class LessonModel {
         public StimulusTemplateType type;
         public String name;
         public Set<String> topics;
-        public Condition trigger_condition;
         public Condition execution_condition;
         public Set<String> ids;
         public List<Relation> relations;
@@ -71,18 +70,21 @@ public class LessonModel {
         public StimulusTemplate() {
         }
 
-        public StimulusTemplate(StimulusTemplateType type, String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations) {
+        public StimulusTemplate(StimulusTemplateType type, String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations) {
             this.type = type;
             this.name = name;
             this.topics = topics;
-            this.trigger_condition = trigger_condition;
             this.execution_condition = execution_condition;
             this.ids = ids;
             this.relations = relations;
         }
 
         public enum StimulusTemplateType {
-            Root, Text, URL, Question
+            Root, Text, URL, Question, Trigger
+        }
+
+        public enum EffectScope {
+            Self, Group
         }
 
         public static class URLStimulusTemplate extends StimulusTemplate {
@@ -93,8 +95,8 @@ public class LessonModel {
             public URLStimulusTemplate() {
             }
 
-            public URLStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String content, String url) {
-                super(StimulusTemplateType.URL, name, topics, trigger_condition, execution_condition, ids, relations);
+            public URLStimulusTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, String content, String url) {
+                super(StimulusTemplateType.URL, name, topics, execution_condition, ids, relations);
                 this.content = content;
                 this.url = url;
             }
@@ -107,8 +109,8 @@ public class LessonModel {
             public TextStimulusTemplate() {
             }
 
-            public TextStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String content) {
-                super(StimulusTemplateType.Text, name, topics, trigger_condition, execution_condition, ids, relations);
+            public TextStimulusTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, String content) {
+                super(StimulusTemplateType.Text, name, topics, execution_condition, ids, relations);
                 this.content = content;
             }
         }
@@ -121,8 +123,8 @@ public class LessonModel {
             public QuestionStimulusTemplate() {
             }
 
-            public QuestionStimulusTemplate(String name, Set<String> topics, Condition trigger_condition, Condition execution_condition, Set<String> ids, List<Relation> relations, String question, List<Answer> answers) {
-                super(StimulusTemplateType.Question, name, topics, trigger_condition, execution_condition, ids, relations);
+            public QuestionStimulusTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, String question, List<Answer> answers) {
+                super(StimulusTemplateType.Question, name, topics, execution_condition, ids, relations);
                 this.question = question;
                 this.answers = answers;
             }
@@ -131,14 +133,31 @@ public class LessonModel {
 
                 public String answer;
                 public String event;
+                public EffectScope scope;
 
                 public Answer() {
                 }
 
-                public Answer(String answer, String event) {
+                public Answer(String answer, String event, EffectScope scope) {
                     this.answer = answer;
                     this.event = event;
+                    this.scope = scope;
                 }
+            }
+        }
+
+        public static class TriggerTemplate extends StimulusTemplate {
+
+            public Condition condition;
+            public EffectScope scope;
+
+            public TriggerTemplate() {
+            }
+
+            public TriggerTemplate(String name, Set<String> topics, Condition execution_condition, Set<String> ids, List<Relation> relations, Condition condition, EffectScope scope) {
+                super(StimulusTemplateType.Trigger, name, topics, execution_condition, ids, relations);
+                this.condition = condition;
+                this.scope = scope;
             }
         }
     }
@@ -473,13 +492,13 @@ public class LessonModel {
             out.name("type").value(value.type.name());
             out.name("name").value(value.name);
 
-            out.name("topics");
-            out.beginArray();
-            for (String topic : value.topics) out.value(topic);
-            out.endArray();
+            if (value.topics != null) {
+                out.name("topics");
+                out.beginArray();
+                for (String topic : value.topics) out.value(topic);
+                out.endArray();
+            }
 
-            if (value.trigger_condition != null)
-                Condition.ADAPTER.write(out.name("trigger_condition"), value.trigger_condition);
             if (value.execution_condition != null)
                 Condition.ADAPTER.write(out.name("execution_condition"), value.execution_condition);
 
@@ -512,9 +531,17 @@ public class LessonModel {
                     out.name("question").value(((StimulusTemplate.QuestionStimulusTemplate) value).question);
                     out.name("answers");
                     out.beginArray();
-                    for (StimulusTemplate.QuestionStimulusTemplate.Answer answer : ((StimulusTemplate.QuestionStimulusTemplate) value).answers)
+                    for (StimulusTemplate.QuestionStimulusTemplate.Answer answer : ((StimulusTemplate.QuestionStimulusTemplate) value).answers) {
                         out.name("answer").value(answer.answer).name("event").value(answer.event);
+                        if (answer.scope != null)
+                            out.name("scope").value(answer.scope.name());
+                    }
                     out.endArray();
+                    break;
+                case Trigger:
+                    Condition.ADAPTER.write(out.name("condition"), ((StimulusTemplate.TriggerTemplate) value).condition);
+                    if (((StimulusTemplate.TriggerTemplate) value).scope != null)
+                        out.name("scope").value(((StimulusTemplate.TriggerTemplate) value).scope.name());
                     break;
             }
             out.endObject();
@@ -535,8 +562,11 @@ public class LessonModel {
                         while (in.peek() != JsonToken.END_ARRAY) st.topics.add(in.nextString());
                         in.endArray();
                         break;
-                    case "trigger_condition":
-                        Objects.requireNonNull(st).trigger_condition = Condition.ADAPTER.read(in);
+                    case "condition":
+                        Objects.requireNonNull((StimulusTemplate.TriggerTemplate) st).condition = Condition.ADAPTER.read(in);
+                        break;
+                    case "scope":
+                        ((StimulusTemplate.TriggerTemplate) st).scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
                         break;
                     case "execution_condition":
                         Objects.requireNonNull(st).execution_condition = Condition.ADAPTER.read(in);
@@ -576,6 +606,7 @@ public class LessonModel {
                         while (in.peek() != JsonToken.END_ARRAY) {
                             String answer = null;
                             String event = null;
+                            StimulusTemplate.EffectScope scope = null;
                             in.beginObject();
                             for (int i = 0; i < 2; i++) {
                                 switch ((in.nextName())) {
@@ -585,9 +616,12 @@ public class LessonModel {
                                     case "event":
                                         event = in.nextString();
                                         break;
+                                    case "scope":
+                                        scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
+                                        break;
                                 }
                             }
-                            ((StimulusTemplate.QuestionStimulusTemplate) st).answers.add(new StimulusTemplate.QuestionStimulusTemplate.Answer(answer, event));
+                            ((StimulusTemplate.QuestionStimulusTemplate) st).answers.add(new StimulusTemplate.QuestionStimulusTemplate.Answer(answer, event, scope));
                             in.endObject();
                         }
                         in.endArray();
