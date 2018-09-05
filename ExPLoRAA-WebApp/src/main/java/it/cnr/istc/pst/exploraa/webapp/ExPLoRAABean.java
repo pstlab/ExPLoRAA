@@ -323,8 +323,6 @@ public class ExPLoRAABean {
             mqtt.publish(lessons.get(lesson_id).getLesson().teacher.user.id + "/input", JSONB.toJson(new Message.Stimulus.QuestionStimulus.Answer(lesson_id, question_id, answer_id)).getBytes(), 1, false);
             // we compute the answer's consequences..
             lessons.get(lesson_id).answerQuestion(user_id, question_id, answer_id);
-            // we set the answer to the question event..
-            ((Message.Stimulus.QuestionStimulus) lessons.get(lesson_id).getLesson().stimuli.stream().filter(e -> e.id == question_id).findAny().get()).answer = answer_id;
         } catch (MqttException ex) {
             LOG.log(Level.SEVERE, null, ex);
         }

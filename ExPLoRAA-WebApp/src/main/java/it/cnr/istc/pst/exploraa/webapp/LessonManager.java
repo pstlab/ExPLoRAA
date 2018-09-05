@@ -82,18 +82,6 @@ public class LessonManager implements TemporalListener {
         return lesson;
     }
 
-    public Set<SolverToken> getTriggerableTokens() {
-        return triggerable_tokens.keySet();
-    }
-
-    public boolean isTriggerable(SolverToken tk) {
-        return triggerable_tokens.containsKey(tk);
-    }
-
-    public boolean isTriggerableBy(SolverToken tk, long user_id) {
-        return triggerable_tokens.containsKey(tk) && !triggerable_tokens.get(tk).contains(user_id);
-    }
-
     public void solve() {
         for (LessonModel.StimulusTemplate event_template : lesson.model.stimuli.values()) {
             if (event_templates.containsKey(event_template.name)) {
@@ -318,6 +306,11 @@ public class LessonManager implements TemporalListener {
         listeners.forEach(l -> l.newTime(t_now));
     }
 
+    public Integer getAnswer(long user_id, final int question_id) {
+        SolverToken q_tk = tokens.get(question_id - 2);
+        return answerable_tokens.get(q_tk).get(user_id);
+    }
+
     public void answerQuestion(long user_id, final int question_id, final int answer) {
         SolverToken q_tk = tokens.get(question_id - 2);
         answerable_tokens.get(q_tk).put(user_id, answer);
@@ -341,6 +334,18 @@ public class LessonManager implements TemporalListener {
 
         // we extract the lesson timeline..
         extract_timeline();
+    }
+
+    public Set<SolverToken> getTriggerableTokens() {
+        return triggerable_tokens.keySet();
+    }
+
+    public boolean isTriggerable(SolverToken tk) {
+        return triggerable_tokens.containsKey(tk);
+    }
+
+    public boolean isTriggerableBy(SolverToken tk, long user_id) {
+        return triggerable_tokens.containsKey(tk) && !triggerable_tokens.get(tk).contains(user_id);
     }
 
     public void trigger(SolverToken tk, long user_id) {
