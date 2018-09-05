@@ -92,7 +92,7 @@ public class LessonManager implements TemporalListener {
     }
 
     public List<Message.Stimulus> getStimuli(long user_id) {
-        dispatched_tokens.entrySet().stream().filter(entry -> entry.getValue().students.contains(user_id)).map(entry -> {
+        return dispatched_tokens.entrySet().stream().filter(entry -> entry.getValue().students.contains(user_id)).map(entry -> {
             switch (entry.getKey().template.type) {
                 case Text:
                     return new Message.Stimulus.TextStimulus(lesson.id, entry.getKey().tp, entry.getValue().time, ((LessonModel.StimulusTemplate.TextStimulusTemplate) entry.getKey().template).content);
@@ -103,8 +103,7 @@ public class LessonManager implements TemporalListener {
                 default:
                     throw new AssertionError(entry.getKey().template.type.name());
             }
-        });
-        return null;
+        }).collect(Collectors.toList());
     }
 
     private Message.Stimulus toStimulus(SolverToken tk, long user_id) {

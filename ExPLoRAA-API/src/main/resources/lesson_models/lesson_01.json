@@ -48,7 +48,7 @@
             "type": "URL",
             "name": "st_4",
             "topics": ["Art"],
-            "content": "URL",
+            "content": "This is a link to an art page.",
             "url": "https://it.wikipedia.org/wiki/Arte"
         }, {
             "type": "Question",

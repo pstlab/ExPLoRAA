@@ -489,7 +489,7 @@ public class LessonModel {
                     stimulus_builder.add("answers", ans_builder);
                     break;
                 case Trigger:
-                    stimulus_builder.add("trigger_condition", Condition.ADAPTER.adaptToJson(((StimulusTemplate.TriggerTemplate) obj).condition));
+                    stimulus_builder.add("condition", Condition.ADAPTER.adaptToJson(((StimulusTemplate.TriggerTemplate) obj).condition));
                     if (((StimulusTemplate.TriggerTemplate) obj).scope != null) {
                         stimulus_builder.add("scope", ((StimulusTemplate.TriggerTemplate) obj).scope.name());
                     }

@@ -37,4 +37,6 @@
     <string name="text">Text</string>
     <string name="question">Question</string>
     <string name="url">Link</string>
+    <string name="node">Node</string>
+    <string name="trigger">Trigger</string>
 </resources>

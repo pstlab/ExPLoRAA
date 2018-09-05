@@ -247,6 +247,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
             final LessonModel.StimulusTemplate stimulus = ctx.getLesson().model.stimuli.get(token.getToken().refEvent);
             switch (stimulus.type) {
                 case Root:
+                    token_content.setText(getText(R.string.node));
                     break;
                 case Text:
                     token_content.setText(((LessonModel.StimulusTemplate.TextStimulusTemplate) stimulus).content);
@@ -256,6 +257,9 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
                     break;
                 case Question:
                     token_content.setText(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) stimulus).question);
+                    break;
+                case Trigger:
+                    token_content.setText(getText(R.string.trigger));
                     break;
             }
         }
