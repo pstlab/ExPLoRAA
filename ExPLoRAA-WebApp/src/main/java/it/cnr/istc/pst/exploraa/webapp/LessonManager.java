@@ -55,7 +55,7 @@ public class LessonManager implements TemporalListener {
      * A collection of triggerable tokens. These tokens are expanded whenever
      * their triggering condition becomes satisfied.
      */
-    private final Collection<SolverToken> triggerable_tokens = new ArrayList<>();
+    private final Map<SolverToken, Set<Long>> triggerable_tokens = new IdentityHashMap<>();
     /**
      * The current context, if any..
      */
@@ -77,20 +77,16 @@ public class LessonManager implements TemporalListener {
         return lesson;
     }
 
-    public void makeTriggerable(SolverToken tk) {
-        triggerable_tokens.add(tk);
-    }
-
-    public Collection<SolverToken> getTriggerableTokens() {
-        return Collections.unmodifiableCollection(triggerable_tokens);
+    public Set<SolverToken> getTriggerableTokens() {
+        return triggerable_tokens.keySet();
     }
 
     public boolean isTriggerable(SolverToken tk) {
-        return triggerable_tokens.contains(tk);
+        return triggerable_tokens.containsKey(tk);
     }
 
-    public void makeUntriggerable(SolverToken tk) {
-        triggerable_tokens.remove(tk);
+    public boolean isTriggerableBy(SolverToken tk, long user_id) {
+        return triggerable_tokens.containsKey(tk) && !triggerable_tokens.get(tk).contains(user_id);
     }
 
     public void solve() {
@@ -229,6 +225,10 @@ public class LessonManager implements TemporalListener {
             long next_pulse = lesson_timeline_pulses.get(idx);
             while (next_pulse <= t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx)) {
+                    if (tk.template.trigger_condition != null) {
+                        // we make the token 'triggerable'..
+                        triggerable_tokens.put(tk, new HashSet<>());
+                    }
                     // this token can be executed..
                     listeners.forEach(l -> l.executeToken(tk));
                 }
@@ -248,10 +248,15 @@ public class LessonManager implements TemporalListener {
             Collection<SolverToken> tr_consequences = new ArrayList<>();
             while (last_pulse > t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx - 1)) {
+                    if (tk.template.trigger_condition != null) {
+                        // we remove the token from the triggerable ones..
+                        triggerable_tokens.remove(tk);
+                    }
                     TriggerContext ctx = triggered_contexts.remove(tk);
                     if (ctx != null) {
                         // token 'tk' is a triggered token, we remove all the consequences of the triggered context..
                         tr_consequences.addAll(ctx.tokens);
+                        triggerable_tokens.get(ctx.source_token).remove(ctx.user_id);
                     }
                     // this token has been executed.. so we hide it..
                     listeners.forEach(l -> l.hideToken(tk));
@@ -304,7 +309,7 @@ public class LessonManager implements TemporalListener {
     }
 
     public void trigger(long user_id, SolverToken tk) {
-        triggerable_tokens.remove(tk);
+        triggerable_tokens.get(tk).add(user_id);
 
         TriggerContext ctx = new TriggerContext(tk, user_id);
         this.triggered_context = ctx;
