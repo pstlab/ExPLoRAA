@@ -39,7 +39,8 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ExPLoRAAContext.getInstance().getService().removeTeachingLessonsListener(this);
+        if (ExPLoRAAContext.getInstance().isServiceRunning())
+            ExPLoRAAContext.getInstance().getService().removeTeachingLessonsListener(this);
     }
 
     @Override

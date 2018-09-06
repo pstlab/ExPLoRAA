@@ -25,6 +25,7 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.S
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ExPLoRAAContext.getInstance().addServiceListener(this);
         setContentView(R.layout.activity_main);
 
         pager = findViewById(R.id.main_pager);
@@ -63,8 +64,6 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.S
 
         // we clear all the notifications..
         NotificationManagerCompat.from(this).cancelAll();
-
-        ExPLoRAAContext.getInstance().addServiceListener(this);
     }
 
     @Override
@@ -110,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.S
 
     @Override
     public void serviceDisonnected() {
-        startActivity(new Intent(this, NavigatorActivity.class));
         finish();
     }
 }

@@ -4,10 +4,8 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
-import android.content.SharedPreferences;
 import android.os.Build;
 import android.os.IBinder;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -32,10 +30,6 @@ public class ExPLoRAAContext {
 
             for (ServiceListener l : service_listeners)
                 l.serviceConnected(service);
-
-            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(service);
-            if (shared_prefs.contains(service.getString(R.string.email)) && shared_prefs.contains(service.getString(R.string.password)))
-                service.login(shared_prefs.getString(service.getString(R.string.email), null), shared_prefs.getString(service.getString(R.string.password), null));
         }
 
         @Override
@@ -67,8 +61,10 @@ public class ExPLoRAAContext {
     public void stopService(@NonNull Context ctx) {
         Log.i(TAG, "Stopping service..");
         assert service != null;
+        service = null;
         ctx.getApplicationContext().unbindService(service_connection);
         ctx.getApplicationContext().stopService(new Intent(ctx.getApplicationContext(), ExPLoRAAService.class));
+        for (ServiceListener l : service_listeners) l.serviceDisonnected();
     }
 
     public void addServiceListener(ServiceListener l) {

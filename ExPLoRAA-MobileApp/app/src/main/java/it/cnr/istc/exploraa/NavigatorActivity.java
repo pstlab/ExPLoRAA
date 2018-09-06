@@ -33,7 +33,7 @@ import android.support.v7.app.AppCompatActivity;
 /**
  * @author Riccardo De Benedictis
  */
-public class NavigatorActivity extends AppCompatActivity {
+public class NavigatorActivity extends AppCompatActivity implements ExPLoRAAContext.ServiceListener {
 
     public static final String TAG = "NavigatorActivity";
     public static final int ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS = 123;
@@ -54,6 +54,7 @@ public class NavigatorActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ExPLoRAAContext.getInstance().addServiceListener(this);
 
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
 
@@ -74,6 +75,7 @@ public class NavigatorActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        ExPLoRAAContext.getInstance().removeServiceListener(this);
         unregisterReceiver(login_receiver);
     }
 
@@ -86,5 +88,17 @@ public class NavigatorActivity extends AppCompatActivity {
                 else
                     finish();
         }
+    }
+
+    @Override
+    public void serviceConnected(ExPLoRAAService service) {
+        SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(service);
+        if (shared_prefs.contains(service.getString(R.string.email)) && shared_prefs.contains(service.getString(R.string.password)))
+            service.login(shared_prefs.getString(service.getString(R.string.email), null), shared_prefs.getString(service.getString(R.string.password), null));
+    }
+
+    @Override
+    public void serviceDisonnected() {
+        finish();
     }
 }

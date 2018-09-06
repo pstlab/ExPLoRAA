@@ -135,9 +135,9 @@ public class ExPLoRAAService extends Service implements LocationListener {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.i(TAG, "Received connection change event..");
-            if (user == null) {
+            if (user == null && !logging_in) {
                 NetworkInfo activeNetwork = ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-                if (activeNetwork != null && activeNetwork.isConnected() && user == null) {
+                if (activeNetwork != null && activeNetwork.isConnected()) {
                     SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(ExPLoRAAService.this);
                     if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
                         login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
@@ -181,13 +181,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
         }
 
         registerReceiver(connection_receiver, new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION));
-
-        NetworkInfo activeNetwork = ((ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo();
-        if (activeNetwork != null && activeNetwork.isConnected()) {
-            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
-            if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
-                login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
-        }
 
         main_handler = new Handler(getApplicationContext().getMainLooper());
 
@@ -321,7 +314,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
                         public void connectionLost(Throwable cause) {
                             Log.e(TAG, "Connection lost..", cause);
                             logout();
-                            stopSelf();
+                            ExPLoRAAContext.getInstance().stopService(ExPLoRAAService.this);
                         }
 
                         @Override
@@ -939,6 +932,9 @@ public class ExPLoRAAService extends Service implements LocationListener {
             @Override
             public void onFailure(Call<User> call, Throwable t) {
                 Log.e(TAG, "User creation failed..", t);
+                Intent user_creation_intent = new Intent(USER_CREATION);
+                user_creation_intent.putExtra("successful", false);
+                sendBroadcast(user_creation_intent);
             }
         });
     }
@@ -994,6 +990,9 @@ public class ExPLoRAAService extends Service implements LocationListener {
             public void onFailure(Call<User> call, Throwable t) {
                 Log.e(TAG, "Login failed..", t);
                 logging_in = false;
+                Intent login_intent = new Intent(LOGIN);
+                login_intent.putExtra("successful", false);
+                sendBroadcast(login_intent);
             }
         });
     }

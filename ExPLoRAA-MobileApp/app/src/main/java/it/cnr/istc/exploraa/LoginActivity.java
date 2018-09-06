@@ -35,28 +35,28 @@ public class LoginActivity extends AppCompatActivity implements ExPLoRAAContext.
 
                 startActivity(new Intent(LoginActivity.this, MainActivity.class));
                 finish();
-            }
+            } else if (ExPLoRAAContext.getInstance().isServiceRunning())
+                ExPLoRAAContext.getInstance().stopService(LoginActivity.this);
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ExPLoRAAContext.getInstance().addServiceListener(this);
         setContentView(R.layout.activity_login);
 
         email = findViewById(R.id.login_input_email);
         password = findViewById(R.id.login_input_password);
 
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
-
-        ExPLoRAAContext.getInstance().addServiceListener(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(login_receiver);
         ExPLoRAAContext.getInstance().removeServiceListener(this);
+        unregisterReceiver(login_receiver);
     }
 
     public void login(View v) {

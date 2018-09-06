@@ -37,13 +37,15 @@ public class NewUserActivity extends AppCompatActivity implements ExPLoRAAContex
 
                 startActivity(new Intent(NewUserActivity.this, MainActivity.class));
                 finish();
-            }
+            } else if (ExPLoRAAContext.getInstance().isServiceRunning())
+                ExPLoRAAContext.getInstance().stopService(NewUserActivity.this);
         }
     };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ExPLoRAAContext.getInstance().addServiceListener(this);
         setContentView(R.layout.activity_new_user);
 
         email = findViewById(R.id.new_user_input_email);
@@ -52,20 +54,18 @@ public class NewUserActivity extends AppCompatActivity implements ExPLoRAAContex
         last_name = findViewById(R.id.new_user_input_last_name);
 
         registerReceiver(user_creation_receiver, new IntentFilter(ExPLoRAAService.USER_CREATION));
-
-        ExPLoRAAContext.getInstance().addServiceListener(this);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(user_creation_receiver);
         ExPLoRAAContext.getInstance().removeServiceListener(this);
+        unregisterReceiver(user_creation_receiver);
     }
 
     @Override
     public void onBackPressed() {
-        startActivity(new Intent(this, LoginActivity.class));
+        startActivity(new Intent(this, NavigatorActivity.class));
         finish();
         super.onBackPressed();
     }
