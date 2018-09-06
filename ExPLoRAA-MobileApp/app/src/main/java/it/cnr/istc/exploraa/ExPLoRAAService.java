@@ -239,73 +239,51 @@ public class ExPLoRAAService extends Service implements LocationListener {
      */
     private void setUser(@NonNull final User user) {
         if (this.user != user) {
-            if (this.user != null) try {
-                // we clear the current data..
-                par_vals.clear();
-                // a user might become null as a consequence of a connection loss..
-                // we broadcast the lost of a parameter..
-                if (mqtt.isConnected()) for (Parameter par : par_types)
-                    mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(par.name)).getBytes(), 1, false);
+            if (this.user != null) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                     ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).removeUpdates(this);
-                par_types.clear();
-                id_par_types.clear();
 
-                // we clear the stimuli..
-                stimuli.clear();
-                for (StimuliListener l : stimuli_listeners) l.stimuliCleared();
+                // gentle disconnection..
+                try {
+                    if (mqtt.isConnected()) {
+                        for (Parameter par : par_types)
+                            mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(par.name)).getBytes(), 1, false);
 
-                // we clear the following lessons..
-                if (mqtt.isConnected()) for (FollowingLessonContext l_ctx : following_lessons) {
-                    // we unsubscribe from the lesson's time and state..
-                    mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
-                    mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state");
+                        // we clear the following lessons..
+                        for (FollowingLessonContext l_ctx : following_lessons) {
+                            // we unsubscribe from the lesson's time and state..
+                            mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
+                            mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state");
+                        }
+
+                        // we clear the teachers..
+                        for (TeacherContext s_ctx : teachers)
+                            mqtt.unsubscribe(s_ctx.getTeacher().id + "/output/on-line");
+
+                        // we clear the teaching lessons..
+                        for (TeachingLessonContext l_ctx : teaching_lessons) {
+                            // we unsubscribe from the lesson's time and state..
+                            mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
+                            mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state");
+                        }
+
+                        // we clear the students..
+                        for (StudentContext s_ctx : students)
+                            mqtt.unsubscribe(s_ctx.getStudent().id + "/output/on-line");
+
+                        mqtt.disconnect();
+                    }
+                    mqtt.close();
+                    Log.i(TAG, "Disconnected from the MQTT broker..");
+                } catch (MqttException ex) {
+                    Log.e(TAG, null, ex);
+                } finally {
+                    mqtt = null;
                 }
-                following_lessons.clear();
-                id_following_lessons.clear();
-                for (FollowingLessonsListener l : following_lessons_listeners)
-                    l.followingLessonsCleared();
-
-                // we clear the teachers..
-                if (mqtt.isConnected()) for (TeacherContext s_ctx : teachers) {
-                    mqtt.unsubscribe(s_ctx.getTeacher().id + "/output/on-line");
-                }
-                teachers.clear();
-                id_teachers.clear();
-                for (TeachersListener l : teachers_listeners)
-                    l.teachersCleared();
-
-                models.clear();
-
-                // we clear the teaching lessons..
-                if (mqtt.isConnected()) for (TeachingLessonContext l_ctx : teaching_lessons) {
-                    // we unsubscribe from the lesson's time and state..
-                    mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/time");
-                    mqtt.unsubscribe(this.user.id + "/input/lesson-" + l_ctx.getLesson().id + "/state");
-                }
-                teaching_lessons.clear();
-                id_teaching_lessons.clear();
-                for (TeachingLessonsListener l : teaching_lessons_listeners)
-                    l.teachingLessonsCleared();
-
-                // we clear the students..
-                if (mqtt.isConnected()) for (StudentContext s_ctx : students) {
-                    mqtt.unsubscribe(s_ctx.getStudent().id + "/output/on-line");
-                }
-                students.clear();
-                id_students.clear();
-                for (StudentsListener l : students_listeners)
-                    l.studentsCleared();
-
-                if (mqtt.isConnected()) mqtt.disconnect();
-                mqtt.close();
-                Log.i(TAG, "Disconnected from the MQTT broker..");
-                mqtt = null;
-            } catch (MqttException ex) {
-                Log.e(TAG, null, ex);
             }
 
             if (user != null) {
+                clearAll();
                 try {
                     // we create a new MQTT connection..
                     mqtt = new MqttClient("tcp://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, String.valueOf(user.id), new MemoryPersistence());
@@ -314,7 +292,6 @@ public class ExPLoRAAService extends Service implements LocationListener {
                         public void connectionLost(Throwable cause) {
                             Log.e(TAG, "Connection lost..", cause);
                             logout();
-                            ExPLoRAAContext.getInstance().stopService(ExPLoRAAService.this);
                         }
 
                         @Override
@@ -453,6 +430,44 @@ public class ExPLoRAAService extends Service implements LocationListener {
             }
             this.user = user;
         }
+    }
+
+    private void clearAll() {
+        // we clear the current data..
+        par_vals.clear();
+        par_types.clear();
+        id_par_types.clear();
+
+        // we clear the stimuli..
+        stimuli.clear();
+        for (StimuliListener l : stimuli_listeners) l.stimuliCleared();
+
+        // we clear the following lessons..
+        following_lessons.clear();
+        id_following_lessons.clear();
+        for (FollowingLessonsListener l : following_lessons_listeners)
+            l.followingLessonsCleared();
+
+        // we clear the teachers..
+        teachers.clear();
+        id_teachers.clear();
+        for (TeachersListener l : teachers_listeners)
+            l.teachersCleared();
+
+        // we clear the models..
+        models.clear();
+
+        // we clear the teaching lessons..
+        teaching_lessons.clear();
+        id_teaching_lessons.clear();
+        for (TeachingLessonsListener l : teaching_lessons_listeners)
+            l.teachingLessonsCleared();
+
+        // we clear the students..
+        students.clear();
+        id_students.clear();
+        for (StudentsListener l : students_listeners)
+            l.studentsCleared();
     }
 
     void addStimulus(@NonNull final Message.Stimulus stimulus) {
@@ -1208,6 +1223,35 @@ public class ExPLoRAAService extends Service implements LocationListener {
                     Toast.makeText(ExPLoRAAService.this, response.errorBody().string(), Toast.LENGTH_SHORT).show();
                 } catch (IOException e) {
                     e.printStackTrace();
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Void> call, Throwable t) {
+                Log.e(TAG, null, t);
+            }
+        });
+    }
+
+    public void answerQuestion(final long lesson_id, final int question_id, final int answer) {
+        resource.answer_question(user.id, lesson_id, question_id, answer).enqueue(new Callback<Void>() {
+            @Override
+            public void onResponse(Call<Void> call, Response<Void> response) {
+                if (!response.isSuccessful()) try {
+                    Toast.makeText(ExPLoRAAService.this, response.errorBody().string(), Toast.LENGTH_SHORT).show();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                else {
+                    FollowingLessonContext l_ctx = id_following_lessons.get(lesson_id);
+                    Message.Stimulus.QuestionStimulus q = null;
+                    for (Message.Stimulus st : stimuli) {
+                        if (st.id == question_id) {
+                            q = (Message.Stimulus.QuestionStimulus) st;
+                            break;
+                        }
+                    }
+                    q.answer = answer;
                 }
             }
 

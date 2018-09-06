@@ -17,9 +17,8 @@ public class URLStimulusActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_urlstimulus);
-
         getWindow().requestFeature(Window.FEATURE_PROGRESS);
+        setContentView(R.layout.activity_urlstimulus);
 
         url_stimulus_content = findViewById(R.id.url_stimulus_content);
         url_stimulus_web_view = findViewById(R.id.url_stimulus_web_view);

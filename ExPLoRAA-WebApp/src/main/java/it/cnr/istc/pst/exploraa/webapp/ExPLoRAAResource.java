@@ -441,6 +441,7 @@ public class ExPLoRAAResource implements ExPLoRAA {
     @Path("answer_question")
     @Override
     public void answer_question(@FormParam("user_id") long user_id, @FormParam("lesson_id") long lesson_id, @FormParam("question_id") int question_id, @FormParam("answer_id") int answer_id) {
+        LOG.log(Level.INFO, "User {0} in lesson {1} answered at question {2} with answer id {3}", new Object[]{user_id, lesson_id, question_id, answer_id});
         try {
             utx.begin();
             ctx.answerQuestion(user_id, lesson_id, question_id, answer_id);

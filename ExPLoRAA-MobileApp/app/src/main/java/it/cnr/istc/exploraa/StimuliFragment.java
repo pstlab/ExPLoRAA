@@ -168,7 +168,9 @@ public class StimuliFragment extends Fragment implements ExPLoRAAService.Stimuli
                     startActivity(text_intent);
                     break;
                 case Question:
-                    final Intent question_intent = new Intent(getContext(), TextStimulusActivity.class);
+                    final Intent question_intent = new Intent(getContext(), QuestionStimulusActivity.class);
+                    question_intent.putExtra("lesson_id", stimulus.lesson_id);
+                    question_intent.putExtra("question_id", stimulus.id);
                     question_intent.putExtra("question", ((Message.Stimulus.QuestionStimulus) stimulus).question);
                     ArrayList<CharSequence> answers = new ArrayList<>(((Message.Stimulus.QuestionStimulus) stimulus).answers.size());
                     answers.addAll(((Message.Stimulus.QuestionStimulus) stimulus).answers);
@@ -179,7 +181,7 @@ public class StimuliFragment extends Fragment implements ExPLoRAAService.Stimuli
                     startActivity(question_intent);
                     break;
                 case URL:
-                    final Intent url_intent = new Intent(getContext(), TextStimulusActivity.class);
+                    final Intent url_intent = new Intent(getContext(), URLStimulusActivity.class);
                     url_intent.putExtra("content", ((Message.Stimulus.URLStimulus) stimulus).content);
                     url_intent.putExtra("url", ((Message.Stimulus.URLStimulus) stimulus).url);
                     startActivity(url_intent);

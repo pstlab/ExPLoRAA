@@ -42,11 +42,7 @@ public class NavigatorActivity extends AppCompatActivity implements ExPLoRAACont
         public void onReceive(Context context, Intent intent) {
             if (intent.getBooleanExtra("successful", false))
                 startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
-            else {
-                if (ExPLoRAAContext.getInstance().isServiceRunning())
-                    ExPLoRAAContext.getInstance().stopService(NavigatorActivity.this);
-                startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
-            }
+            else startActivity(new Intent(NavigatorActivity.this, LoginActivity.class));
             finish();
         }
     };
@@ -59,8 +55,14 @@ public class NavigatorActivity extends AppCompatActivity implements ExPLoRAACont
         registerReceiver(login_receiver, new IntentFilter(ExPLoRAAService.LOGIN));
 
         if (ExPLoRAAContext.getInstance().isServiceRunning()) {
-            startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
-            finish();
+            if (ExPLoRAAContext.getInstance().getService().getUser() == null) {
+                SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
+                if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
+                    ExPLoRAAContext.getInstance().getService().login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+            } else {
+                startActivity(new Intent(NavigatorActivity.this, MainActivity.class));
+                finish();
+            }
         } else {
             SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(NavigatorActivity.this);
             if (!shared_prefs.contains(getString(R.string.email)) || !shared_prefs.contains(getString(R.string.password))) {

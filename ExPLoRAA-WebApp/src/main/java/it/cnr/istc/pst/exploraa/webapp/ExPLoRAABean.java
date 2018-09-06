@@ -382,7 +382,7 @@ public class ExPLoRAABean {
                     Set<Long> students = new HashSet<>();
                     for (Follow follow : lesson.students.values()) {
                         for (String interest : follow.interests) {
-                            if (tk.template.execution_condition == null || isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id))) {
+                            if (tk.template.execution_condition == null || (isOnline(follow.user.id) && isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
                                 switch (tk.template.type) {
                                     case Root:
                                     case Trigger:
@@ -412,7 +412,7 @@ public class ExPLoRAABean {
                     if (tk.template.type == LessonModel.StimulusTemplate.StimulusTemplateType.Trigger) {
                         // we check if the token can be triggered..
                         for (Long student : students) {
-                            if (isSatisfied(((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).condition, parameter_values.get(student))) {
+                            if (isOnline(student) && isSatisfied(((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).condition, parameter_values.get(student))) {
                                 // we also trigger the token..
                                 manager.trigger(tk, student);
                             }

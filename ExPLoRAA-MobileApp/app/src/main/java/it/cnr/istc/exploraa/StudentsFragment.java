@@ -63,7 +63,7 @@ public class StudentsFragment extends Fragment implements ExPLoRAAService.Studen
 
     @Override
     public void studentUpdated(int pos, StudentContext ctx) {
-        students_adapter.students.updateItemAt(students_adapter.students.indexOf(ctx), ctx);
+        students_adapter.students.updateItemAt(indexOf(ctx), ctx);
     }
 
     @Override
@@ -74,6 +74,13 @@ public class StudentsFragment extends Fragment implements ExPLoRAAService.Studen
     @Override
     public void studentsCleared() {
         students_adapter.students.clear();
+    }
+
+    private int indexOf(StudentContext ctx) {
+        for (int i = 0; i < students_adapter.students.size(); i++)
+            if (ctx.equals(students_adapter.students.get(i)))
+                return i;
+        return -1;
     }
 
     private class StudentsAdapter extends RecyclerView.Adapter<StudentView> {

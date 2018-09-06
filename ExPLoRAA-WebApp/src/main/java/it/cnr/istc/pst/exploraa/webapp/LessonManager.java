@@ -290,6 +290,32 @@ public class LessonManager implements TemporalListener {
             Collection<SolverToken> tr_consequences = new ArrayList<>();
             while (last_pulse > t) {
                 for (SolverToken tk : lesson_timeline_values.get(idx - 1)) {
+                    TriggerContext ctx = triggered_contexts.remove(tk);
+                    if (ctx != null) {
+                        // token 'tk' has been added as a consequence of an answer or of a trigger.
+                        tr_consequences.addAll(ctx.tokens);
+                        if (answerable_tokens.containsKey(ctx.source_token)) {
+                            answerable_tokens.get(ctx.source_token).remove(ctx.user_id);
+                        } else if (triggerable_tokens.containsKey(ctx.source_token)) {
+                            triggerable_tokens.get(ctx.source_token).remove(ctx.user_id);
+                        }
+                    }
+                    switch (tk.template.type) {
+                        case Root:
+                        case Trigger:
+                            break;
+                        case Text:
+                        case URL:
+                        case Question:
+                            // this token has been executed.. so we hide it..
+                            for (Long student : dispatched_tokens.get(tk).students) {
+                                listeners.forEach(l -> l.hideStimulus(toStimulus(tk, student), student));
+                            }
+                            dispatched_tokens.remove(tk);
+                            break;
+                        default:
+                            throw new AssertionError(tk.template.type.name());
+                    }
                     switch (tk.template.type) {
                         case Root:
                         case Text:
@@ -305,20 +331,6 @@ public class LessonManager implements TemporalListener {
                             break;
                         default:
                             throw new AssertionError(tk.template.type.name());
-                    }
-                    TriggerContext ctx = triggered_contexts.remove(tk);
-                    if (ctx != null) {
-                        // token 'tk' has been added as a consequence of an answer or of a trigger.
-                        tr_consequences.addAll(ctx.tokens);
-                        if (answerable_tokens.containsKey(ctx.source_token)) {
-                            answerable_tokens.get(ctx.source_token).remove(ctx.user_id);
-                        } else if (triggerable_tokens.containsKey(ctx.source_token)) {
-                            triggerable_tokens.get(ctx.source_token).remove(ctx.user_id);
-                        }
-                    }
-                    // this token has been executed.. so we hide it..
-                    for (Long student : dispatched_tokens.remove(tk).students) {
-                        listeners.forEach(l -> l.hideStimulus(toStimulus(tk, student), student));
                     }
                 }
                 idx--;
@@ -347,6 +359,9 @@ public class LessonManager implements TemporalListener {
 
     public void dispatchToken(SolverToken tk, Set<Long> users) {
         dispatched_tokens.put(tk, new DispatchEvent(System.currentTimeMillis(), users));
+        for (Long user : users) {
+            listeners.forEach(l -> l.executeStimulus(toStimulus(tk, user), user));
+        }
     }
 
     public void answerQuestion(long user_id, final int question_id, final int answer) {

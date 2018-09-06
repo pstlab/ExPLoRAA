@@ -39,8 +39,7 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (ExPLoRAAContext.getInstance().isServiceRunning())
-            ExPLoRAAContext.getInstance().getService().removeTeachingLessonsListener(this);
+        ExPLoRAAContext.getInstance().getService().removeTeachingLessonsListener(this);
     }
 
     @Override
@@ -96,7 +95,7 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
 
     @Override
     public void teachingLessonUpdated(int pos, TeachingLessonContext ctx) {
-        teaching_lessons_adapter.lessons.updateItemAt(teaching_lessons_adapter.lessons.indexOf(ctx), ctx);
+        teaching_lessons_adapter.lessons.updateItemAt(indexOf(ctx), ctx);
     }
 
     @Override
@@ -107,6 +106,13 @@ public class TeachingLessonsFragment extends Fragment implements ExPLoRAAService
     @Override
     public void teachingLessonsCleared() {
         teaching_lessons_adapter.lessons.clear();
+    }
+
+    private int indexOf(TeachingLessonContext ctx) {
+        for (int i = 0; i < teaching_lessons_adapter.lessons.size(); i++)
+            if (ctx.equals(teaching_lessons_adapter.lessons.get(i)))
+                return i;
+        return -1;
     }
 
     private class TeachingLessonsAdapter extends RecyclerView.Adapter<TeachingLessonView> {

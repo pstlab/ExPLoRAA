@@ -162,7 +162,14 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
 
     @Override
     public void updatedToken(int pos, TeachingLessonContext.TokenRow tk) {
-        teaching_lesson_tokens_adapter.tokens.updateItemAt(teaching_lesson_tokens_adapter.tokens.indexOf(tk), tk);
+        teaching_lesson_tokens_adapter.tokens.updateItemAt(indexOf(tk), tk);
+    }
+
+    private int indexOf(TeachingLessonContext.TokenRow tk) {
+        for (int i = 0; i < teaching_lesson_tokens_adapter.tokens.size(); i++)
+            if (tk.equals(teaching_lesson_tokens_adapter.tokens.get(i)))
+                return i;
+        return -1;
     }
 
     private class TokensAdapter extends RecyclerView.Adapter<TokenView> {

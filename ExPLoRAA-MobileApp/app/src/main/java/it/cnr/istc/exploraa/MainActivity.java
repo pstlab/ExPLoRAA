@@ -13,7 +13,7 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.ServiceListener {
+public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "MainActivity";
     private ViewPager pager;
@@ -25,7 +25,6 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.S
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        ExPLoRAAContext.getInstance().addServiceListener(this);
         setContentView(R.layout.activity_main);
 
         pager = findViewById(R.id.main_pager);
@@ -64,13 +63,12 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.S
 
         // we clear all the notifications..
         NotificationManagerCompat.from(this).cancelAll();
-    }
 
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-
-        ExPLoRAAContext.getInstance().removeServiceListener(this);
+        if (ExPLoRAAContext.getInstance().getService().getUser() == null) {
+            SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
+            if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
+                ExPLoRAAContext.getInstance().getService().login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+        }
     }
 
     @Override
@@ -93,22 +91,13 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAContext.S
                 prefs_edit.remove(getString(R.string.password));
                 prefs_edit.apply();
 
+                ExPLoRAAContext.getInstance().stopService(this);
+
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
-
-                ExPLoRAAContext.getInstance().stopService(this);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
-    }
-
-    @Override
-    public void serviceConnected(ExPLoRAAService service) {
-    }
-
-    @Override
-    public void serviceDisonnected() {
-        finish();
     }
 }

@@ -23,6 +23,7 @@ import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -412,6 +413,7 @@ public abstract class Message {
                                 ((Stimulus.QuestionStimulus) st).question = in.nextString();
                                 break;
                             case "answers":
+                                ((Stimulus.QuestionStimulus) st).answers = new ArrayList<>();
                                 in.beginArray();
                                 while (in.peek() != JsonToken.END_ARRAY)
                                     ((Stimulus.QuestionStimulus) st).answers.add(in.nextString());

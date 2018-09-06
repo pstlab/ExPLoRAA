@@ -24,7 +24,7 @@ public class TeachingLessonContext {
     TeachingLessonContext(ExPLoRAAService service, Lesson lesson) {
         this.service = service;
         this.lesson = lesson;
-        for (Message.Token tk : lesson.tokens) tokens.add(new TokenRow(tk));
+        for (Message.Token tk : lesson.tokens) addToken(tk);
     }
 
     public Lesson getLesson() {

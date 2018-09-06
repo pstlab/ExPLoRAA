@@ -98,7 +98,7 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
 
     @Override
     public void followingLessonUpdated(int pos, FollowingLessonContext ctx) {
-        following_lessons_adapter.lessons.updateItemAt(following_lessons_adapter.lessons.indexOf(ctx), ctx);
+        following_lessons_adapter.lessons.updateItemAt(indexOf(ctx), ctx);
     }
 
     @Override
@@ -109,6 +109,13 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
     @Override
     public void followingLessonsCleared() {
         following_lessons_adapter.lessons.clear();
+    }
+
+    private int indexOf(FollowingLessonContext ctx) {
+        for (int i = 0; i < following_lessons_adapter.lessons.size(); i++)
+            if (ctx.equals(following_lessons_adapter.lessons.get(i)))
+                return i;
+        return -1;
     }
 
     private class FollowingLessonsAdapter extends RecyclerView.Adapter<FollowingLessonView> {
