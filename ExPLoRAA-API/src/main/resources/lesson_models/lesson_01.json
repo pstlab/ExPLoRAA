@@ -11,10 +11,11 @@
             "topics": ["Religion"],
             "content": "This is a first stimulus about religion."
         }, {
-            "type": "Text",
+            "type": "URL",
             "name": "st_2",
             "topics": ["Art", "History"],
-            "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum."
+            "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum.",
+            "url": "https://it.wikipedia.org/wiki/Colosseo"
         }, {
             "type": "Text",
             "name": "st_3",

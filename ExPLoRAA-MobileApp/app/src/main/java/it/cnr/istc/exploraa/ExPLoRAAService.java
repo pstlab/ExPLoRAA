@@ -13,6 +13,10 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -69,7 +73,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ExPLoRAAService extends Service implements LocationListener {
+public class ExPLoRAAService extends Service implements LocationListener, SensorEventListener {
 
     private static final String TAG = "ExPLoRAAService";
     private static final int LOCATION_TIME = 1000 * 60 * 2; // two minutes..
@@ -93,6 +97,8 @@ public class ExPLoRAAService extends Service implements LocationListener {
      */
     private final Map<String, Map<String, String>> par_vals = new HashMap<>();
     private Location current_location;
+    private SensorManager sensor_manager;
+    private Sensor step_detector;
     /**
      * The received stimuli.
      */
@@ -184,6 +190,9 @@ public class ExPLoRAAService extends Service implements LocationListener {
 
         main_handler = new Handler(getApplicationContext().getMainLooper());
 
+        sensor_manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
+        step_detector = sensor_manager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         final Notification notification = new NotificationCompat.Builder(this, getString(R.string.app_name))
@@ -242,6 +251,7 @@ public class ExPLoRAAService extends Service implements LocationListener {
             if (this.user != null) {
                 if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                     ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).removeUpdates(this);
+                sensor_manager.unregisterListener(this);
 
                 // gentle disconnection..
                 try {
@@ -416,8 +426,11 @@ public class ExPLoRAAService extends Service implements LocationListener {
                         // we broadcast the existence of a new parameter..
                         mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
                     }
+
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                         ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
+                    if (step_detector != null)
+                        sensor_manager.registerListener(this, step_detector, SensorManager.SENSOR_DELAY_NORMAL);
 
                     for (Map.Entry<String, Map<String, String>> par_val : user.par_values.entrySet()) {
                         par_vals.put(par_val.getKey(), par_val.getValue());
@@ -1360,6 +1373,17 @@ public class ExPLoRAAService extends Service implements LocationListener {
             c_par_types.put("GPS", gps);
         }
         return c_par_types;
+    }
+
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        if (step_detector != null && sensorEvent.sensor == step_detector) {
+            Log.i(TAG, "New step..");
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
     }
 
     public class ExPLoRAABinder extends Binder {
