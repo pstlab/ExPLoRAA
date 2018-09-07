@@ -154,16 +154,24 @@ public class LessonModel {
 
         public static class TriggerTemplate extends StimulusTemplate {
 
+            public String content;
             public Condition condition;
             public EffectScope scope;
+            public Periodicity periodicity;
 
             public TriggerTemplate() {
             }
 
-            public TriggerTemplate(String name, Condition execution_condition, Set<String> ids, List<Relation> relations, Condition condition, EffectScope scope) {
+            public TriggerTemplate(String name, Condition execution_condition, Set<String> ids, List<Relation> relations, String content, Condition condition, EffectScope scope, Periodicity periodicity) {
                 super(StimulusTemplateType.Trigger, name, execution_condition, ids, relations);
+                this.content = content;
                 this.condition = condition;
                 this.scope = scope;
+                this.periodicity = periodicity;
+            }
+
+            public enum Periodicity {
+                Once, Always
             }
         }
     }
@@ -489,9 +497,13 @@ public class LessonModel {
                     stimulus_builder.add("answers", ans_builder);
                     break;
                 case Trigger:
+                    stimulus_builder.add("content", ((StimulusTemplate.TriggerTemplate) obj).content);
                     stimulus_builder.add("condition", Condition.ADAPTER.adaptToJson(((StimulusTemplate.TriggerTemplate) obj).condition));
                     if (((StimulusTemplate.TriggerTemplate) obj).scope != null) {
                         stimulus_builder.add("scope", ((StimulusTemplate.TriggerTemplate) obj).scope.name());
+                    }
+                    if (((StimulusTemplate.TriggerTemplate) obj).periodicity != null) {
+                        stimulus_builder.add("periodicity", ((StimulusTemplate.TriggerTemplate) obj).periodicity.name());
                     }
                     break;
                 default:
@@ -543,7 +555,7 @@ public class LessonModel {
                     return new StimulusTemplate.QuestionStimulusTemplate(name, execution_condition, ids, relations, topics, obj.getString("question"), answers);
                 case Trigger:
                     Condition trigger_condition = obj.containsKey("condition") && !obj.isNull("condition") ? Condition.ADAPTER.adaptFromJson(obj.getJsonObject("condition")) : null;
-                    return new StimulusTemplate.TriggerTemplate(name, execution_condition, ids, relations, trigger_condition, obj.containsKey("scope") ? StimulusTemplate.EffectScope.valueOf(obj.getString("scope")) : null);
+                    return new StimulusTemplate.TriggerTemplate(name, execution_condition, ids, relations, obj.getString("content"), trigger_condition, obj.containsKey("scope") ? StimulusTemplate.EffectScope.valueOf(obj.getString("scope")) : null, obj.containsKey("periodicity") ? StimulusTemplate.TriggerTemplate.Periodicity.valueOf(obj.getString("periodicity")) : null);
                 default:
                     throw new AssertionError(StimulusTemplate.StimulusTemplateType.valueOf(obj.getString("type")).name());
             }

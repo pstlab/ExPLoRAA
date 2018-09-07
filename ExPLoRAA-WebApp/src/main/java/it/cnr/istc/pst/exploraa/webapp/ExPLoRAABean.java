@@ -376,34 +376,93 @@ public class ExPLoRAABean {
             }
 
             @Override
-            public void executeToken(LessonManager.SolverToken tk) {
+            public void executeToken(LessonManager.SolverToken tk, final LessonManager.TriggerContext ctx) {
                 if (tk.template.type != LessonModel.StimulusTemplate.StimulusTemplateType.Root) {
                     // the students both interested and having proper parameter values for this stimulus..
                     Set<Long> students = new HashSet<>();
-                    for (Follow follow : lesson.students.values()) {
-                        for (String interest : follow.interests) {
-                            if (tk.template.execution_condition == null || (isOnline(follow.user.id) && isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
-                                switch (tk.template.type) {
-                                    case Root:
-                                    case Trigger:
-                                        break;
-                                    case Text:
-                                        if (((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).topics.contains(interest)) {
-                                            students.add(follow.user.id);
+                    if (ctx != null && (ctx.getSourceToken().template instanceof LessonModel.StimulusTemplate.TriggerTemplate)) {
+                        if (((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope != null) {
+                            switch (((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope) {
+                                case Self:
+                                    if (tk.template.execution_condition == null || (isOnline(ctx.getUserId()) && isSatisfied(tk.template.execution_condition, parameter_values.get(ctx.getUserId())))) {
+                                        switch (tk.template.type) {
+                                            case Root:
+                                            case Trigger:
+                                                break;
+                                            case Text:
+                                                students.add(ctx.getUserId());
+                                                break;
+                                            case URL:
+                                                students.add(ctx.getUserId());
+                                                break;
+                                            case Question:
+                                                students.add(ctx.getUserId());
+                                                break;
+                                            default:
+                                                throw new AssertionError(tk.template.type.name());
                                         }
-                                        break;
-                                    case URL:
-                                        if (((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).topics.contains(interest)) {
-                                            students.add(follow.user.id);
+                                    }
+                                    break;
+                                case Group:
+                                    for (Follow follow : lesson.students.values()) {
+                                        for (String interest : follow.interests) {
+                                            if (tk.template.execution_condition == null || (isOnline(follow.user.id) && isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
+                                                switch (tk.template.type) {
+                                                    case Root:
+                                                    case Trigger:
+                                                        break;
+                                                    case Text:
+                                                        if (((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).topics.contains(interest)) {
+                                                            students.add(follow.user.id);
+                                                        }
+                                                        break;
+                                                    case URL:
+                                                        if (((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).topics.contains(interest)) {
+                                                            students.add(follow.user.id);
+                                                        }
+                                                        break;
+                                                    case Question:
+                                                        if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).topics.contains(interest)) {
+                                                            students.add(follow.user.id);
+                                                        }
+                                                        break;
+                                                    default:
+                                                        throw new AssertionError(tk.template.type.name());
+                                                }
+                                            }
                                         }
-                                        break;
-                                    case Question:
-                                        if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).topics.contains(interest)) {
-                                            students.add(follow.user.id);
-                                        }
-                                        break;
-                                    default:
-                                        throw new AssertionError(tk.template.type.name());
+                                    }
+                                    break;
+                                default:
+                                    throw new AssertionError(((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope.name());
+                            }
+                        }
+                    } else {
+                        for (Follow follow : lesson.students.values()) {
+                            for (String interest : follow.interests) {
+                                if (tk.template.execution_condition == null || (isOnline(follow.user.id) && isSatisfied(tk.template.execution_condition, parameter_values.get(follow.user.id)))) {
+                                    switch (tk.template.type) {
+                                        case Root:
+                                        case Trigger:
+                                            break;
+                                        case Text:
+                                            if (((LessonModel.StimulusTemplate.TextStimulusTemplate) tk.template).topics.contains(interest)) {
+                                                students.add(follow.user.id);
+                                            }
+                                            break;
+                                        case URL:
+                                            if (((LessonModel.StimulusTemplate.URLStimulusTemplate) tk.template).topics.contains(interest)) {
+                                                students.add(follow.user.id);
+                                            }
+                                            break;
+                                        case Question:
+                                            if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) tk.template).topics.contains(interest)) {
+                                                students.add(follow.user.id);
+                                            }
+                                            break;
+                                        default:
+                                            throw new AssertionError(tk.template.type.name());
+                                    }
                                 }
                             }
                         }

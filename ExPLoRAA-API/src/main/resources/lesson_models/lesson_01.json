@@ -11,14 +11,8 @@
             "topics": ["Religion"],
             "content": "This is a first stimulus about religion."
         }, {
-            "type": "URL",
-            "name": "st_2",
-            "topics": ["Art", "History"],
-            "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum.",
-            "url": "https://it.wikipedia.org/wiki/Colosseo"
-        }, {
             "type": "Text",
-            "name": "st_3",
+            "name": "st_2",
             "topics": ["Religion"],
             "execution_condition": {
                 "type": "And",
@@ -47,38 +41,39 @@
             "content": "This is a stimulus about religion which is executed only if its execution condition is satisfied."
         }, {
             "type": "URL",
-            "name": "st_4",
+            "name": "st_3",
             "topics": ["Art"],
             "content": "This is a link to an art page.",
             "url": "https://it.wikipedia.org/wiki/Arte"
         }, {
             "type": "Question",
-            "name": "st_5",
+            "name": "st_4",
             "topics": ["Religion"],
             "question": "This is a question about religion. Do you believe in god?",
             "answers": [{
                     "answer": "Yes",
-                    "event": "st_5_yes"
+                    "event": "st_4_yes"
                 }, {
                     "answer": "No",
-                    "event": "st_5_no"
+                    "event": "st_4_no"
                 }]
         }, {
             "type": "URL",
-            "name": "st_5_yes",
+            "name": "st_4_yes",
             "topics": ["Religion"],
             "content": "This is a link about religion which is received if you believe in god",
             "url": "https://it.wikipedia.org/wiki/Religione"
         }, {
             "type": "URL",
-            "name": "st_5_no",
+            "name": "st_4_no",
             "topics": ["Religion"],
             "content": "This is a link about religion which is received if you do not believe in god",
             "url": "https://www.uaar.it/"
         }, {
             "type": "Trigger",
             "name": "tr_st_0",
-            "ids": ["st_2"],
+            "ids": ["tr_st_0_consequence"],
+            "content": "This is a trigger which takes place whenever in proximity of the Colosseum",
             "condition": {
                 "type": "And",
                 "conditions": [{
@@ -103,8 +98,31 @@
                         "value": "12.492376"
                     }]
             }
+        }, {
+            "type": "URL",
+            "name": "tr_st_0_consequence",
+            "topics": ["Art", "History"],
+            "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum.",
+            "url": "https://it.wikipedia.org/wiki/Colosseo"
+        }, {
+            "type": "Trigger",
+            "name": "tr_st_1",
+            "ids": ["tr_st_1_consequence"],
+            "content": "This is a trigger which takes place whenever walking too fast (i.e. more than 120 steps per minute).",
+            "scope": "Self",
+            "periodicity": "Always",
+            "condition": {
+                "type": "Numeric",
+                "numeric_condition_type": "GEq",
+                "variable": "Steps.steps_per_minute",
+                "value": "120"
+            }
+        }, {
+            "type": "Text",
+            "name": "tr_st_1_consequence",
+            "content": "Warning!! You are walking too fast.."
         }],
-    "ids": ["st_0", "st_1", "tr_st_0", "st_3", "st_4", "st_5"],
+    "ids": ["st_0", "st_1", "tr_st_0", "tr_st_1", "st_2", "st_3", "st_4"],
     "relations": [
         {
             "from": "this",
@@ -129,6 +147,19 @@
         },
         {
             "from": "st_1",
+            "to": "tr_st_1",
+            "lb": 10,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_1",
+            "to": "st_2",
+            "lb": 6,
+            "ub": 12,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "st_2",
             "to": "st_3",
             "lb": 6,
             "ub": 12,
@@ -137,13 +168,6 @@
         {
             "from": "st_3",
             "to": "st_4",
-            "lb": 6,
-            "ub": 12,
-            "unit": "SECONDS"
-        },
-        {
-            "from": "st_4",
-            "to": "st_5",
             "lb": 6,
             "ub": 12,
             "unit": "SECONDS"

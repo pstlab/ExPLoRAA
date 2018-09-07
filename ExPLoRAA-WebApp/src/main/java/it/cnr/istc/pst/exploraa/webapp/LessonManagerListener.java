@@ -43,8 +43,9 @@ public interface LessonManagerListener {
      * Notifies the listener that a token has to be executed.
      *
      * @param tk the token that has to be executed.
+     * @param ctx the context within the token is created.
      */
-    public void executeToken(final LessonManager.SolverToken tk);
+    public void executeToken(final LessonManager.SolverToken tk, final LessonManager.TriggerContext ctx);
 
     /**
      * Notifies the listener that a stimulus has to be executed.

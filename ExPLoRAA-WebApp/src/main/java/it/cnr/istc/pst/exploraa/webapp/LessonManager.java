@@ -272,7 +272,7 @@ public class LessonManager implements TemporalListener {
                             throw new AssertionError(tk.template.type.name());
                     }
                     // this token can be executed..
-                    listeners.forEach(l -> l.executeToken(tk));
+                    listeners.forEach(l -> l.executeToken(tk, triggered_contexts.get(tk)));
                 }
                 idx++;
                 if (idx < lesson_timeline_pulses.size()) {
@@ -402,7 +402,10 @@ public class LessonManager implements TemporalListener {
     }
 
     public void trigger(SolverToken tk, long user_id) {
-        triggerable_tokens.get(tk).add(user_id);
+        if (((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).periodicity == LessonModel.StimulusTemplate.TriggerTemplate.Periodicity.Once) {
+            // we store that user 'user_id' has triggered the token..
+            triggerable_tokens.get(tk).add(user_id);
+        }
 
         TriggerContext ctx = new TriggerContext(tk, user_id);
         triggered_context = ctx;
@@ -501,11 +504,11 @@ public class LessonManager implements TemporalListener {
         listeners.remove(listener);
     }
 
-    private static class TriggerContext {
+    public static class TriggerContext {
 
         private final SolverToken source_token;
         private final long user_id;
-        final Collection<SolverToken> tokens = new ArrayList<>();
+        private final Collection<SolverToken> tokens = new ArrayList<>();
 
         private TriggerContext(SolverToken source_token, long user_id) {
             this.source_token = source_token;
