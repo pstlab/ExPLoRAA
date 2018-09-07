@@ -266,7 +266,7 @@ public class TeachingLessonActivity extends AppCompatActivity implements Teachin
                     token_content.setText(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) stimulus).question);
                     break;
                 case Trigger:
-                    token_content.setText(getText(R.string.trigger));
+                    token_content.setText(((LessonModel.StimulusTemplate.TriggerTemplate) stimulus).content);
                     break;
             }
         }

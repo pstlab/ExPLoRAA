@@ -24,7 +24,6 @@ import com.google.gson.stream.JsonWriter;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -46,17 +45,6 @@ public class LessonModel {
     public Set<String> ids;
     public List<Relation> relations;
 
-    public LessonModel() {
-    }
-
-    public LessonModel(Long id, String name, Map<String, StimulusTemplate> stimuli, Set<String> ids, List<Relation> relations) {
-        this.id = id;
-        this.name = name;
-        this.stimuli = stimuli;
-        this.ids = ids;
-        this.relations = relations;
-    }
-
     public static class StimulusTemplate {
 
         public static final StimulusTemplateAdapter ADAPTER = new StimulusTemplateAdapter();
@@ -65,17 +53,6 @@ public class LessonModel {
         public Condition execution_condition;
         public Set<String> ids;
         public List<Relation> relations;
-
-        public StimulusTemplate() {
-        }
-
-        public StimulusTemplate(StimulusTemplateType type, String name, Condition execution_condition, Set<String> ids, List<Relation> relations) {
-            this.type = type;
-            this.name = name;
-            this.execution_condition = execution_condition;
-            this.ids = ids;
-            this.relations = relations;
-        }
 
         public enum StimulusTemplateType {
             Root, Text, URL, Question, Trigger
@@ -114,9 +91,14 @@ public class LessonModel {
 
         public static class TriggerTemplate extends StimulusTemplate {
 
-            public Set<String> topics;
+            public String content;
             public Condition condition;
             public EffectScope scope;
+            public Periodicity periodicity;
+
+            public enum Periodicity {
+                Once, Always
+            }
         }
     }
 
@@ -125,13 +107,6 @@ public class LessonModel {
         public static final ConditionAdapter ADAPTER = new ConditionAdapter();
         public ConditionType type;
 
-        public Condition() {
-        }
-
-        public Condition(ConditionType type) {
-            this.type = type;
-        }
-
         public enum ConditionType {
             And, Or, Not, Numeric, Nominal
         }
@@ -139,63 +114,22 @@ public class LessonModel {
         public static class AndCondition extends Condition {
 
             public List<Condition> conditions;
-
-            public AndCondition() {
-            }
-
-            public AndCondition(Condition... conditions) {
-                this(Arrays.asList(conditions));
-            }
-
-            public AndCondition(List<Condition> conditions) {
-                super(ConditionType.And);
-                this.conditions = conditions;
-            }
         }
 
         public static class OrCondition extends Condition {
 
             public List<Condition> conditions;
-
-            public OrCondition() {
-            }
-
-            public OrCondition(Condition... conditions) {
-                this(Arrays.asList(conditions));
-            }
-
-            public OrCondition(List<Condition> conditions) {
-                super(ConditionType.And);
-                this.conditions = conditions;
-            }
         }
 
         public static class NotCondition extends Condition {
 
             public Condition condition;
-
-            public NotCondition() {
-            }
-
-            public NotCondition(Condition condition) {
-                super(ConditionType.Not);
-                this.condition = condition;
-            }
         }
 
         public static class NominalCondition extends Condition {
 
             public String variable;
             public String value;
-
-            public NominalCondition() {
-            }
-
-            public NominalCondition(String variable, String value) {
-                super(ConditionType.Nominal);
-                this.variable = variable;
-                this.value = value;
-            }
         }
 
         public static class NumericCondition extends Condition {
@@ -203,16 +137,6 @@ public class LessonModel {
             public NumericConditionType numeric_condition_type;
             public String variable;
             public double value;
-
-            public NumericCondition() {
-            }
-
-            public NumericCondition(NumericConditionType type, String variable, double value) {
-                super(ConditionType.Numeric);
-                this.numeric_condition_type = type;
-                this.variable = variable;
-                this.value = value;
-            }
 
             public enum NumericConditionType {
                 GEq, Eq, LEq
@@ -228,17 +152,6 @@ public class LessonModel {
         public Long lb;
         public Long ub;
         public TimeUnit unit;
-
-        public Relation() {
-        }
-
-        public Relation(String from, String to, Long lb, Long ub, TimeUnit unit) {
-            this.from = from;
-            this.to = to;
-            this.lb = lb;
-            this.ub = ub;
-            this.unit = unit;
-        }
     }
 
     public static class LessonModelAdapter extends TypeAdapter<LessonModel> {
@@ -358,59 +271,58 @@ public class LessonModel {
             in.nextName();
             switch (Condition.ConditionType.valueOf(in.nextString())) {
                 case And:
+                    c = new Condition.AndCondition();
+                    c.type = Condition.ConditionType.And;
                     in.nextName();
-                    List<Condition> and_conditions = new ArrayList<>();
                     in.beginArray();
                     while (in.peek() != JsonToken.END_ARRAY)
-                        and_conditions.add(Condition.ADAPTER.read(in));
+                        ((Condition.AndCondition) c).conditions.add(Condition.ADAPTER.read(in));
                     in.endArray();
-                    c = new Condition.AndCondition(and_conditions);
                     break;
                 case Or:
+                    c = new Condition.OrCondition();
+                    c.type = Condition.ConditionType.Or;
                     in.nextName();
-                    List<Condition> or_conditions = new ArrayList<>();
                     in.beginArray();
                     while (in.peek() != JsonToken.END_ARRAY)
-                        or_conditions.add(Condition.ADAPTER.read(in));
+                        ((Condition.OrCondition) c).conditions.add(Condition.ADAPTER.read(in));
                     in.endArray();
-                    c = new Condition.OrCondition(or_conditions);
                     break;
                 case Not:
+                    c = new Condition.NotCondition();
+                    c.type = Condition.ConditionType.Not;
                     in.nextName();
-                    c = new Condition.NotCondition(Condition.ADAPTER.read(in));
+                    ((Condition.NotCondition) c).condition = Condition.ADAPTER.read(in);
                     break;
                 case Numeric: {
-                    Condition.NumericCondition.NumericConditionType n_cond_type = null;
-                    String variable = null;
-                    double value = -1;
+                    c = new Condition.NumericCondition();
+                    c.type = Condition.ConditionType.Numeric;
                     while (in.hasNext())
                         switch ((in.nextName())) {
                             case "numeric_condition_type":
-                                n_cond_type = Condition.NumericCondition.NumericConditionType.valueOf(in.nextString());
+                                ((Condition.NumericCondition) c).numeric_condition_type = Condition.NumericCondition.NumericConditionType.valueOf(in.nextString());
                                 break;
                             case "variable":
-                                variable = in.nextString();
+                                ((Condition.NumericCondition) c).variable = in.nextString();
                                 break;
                             case "value":
-                                value = in.nextDouble();
+                                ((Condition.NumericCondition) c).value = in.nextDouble();
                                 break;
                         }
-                    c = new Condition.NumericCondition(n_cond_type, variable, value);
                     break;
                 }
                 case Nominal: {
-                    String variable = null;
-                    String value = null;
+                    c = new Condition.NominalCondition();
+                    c.type = Condition.ConditionType.Nominal;
                     while (in.hasNext())
                         switch ((in.nextName())) {
                             case "variable":
-                                variable = in.nextString();
+                                ((Condition.NominalCondition) c).variable = in.nextString();
                                 break;
                             case "value":
-                                value = in.nextString();
+                                ((Condition.NominalCondition) c).value = in.nextString();
                                 break;
                         }
-                    c = new Condition.NominalCondition(variable, value);
                     break;
                 }
             }
@@ -513,9 +425,12 @@ public class LessonModel {
                     out.endArray();
                     break;
                 case Trigger:
+                    out.name("content").value(((StimulusTemplate.TriggerTemplate) value).content);
                     Condition.ADAPTER.write(out.name("condition"), ((StimulusTemplate.TriggerTemplate) value).condition);
                     if (((StimulusTemplate.TriggerTemplate) value).scope != null)
                         out.name("scope").value(((StimulusTemplate.TriggerTemplate) value).scope.name());
+                    if (((StimulusTemplate.TriggerTemplate) value).periodicity != null)
+                        out.name("periodicity").value(((StimulusTemplate.TriggerTemplate) value).periodicity.name());
                     break;
             }
             out.endObject();
@@ -561,6 +476,9 @@ public class LessonModel {
                     case "scope":
                         ((StimulusTemplate.TriggerTemplate) st).scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
                         break;
+                    case "periodicity":
+                        ((StimulusTemplate.TriggerTemplate) st).periodicity = StimulusTemplate.TriggerTemplate.Periodicity.valueOf(in.nextString());
+                        break;
                     case "execution_condition":
                         Objects.requireNonNull(st).execution_condition = Condition.ADAPTER.read(in);
                         break;
@@ -584,6 +502,9 @@ public class LessonModel {
                                 break;
                             case URL:
                                 ((StimulusTemplate.URLStimulusTemplate) st).content = in.nextString();
+                                break;
+                            case Trigger:
+                                ((StimulusTemplate.TriggerTemplate) st).content = in.nextString();
                                 break;
                         }
                         break;

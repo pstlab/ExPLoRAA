@@ -99,6 +99,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     private Location current_location;
     private SensorManager sensor_manager;
     private Sensor step_detector;
+    private long last_step_timestamp = 0;
     /**
      * The received stimuli.
      */
@@ -1361,9 +1362,32 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     public void onProviderDisabled(String provider) {
     }
 
+    @Override
+    public void onSensorChanged(SensorEvent sensorEvent) {
+        switch (sensorEvent.sensor.getType()) {
+            case Sensor.TYPE_STEP_DETECTOR:
+                Log.i(TAG, "New step..");
+                if (mqtt != null && mqtt.isConnected()) {
+                    Map<String, String> steps_per_minute = new HashMap<>(1);
+                    steps_per_minute.put("steps_per_minute", Double.toString(60000D / (sensorEvent.timestamp - last_step_timestamp)));
+                    try {
+                        mqtt.publish(user.id + "/output/Steps", GSON.toJson(steps_per_minute).getBytes(), 1, true);
+                    } catch (MqttException e) {
+                        Log.w(TAG, "Step-per-minute update MQTT communication failed..", e);
+                    }
+                    last_step_timestamp = sensorEvent.timestamp;
+                }
+        }
+    }
+
+    @Override
+    public void onAccuracyChanged(Sensor sensor, int i) {
+    }
+
     private Map<String, Parameter> get_par_types() {
         Map<String, Parameter> c_par_types = new HashMap<>();
 
+        // the GPS sensor..
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Parameter gps = new Parameter();
             gps.name = "GPS";
@@ -1372,30 +1396,22 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
             gps.properties.put("longitude", "numeric");
             c_par_types.put("GPS", gps);
         }
+
+        // the step detector sensor..
+        if (step_detector != null) {
+            Parameter steps = new Parameter();
+            steps.name = "Steps";
+            steps.properties = new HashMap<>(1);
+            steps.properties.put("steps_per_minute", "numeric");
+            c_par_types.put("Steps", steps);
+        }
         return c_par_types;
-    }
-
-    @Override
-    public void onSensorChanged(SensorEvent sensorEvent) {
-        if (step_detector != null && sensorEvent.sensor == step_detector) {
-            Log.i(TAG, "New step..");
-        }
-    }
-
-    @Override
-    public void onAccuracyChanged(Sensor sensor, int i) {
-    }
-
-    public class ExPLoRAABinder extends Binder {
-
-        public ExPLoRAAService getService() {
-            return ExPLoRAAService.this;
-        }
     }
 
     private Map<String, Map<String, String>> get_par_values() {
         Map<String, Map<String, String>> c_par_values = new HashMap<>();
 
+        // the GPS sensor..
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             Map<String, String> gps_pos = new HashMap<>(2);
             final Location last_location = ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).getLastKnownLocation(LocationManager.GPS_PROVIDER);
@@ -1409,6 +1425,14 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
             }
             c_par_values.put("GPS", gps_pos);
         }
+
+        // the step detector sensor..
+        if (step_detector != null) {
+            Map<String, String> steps_per_minute = new HashMap<>(1);
+            steps_per_minute.put("steps_per_minute", "0");
+            c_par_values.put("Steps", steps_per_minute);
+        }
+
         return c_par_values;
     }
 
@@ -1450,6 +1474,13 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
 
     public void removeStudentsListener(StudentsListener l) {
         students_listeners.remove(l);
+    }
+
+    public class ExPLoRAABinder extends Binder {
+
+        public ExPLoRAAService getService() {
+            return ExPLoRAAService.this;
+        }
     }
 
     public interface StimuliListener {
