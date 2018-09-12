@@ -31,7 +31,8 @@ public class StudentsFragment extends Fragment implements ExPLoRAAService.Studen
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ExPLoRAAContext.getInstance().getService().removeStudentsListener(this);
+        if (ExPLoRAAContext.getInstance().isServiceRunning())
+            ExPLoRAAContext.getInstance().getService().removeStudentsListener(this);
     }
 
     @Override

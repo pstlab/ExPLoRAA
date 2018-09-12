@@ -40,7 +40,8 @@ public class FollowingLessonsFragment extends Fragment implements ExPLoRAAServic
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ExPLoRAAContext.getInstance().getService().removeFollowingLessonsListener(this);
+        if (ExPLoRAAContext.getInstance().isServiceRunning())
+            ExPLoRAAContext.getInstance().getService().removeFollowingLessonsListener(this);
     }
 
     @Override

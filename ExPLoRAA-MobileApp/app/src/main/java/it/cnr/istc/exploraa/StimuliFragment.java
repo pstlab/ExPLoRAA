@@ -33,7 +33,8 @@ public class StimuliFragment extends Fragment implements ExPLoRAAService.Stimuli
     @Override
     public void onDestroy() {
         super.onDestroy();
-        ExPLoRAAContext.getInstance().getService().removeStimuliListener(this);
+        if (ExPLoRAAContext.getInstance().isServiceRunning())
+            ExPLoRAAContext.getInstance().getService().removeStimuliListener(this);
     }
 
     @Override
