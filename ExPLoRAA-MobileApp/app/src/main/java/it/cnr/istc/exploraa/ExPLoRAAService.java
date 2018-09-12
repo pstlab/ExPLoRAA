@@ -196,7 +196,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         main_handler = new Handler(getApplicationContext().getMainLooper());
 
         sensor_manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        step_detector = sensor_manager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        step_detector = sensor_manager.getDefaultSensor(Sensor.TYPE_STEP_DETECTOR);
         if (step_detector != null) {
             steps_timer = new Timer();
             steps_timer.scheduleAtFixedRate(new TimerTask() {
