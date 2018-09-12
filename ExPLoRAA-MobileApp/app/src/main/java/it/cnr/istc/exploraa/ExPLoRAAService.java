@@ -58,6 +58,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import it.cnr.istc.exploraa.api.ExPLoRAA;
 import it.cnr.istc.exploraa.api.Follow;
@@ -77,6 +79,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
 
     private static final String TAG = "ExPLoRAAService";
     private static final int LOCATION_TIME = 1000 * 60 * 2; // two minutes..
+    private static final int STEPS_TIME = 1000 * 10; // ten seconds..
     public static final String LOGIN = "Login";
     public static final String USER_CREATION = "User creation";
     public static final Gson GSON = new GsonBuilder().registerTypeAdapter(Message.class, Message.ADAPTER).registerTypeAdapter(LessonModel.class, LessonModel.ADAPTER).create();
@@ -100,6 +103,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     private SensorManager sensor_manager;
     private Sensor step_detector;
     private long last_step_timestamp = 0;
+    private Timer steps_timer;
     /**
      * The received stimuli.
      */
@@ -193,6 +197,24 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
 
         sensor_manager = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         step_detector = sensor_manager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        if (step_detector != null) {
+            steps_timer = new Timer();
+            steps_timer.scheduleAtFixedRate(new TimerTask() {
+                @Override
+                public void run() {
+                    if (mqtt != null && mqtt.isConnected()) {
+                        Map<String, String> steps_per_minute = new HashMap<>(1);
+                        steps_per_minute.put("steps_per_minute", "0");
+                        try {
+                            mqtt.publish(user.id + "/output/Steps", GSON.toJson(steps_per_minute).getBytes(), 1, true);
+                        } catch (MqttException e) {
+                            Log.w(TAG, "Step-per-minute update MQTT communication failed..", e);
+                        }
+                        last_step_timestamp = System.currentTimeMillis();
+                    }
+                }
+            }, STEPS_TIME, STEPS_TIME);
+        }
 
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
@@ -1367,7 +1389,25 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         switch (sensorEvent.sensor.getType()) {
             case Sensor.TYPE_STEP_DETECTOR:
                 Log.i(TAG, "New step..");
+                steps_timer.cancel();
+                steps_timer = new Timer();
+                steps_timer.scheduleAtFixedRate(new TimerTask() {
+                    @Override
+                    public void run() {
+                        if (mqtt != null && mqtt.isConnected()) {
+                            Map<String, String> steps_per_minute = new HashMap<>(1);
+                            steps_per_minute.put("steps_per_minute", "0");
+                            try {
+                                mqtt.publish(user.id + "/output/Steps", GSON.toJson(steps_per_minute).getBytes(), 1, true);
+                            } catch (MqttException e) {
+                                Log.w(TAG, "Step-per-minute update MQTT communication failed..", e);
+                            }
+                            last_step_timestamp = System.currentTimeMillis();
+                        }
+                    }
+                }, STEPS_TIME, STEPS_TIME);
                 if (mqtt != null && mqtt.isConnected()) {
+
                     Map<String, String> steps_per_minute = new HashMap<>(1);
                     steps_per_minute.put("steps_per_minute", Double.toString(60000D / (sensorEvent.timestamp - last_step_timestamp)));
                     try {
