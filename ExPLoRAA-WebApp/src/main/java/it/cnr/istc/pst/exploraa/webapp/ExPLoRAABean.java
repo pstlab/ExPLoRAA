@@ -209,13 +209,19 @@ public class ExPLoRAABean {
             for (LessonModel.StimulusTemplate template : lm.stimuli.values()) {
                 switch (template.type) {
                     case Text:
-                        topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        if (((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics != null) {
+                            topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        }
                         break;
                     case URL:
-                        topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        if (((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics != null) {
+                            topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        }
                         break;
                     case Question:
-                        topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics != null) {
+                            topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        }
                         break;
                     case Root:
                     case Trigger:
@@ -669,6 +675,9 @@ public class ExPLoRAABean {
                 return !isSatisfied(((LessonModel.Condition.NotCondition) cond).condition, vals);
             case Numeric:
                 String[] num_par_name = ((LessonModel.Condition.NumericCondition) cond).variable.split("\\.");
+                if (!vals.containsKey(num_par_name[0]) || !vals.get(num_par_name[0]).containsKey(num_par_name[1])) {
+                    return false;
+                }
                 double c_numeric_val = Double.parseDouble(vals.get(num_par_name[0]).get(num_par_name[1]));
                 switch (((LessonModel.Condition.NumericCondition) cond).numeric_condition_type) {
                     case GEq:
@@ -682,6 +691,9 @@ public class ExPLoRAABean {
                 }
             case Nominal:
                 String[] nom_par_name = ((LessonModel.Condition.NominalCondition) cond).variable.split("\\.");
+                if (!vals.containsKey(nom_par_name[0]) || !vals.get(nom_par_name[0]).containsKey(nom_par_name[1])) {
+                    return false;
+                }
                 return vals.get(nom_par_name[0]).get(nom_par_name[1]).equals(((LessonModel.Condition.NominalCondition) cond).value);
             default:
                 throw new AssertionError(cond.type.name());

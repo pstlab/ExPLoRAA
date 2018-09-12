@@ -569,10 +569,10 @@ public class LessonModel {
             JsonObjectBuilder rel_builder = Json.createObjectBuilder();
             rel_builder.add("from", obj.from);
             rel_builder.add("to", obj.to);
-            if (obj.lb != Double.NEGATIVE_INFINITY) {
+            if (obj.lb != null && obj.lb != Double.NEGATIVE_INFINITY) {
                 rel_builder.add("lb", obj.lb);
             }
-            if (obj.ub != Double.POSITIVE_INFINITY) {
+            if (obj.ub != null && obj.ub != Double.POSITIVE_INFINITY) {
                 rel_builder.add("ub", obj.ub);
             }
             rel_builder.add("unit", obj.unit.name());

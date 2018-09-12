@@ -102,8 +102,23 @@
             "type": "URL",
             "name": "tr_st_0_consequence",
             "topics": ["Art", "History"],
+            "ids": ["tr_st_0_consequence_0"],
+            "relations": [
+                {
+                    "from": "this",
+                    "to": "tr_st_0_consequence_0",
+                    "lb": 16,
+                    "ub": 30,
+                    "unit": "SECONDS"
+                }],
             "content": "This is a first location-dependent stimulus about art and history. This stimulus is shown when in proximity of the Colosseum.",
             "url": "https://it.wikipedia.org/wiki/Colosseo"
+        }, {
+            "type": "URL",
+            "name": "tr_st_0_consequence_0",
+            "topics": ["History"],
+            "content": "An historical link about ancient Rome.",
+            "url": "https://it.wikipedia.org/wiki/Roma_(citt%C3%A0_antica)"
         }, {
             "type": "Trigger",
             "name": "tr_st_1",

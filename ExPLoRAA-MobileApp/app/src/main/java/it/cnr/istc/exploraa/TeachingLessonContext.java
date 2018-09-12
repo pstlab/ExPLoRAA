@@ -77,7 +77,7 @@ public class TeachingLessonContext {
         return id_tokens.get(id);
     }
 
-    public void updateToken(int id, long time, long min, long max) {
+    public void updateToken(int id, long time, Long min, Long max) {
         final TokenRow tk_row = id_tokens.get(id);
         int pos = tokens.indexOf(tk_row);
         tk_row.getToken().time = time;

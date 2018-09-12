@@ -273,6 +273,7 @@ public class LessonModel {
                 case And:
                     c = new Condition.AndCondition();
                     c.type = Condition.ConditionType.And;
+                    ((Condition.AndCondition) c).conditions = new ArrayList<>();
                     in.nextName();
                     in.beginArray();
                     while (in.peek() != JsonToken.END_ARRAY)
@@ -282,6 +283,7 @@ public class LessonModel {
                 case Or:
                     c = new Condition.OrCondition();
                     c.type = Condition.ConditionType.Or;
+                    ((Condition.OrCondition) c).conditions = new ArrayList<>();
                     in.nextName();
                     in.beginArray();
                     while (in.peek() != JsonToken.END_ARRAY)
@@ -575,9 +577,9 @@ public class LessonModel {
             out.beginObject();
             out.name("from").value(value.from);
             out.name("to").value(value.to);
-            if (value.lb != Double.NEGATIVE_INFINITY)
+            if (value.lb != null && value.lb != Double.NEGATIVE_INFINITY)
                 out.name("lb").value(value.lb);
-            if (value.ub != Double.NEGATIVE_INFINITY)
+            if (value.ub != null && value.ub != Double.NEGATIVE_INFINITY)
                 out.name("ub").value(value.ub);
             out.name("unit").value(value.unit.name());
             out.endObject();

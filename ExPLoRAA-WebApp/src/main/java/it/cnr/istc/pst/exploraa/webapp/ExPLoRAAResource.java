@@ -234,13 +234,19 @@ public class ExPLoRAAResource implements ExPLoRAA {
             for (LessonModel.StimulusTemplate template : c_model.stimuli.values()) {
                 switch (template.type) {
                     case Text:
-                        topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        if (((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics != null) {
+                            topics.addAll(((LessonModel.StimulusTemplate.TextStimulusTemplate) template).topics);
+                        }
                         break;
                     case URL:
-                        topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        if (((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics != null) {
+                            topics.addAll(((LessonModel.StimulusTemplate.URLStimulusTemplate) template).topics);
+                        }
                         break;
                     case Question:
-                        topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics != null) {
+                            topics.addAll(((LessonModel.StimulusTemplate.QuestionStimulusTemplate) template).topics);
+                        }
                         break;
                     case Root:
                     case Trigger:

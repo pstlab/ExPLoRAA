@@ -374,7 +374,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                                     main_handler.post(new Runnable() {
                                         @Override
                                         public void run() {
-                                            id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min != null ? token_update.min : Long.MIN_VALUE, token_update.max != null ? token_update.max : Long.MAX_VALUE);
+                                            id_teaching_lessons.get(token_update.lesson_id).updateToken(token_update.id, token_update.time, token_update.min, token_update.max);
                                         }
                                     });
                                     break;
