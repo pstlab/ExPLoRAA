@@ -1344,6 +1344,10 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         }
     }
 
+    public boolean isEmpaticaE4Connected() {
+        return device_manager != null;
+    }
+
     @Override
     public void onLocationChanged(Location location) {
         if (mqtt != null && mqtt.isConnected() && isBetterLocation(location)) {

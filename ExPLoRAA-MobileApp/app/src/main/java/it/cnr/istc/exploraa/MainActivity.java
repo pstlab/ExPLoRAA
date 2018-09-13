@@ -86,8 +86,13 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAService.E
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
         main_menu = menu;
-        main_menu.findItem(R.id.connect_empatica_e4_menu_item).setVisible(true);
-        main_menu.findItem(R.id.disconnect_empatica_e4_menu_item).setVisible(false);
+        if (ExPLoRAAContext.getInstance().getService().isEmpaticaE4Connected()) {
+            main_menu.findItem(R.id.connect_empatica_e4_menu_item).setVisible(false);
+            main_menu.findItem(R.id.disconnect_empatica_e4_menu_item).setVisible(true);
+        } else {
+            main_menu.findItem(R.id.connect_empatica_e4_menu_item).setVisible(true);
+            main_menu.findItem(R.id.disconnect_empatica_e4_menu_item).setVisible(false);
+        }
         return true;
     }
 
