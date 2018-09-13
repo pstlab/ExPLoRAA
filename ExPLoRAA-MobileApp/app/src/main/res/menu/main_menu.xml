@@ -1,7 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <item
-        android:id="@+id/logout_menu_item"
-        android:title="@string/logout" />
+    <group android:id="@+id/empatica_connection_group">
+        <item
+            android:id="@+id/connect_empatica_e4_menu_item"
+            android:title="@string/connect_empatica_e4" />
+        <item
+            android:id="@+id/disconnect_empatica_e4_menu_item"
+            android:title="@string/disconnect_empatica_e4" />
+    </group>
+    <group android:id="@+id/connection_group">
+        <item
+            android:id="@+id/logout_menu_item"
+            android:title="@string/logout" />
+    </group>
 </menu>

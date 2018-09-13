@@ -143,6 +143,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     private final List<StudentContext> students = new ArrayList<>();
     private final LongSparseArray<StudentContext> id_students = new LongSparseArray<>();
     private final LongSparseArray<StudentContext.StudentListener> id_student_listener = new LongSparseArray<>();
+    private final Collection<EmpaticaE4Listener> empatica_e4_listeners = new ArrayList<>();
     private final Collection<StimuliListener> stimuli_listeners = new ArrayList<>();
     private final Collection<FollowingLessonsListener> following_lessons_listeners = new ArrayList<>();
     private final Collection<TeachersListener> teachers_listeners = new ArrayList<>();
@@ -225,9 +226,6 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
             }, STEPS_TIME, STEPS_TIME);
         }
 
-        device_manager = new EmpaDeviceManager(getApplicationContext(), this, this);
-        device_manager.authenticateWithAPIKey(BuildConfig.EMPATICA_API_KEY);
-
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
         final Notification notification = new NotificationCompat.Builder(this, getString(R.string.app_name))
@@ -251,8 +249,9 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         super.onDestroy();
         Log.i(TAG, "Destroying ExPLoRAA service..");
 
-        device_manager.disconnect();
-        device_manager.cleanUp();
+        if (device_manager != null) {
+            device_manager.cleanUp();
+        }
 
         if (user != null)
             logout();
@@ -1089,6 +1088,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         assert user != null;
         Log.i(TAG, "Logging out current user..");
         setUser(null);
+        disconnectEmpaticaE4();
     }
 
     /**
@@ -1332,6 +1332,18 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         });
     }
 
+    public void connectEmpaticaE4() {
+        device_manager = new EmpaDeviceManager(getApplicationContext(), this, this);
+        device_manager.authenticateWithAPIKey(BuildConfig.EMPATICA_API_KEY);
+    }
+
+    public void disconnectEmpaticaE4() {
+        if (device_manager != null) {
+            device_manager.disconnect();
+            device_manager = null;
+        }
+    }
+
     @Override
     public void onLocationChanged(Location location) {
         if (mqtt != null && mqtt.isConnected() && isBetterLocation(location)) {
@@ -1465,6 +1477,165 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     public void onAccuracyChanged(Sensor sensor, int i) {
     }
 
+    @Override
+    public void didReceiveGSR(float gsr, double timestamp) {
+        Log.i(TAG, "Galvanic Skin Response (GSR): " + gsr);
+    }
+
+    @Override
+    public void didReceiveBVP(float bvp, double timestamp) {
+        Log.i(TAG, "Blood Volume Pulse (BVP): " + bvp);
+    }
+
+    @Override
+    public void didReceiveIBI(float ibi, double timestamp) {
+        Log.i(TAG, "Interbeat interval (IBI): " + ibi);
+    }
+
+    @Override
+    public void didReceiveTemperature(float t, double timestamp) {
+        Log.i(TAG, "Temperature: " + t);
+    }
+
+    @Override
+    public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
+        Log.i(TAG, "Acceleration: [" + x + ", " + y + ", " + z + "]");
+    }
+
+    @Override
+    public void didReceiveBatteryLevel(float level, double timestamp) {
+        Log.i(TAG, "Battery level: " + level);
+    }
+
+    @Override
+    public void didReceiveTag(double timestamp) {
+        Log.i(TAG, "Tag..");
+    }
+
+    @Override
+    public void didUpdateStatus(EmpaStatus status) {
+        switch (status) {
+            case READY:
+                Log.i(TAG, "Empatica E4 manager ready..");
+                device_manager.startScanning();
+                break;
+            case DISCONNECTED:
+                Log.i(TAG, "Empatica E4 disconnected device..");
+                main_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ExPLoRAAService.this, "Empatica E4 device is disconnected!", Toast.LENGTH_LONG).show();
+                        for (EmpaticaE4Listener l : empatica_e4_listeners)
+                            l.empaticaE4Disconnected();
+                    }
+                });
+                break;
+            case CONNECTING:
+                Log.i(TAG, "Empatica E4 connecting device..");
+                // we add the Galvanic Skin Response (GSR) sensor..
+                Parameter empatica_e4_gsr = new Parameter();
+                empatica_e4_gsr.name = "EmpaticaE4_GSR";
+                empatica_e4_gsr.properties = new HashMap<>(1);
+                empatica_e4_gsr.properties.put("GSR", "numeric");
+                addParameter(user, empatica_e4_gsr);
+
+                // we add the Blood Volume Pulse (BVP) sensor..
+                Parameter empatica_e4_bvp = new Parameter();
+                empatica_e4_bvp.name = "EmpaticaE4_BVP";
+                empatica_e4_bvp.properties = new HashMap<>(1);
+                empatica_e4_bvp.properties.put("BVP", "numeric");
+                addParameter(user, empatica_e4_bvp);
+
+                // we add the Interbeat interval (IBI) sensor..
+                Parameter empatica_e4_ibi = new Parameter();
+                empatica_e4_ibi.name = "EmpaticaE4_IBI";
+                empatica_e4_ibi.properties = new HashMap<>(1);
+                empatica_e4_ibi.properties.put("IBI", "numeric");
+                addParameter(user, empatica_e4_ibi);
+
+                // we add the Temperature sensor..
+                Parameter empatica_e4_temperature = new Parameter();
+                empatica_e4_temperature.name = "EmpaticaE4_Temperature";
+                empatica_e4_temperature.properties = new HashMap<>(1);
+                empatica_e4_temperature.properties.put("Temperature", "numeric");
+                addParameter(user, empatica_e4_temperature);
+
+                // we add the Acceleration sensor..
+                Parameter empatica_e4_acceleration = new Parameter();
+                empatica_e4_acceleration.name = "EmpaticaE4_Acceleration";
+                empatica_e4_acceleration.properties = new HashMap<>(3);
+                empatica_e4_acceleration.properties.put("x", "numeric");
+                empatica_e4_acceleration.properties.put("y", "numeric");
+                empatica_e4_acceleration.properties.put("z", "numeric");
+                addParameter(user, empatica_e4_acceleration);
+
+                // we add the Battery sensor..
+                Parameter empatica_e4_battery = new Parameter();
+                empatica_e4_battery.name = "EmpaticaE4_Battery";
+                empatica_e4_battery.properties = new HashMap<>(1);
+                empatica_e4_battery.properties.put("Level", "numeric");
+                addParameter(user, empatica_e4_battery);
+                break;
+            case CONNECTED:
+                Log.i(TAG, "Empatica E4 connected device..");
+                main_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ExPLoRAAService.this, "Empatica E4 device is connected!", Toast.LENGTH_LONG).show();
+                        for (EmpaticaE4Listener l : empatica_e4_listeners) l.empaticaE4Connected();
+                    }
+                });
+                break;
+            case DISCONNECTING:
+                Log.i(TAG, "Empatica E4 disconnecting device..");
+                removeParameter(user, id_par_types.get("EmpaticaE4_Acceleration"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_Temperature"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_IBI"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_BVP"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_GSR"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_Battery"));
+                break;
+            case DISCOVERING:
+                Log.i(TAG, "Empatica E4 manager discovering devices..");
+                main_handler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(ExPLoRAAService.this, "Searching of an Empatica E4 device..", Toast.LENGTH_LONG).show();
+                    }
+                });
+                break;
+        }
+    }
+
+    @Override
+    public void didEstablishConnection() {
+    }
+
+    @Override
+    public void didUpdateSensorStatus(int status, EmpaSensorType type) {
+    }
+
+    @Override
+    public void didDiscoverDevice(EmpaticaDevice device, String deviceLabel, int rssi, boolean allowed) {
+        Log.i(TAG, "Discovered device " + deviceLabel);
+        if (allowed) {
+            device_manager.stopScanning();
+            try {
+                device_manager.connectDevice(device);
+            } catch (ConnectionNotAllowedException e) {
+                Log.w(TAG, e);
+            }
+        }
+    }
+
+    @Override
+    public void didRequestEnableBluetooth() {
+    }
+
+    @Override
+    public void didUpdateOnWristStatus(int status) {
+    }
+
     private Map<String, Parameter> get_par_types() {
         Map<String, Parameter> c_par_types = new HashMap<>();
 
@@ -1517,6 +1688,14 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         return c_par_values;
     }
 
+    public void addEmpaticaE4Listener(EmpaticaE4Listener l) {
+        empatica_e4_listeners.add(l);
+    }
+
+    public void removeEmpaticaE4Listener(EmpaticaE4Listener l) {
+        empatica_e4_listeners.remove(l);
+    }
+
     public void addStimuliListener(StimuliListener l) {
         stimuli_listeners.add(l);
     }
@@ -1557,152 +1736,18 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         students_listeners.remove(l);
     }
 
-    @Override
-    public void didReceiveGSR(float gsr, double timestamp) {
-        Log.i(TAG, "Galvanic Skin Response (GSR): " + gsr);
-    }
-
-    @Override
-    public void didReceiveBVP(float bvp, double timestamp) {
-        Log.i(TAG, "Blood Volume Pulse (BVP): " + bvp);
-    }
-
-    @Override
-    public void didReceiveIBI(float ibi, double timestamp) {
-        Log.i(TAG, "Interbeat interval (IBI): " + ibi);
-    }
-
-    @Override
-    public void didReceiveTemperature(float t, double timestamp) {
-        Log.i(TAG, "Temperature: " + t);
-    }
-
-    @Override
-    public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
-        Log.i(TAG, "Acceleration: [" + x + ", " + y + ", " + z + "]");
-    }
-
-    @Override
-    public void didReceiveBatteryLevel(float level, double timestamp) {
-        Log.i(TAG, "Battery level: " + level);
-    }
-
-    @Override
-    public void didReceiveTag(double timestamp) {
-        Log.i(TAG, "Tag..");
-    }
-
-    @Override
-    public void didUpdateStatus(EmpaStatus status) {
-        switch (status) {
-            case READY:
-                Log.i(TAG, "Empatica E4 manager ready..");
-                device_manager.startScanning();
-                break;
-            case DISCONNECTED:
-                Log.i(TAG, "Empatica E4 disconnected device..");
-                break;
-            case CONNECTING:
-                Log.i(TAG, "Empatica E4 connecting device..");
-                // we add the Galvanic Skin Response (GSR) sensor..
-                Parameter empatica_e4_gsr = new Parameter();
-                empatica_e4_gsr.name = "EmpaticaE4_GSR";
-                empatica_e4_gsr.properties = new HashMap<>(1);
-                empatica_e4_gsr.properties.put("GSR", "numeric");
-                addParameter(user, empatica_e4_gsr);
-
-                // we add the Blood Volume Pulse (BVP) sensor..
-                Parameter empatica_e4_bvp = new Parameter();
-                empatica_e4_bvp.name = "EmpaticaE4_BVP";
-                empatica_e4_bvp.properties = new HashMap<>(1);
-                empatica_e4_bvp.properties.put("BVP", "numeric");
-                addParameter(user, empatica_e4_bvp);
-
-                // we add the Interbeat interval (IBI) sensor..
-                Parameter empatica_e4_ibi = new Parameter();
-                empatica_e4_ibi.name = "EmpaticaE4_IBI";
-                empatica_e4_ibi.properties = new HashMap<>(1);
-                empatica_e4_ibi.properties.put("IBI", "numeric");
-                addParameter(user, empatica_e4_ibi);
-
-                // we add the Temperature sensor..
-                Parameter empatica_e4_temperature = new Parameter();
-                empatica_e4_temperature.name = "EmpaticaE4_Temperature";
-                empatica_e4_temperature.properties = new HashMap<>(1);
-                empatica_e4_temperature.properties.put("Temperature", "numeric");
-                addParameter(user, empatica_e4_temperature);
-
-                // we add the Acceleration sensor..
-                Parameter empatica_e4_acceleration = new Parameter();
-                empatica_e4_acceleration.name = "EmpaticaE4_Acceleration";
-                empatica_e4_acceleration.properties = new HashMap<>(3);
-                empatica_e4_acceleration.properties.put("x", "numeric");
-                empatica_e4_acceleration.properties.put("y", "numeric");
-                empatica_e4_acceleration.properties.put("z", "numeric");
-                addParameter(user, empatica_e4_acceleration);
-
-                // we add the Battery sensor..
-                Parameter empatica_e4_battery = new Parameter();
-                empatica_e4_battery.name = "EmpaticaE4_Battery";
-                empatica_e4_battery.properties = new HashMap<>(1);
-                empatica_e4_battery.properties.put("Level", "numeric");
-                addParameter(user, empatica_e4_battery);
-
-                Toast.makeText(this, "Empatica E4 device connected!", Toast.LENGTH_LONG).show();
-                break;
-            case CONNECTED:
-                Log.i(TAG, "Empatica E4 connected device..");
-                break;
-            case DISCONNECTING:
-                Log.i(TAG, "Empatica E4 disconnecting device..");
-                removeParameter(user, id_par_types.get("EmpaticaE4_Acceleration"));
-                removeParameter(user, id_par_types.get("EmpaticaE4_Temperature"));
-                removeParameter(user, id_par_types.get("EmpaticaE4_IBI"));
-                removeParameter(user, id_par_types.get("EmpaticaE4_BVP"));
-                removeParameter(user, id_par_types.get("EmpaticaE4_GSR"));
-                removeParameter(user, id_par_types.get("EmpaticaE4_Battery"));
-                Toast.makeText(this, "Empatica E4 device disconnected!", Toast.LENGTH_LONG).show();
-                break;
-            case DISCOVERING:
-                Log.i(TAG, "Empatica E4 manager discovering devices..");
-                break;
-        }
-    }
-
-    @Override
-    public void didEstablishConnection() {
-    }
-
-    @Override
-    public void didUpdateSensorStatus(int status, EmpaSensorType type) {
-    }
-
-    @Override
-    public void didDiscoverDevice(EmpaticaDevice device, String deviceLabel, int rssi, boolean allowed) {
-        Log.i(TAG, "Discovered device " + deviceLabel);
-        if (allowed) {
-            device_manager.stopScanning();
-            try {
-                device_manager.connectDevice(device);
-            } catch (ConnectionNotAllowedException e) {
-                Log.w(TAG, e);
-            }
-        }
-    }
-
-    @Override
-    public void didRequestEnableBluetooth() {
-    }
-
-    @Override
-    public void didUpdateOnWristStatus(int status) {
-    }
-
     public class ExPLoRAABinder extends Binder {
 
         public ExPLoRAAService getService() {
             return ExPLoRAAService.this;
         }
+    }
+
+    public interface EmpaticaE4Listener {
+
+        void empaticaE4Connected();
+
+        void empaticaE4Disconnected();
     }
 
     public interface StimuliListener {

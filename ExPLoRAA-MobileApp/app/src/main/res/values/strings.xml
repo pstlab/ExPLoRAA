@@ -40,4 +40,6 @@
     <string name="node">Node</string>
     <string name="trigger">Trigger</string>
     <string name="send">Send</string>
+    <string name="connect_empatica_e4">Connect Empatica E4</string>
+    <string name="disconnect_empatica_e4">Disconnect Empatica E4</string>
 </resources>

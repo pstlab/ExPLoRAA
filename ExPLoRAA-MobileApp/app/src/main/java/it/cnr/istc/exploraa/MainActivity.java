@@ -13,9 +13,10 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements ExPLoRAAService.EmpaticaE4Listener {
 
     private static final String TAG = "MainActivity";
+    private Menu main_menu;
     private ViewPager pager;
     private final StimuliFragment stimuli_fragment = new StimuliFragment();
     private final FollowingLessonsFragment following_lessons_fragment = new FollowingLessonsFragment();
@@ -69,12 +70,24 @@ public class MainActivity extends AppCompatActivity {
             if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
                 ExPLoRAAContext.getInstance().getService().login(shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
         }
+
+        service.addEmpaticaE4Listener(this);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
+        ExPLoRAAContext.getInstance().getService().removeEmpaticaE4Listener(this);
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         MenuInflater inflater = getMenuInflater();
         inflater.inflate(R.menu.main_menu, menu);
+        main_menu = menu;
+        main_menu.findItem(R.id.connect_empatica_e4_menu_item).setVisible(true);
+        main_menu.findItem(R.id.disconnect_empatica_e4_menu_item).setVisible(false);
         return true;
     }
 
@@ -96,8 +109,30 @@ public class MainActivity extends AppCompatActivity {
                 startActivity(new Intent(this, LoginActivity.class));
                 finish();
                 return true;
+            case R.id.connect_empatica_e4_menu_item:
+                if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
+                    throw new RuntimeException("Service should be running..");
+                ExPLoRAAContext.getInstance().getService().connectEmpaticaE4();
+                return true;
+            case R.id.disconnect_empatica_e4_menu_item:
+                if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
+                    throw new RuntimeException("Service should be running..");
+                ExPLoRAAContext.getInstance().getService().disconnectEmpaticaE4();
+                return true;
             default:
                 return super.onOptionsItemSelected(item);
         }
+    }
+
+    @Override
+    public void empaticaE4Connected() {
+        main_menu.findItem(R.id.connect_empatica_e4_menu_item).setVisible(false);
+        main_menu.findItem(R.id.disconnect_empatica_e4_menu_item).setVisible(true);
+    }
+
+    @Override
+    public void empaticaE4Disconnected() {
+        main_menu.findItem(R.id.connect_empatica_e4_menu_item).setVisible(true);
+        main_menu.findItem(R.id.disconnect_empatica_e4_menu_item).setVisible(false);
     }
 }
