@@ -37,6 +37,13 @@ import android.util.Log;
 import android.util.LongSparseArray;
 import android.widget.Toast;
 
+import com.empatica.empalink.ConnectionNotAllowedException;
+import com.empatica.empalink.EmpaDeviceManager;
+import com.empatica.empalink.EmpaticaDevice;
+import com.empatica.empalink.config.EmpaSensorType;
+import com.empatica.empalink.config.EmpaStatus;
+import com.empatica.empalink.delegate.EmpaDataDelegate;
+import com.empatica.empalink.delegate.EmpaStatusDelegate;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
@@ -75,7 +82,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
 
-public class ExPLoRAAService extends Service implements LocationListener, SensorEventListener {
+public class ExPLoRAAService extends Service implements LocationListener, SensorEventListener, EmpaDataDelegate, EmpaStatusDelegate {
 
     private static final String TAG = "ExPLoRAAService";
     private static final int LOCATION_TIME = 1000 * 60 * 2; // two minutes..
@@ -93,7 +100,6 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     /**
      * The current user's parameter types.
      */
-    private final List<Parameter> par_types = new ArrayList<>();
     private final Map<String, Parameter> id_par_types = new HashMap<>();
     /**
      * The current user's parameter values.
@@ -104,6 +110,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     private Sensor step_detector;
     private long last_step_timestamp = 0;
     private Timer steps_timer;
+    private EmpaDeviceManager device_manager;
     /**
      * The received stimuli.
      */
@@ -203,8 +210,10 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                 @Override
                 public void run() {
                     if (mqtt != null && mqtt.isConnected()) {
+                        String val = "0";
                         Map<String, String> steps_per_minute = new HashMap<>(1);
-                        steps_per_minute.put("steps_per_minute", "0");
+                        steps_per_minute.put("steps_per_minute", val);
+                        par_vals.get("Steps").put("steps_per_minute", val);
                         try {
                             mqtt.publish(user.id + "/output/Steps", GSON.toJson(steps_per_minute).getBytes(), 1, true);
                         } catch (MqttException e) {
@@ -215,6 +224,9 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                 }
             }, STEPS_TIME, STEPS_TIME);
         }
+
+        device_manager = new EmpaDeviceManager(getApplicationContext(), this, this);
+        device_manager.authenticateWithAPIKey(BuildConfig.EMPATICA_API_KEY);
 
         Intent intent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
@@ -238,6 +250,10 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     public void onDestroy() {
         super.onDestroy();
         Log.i(TAG, "Destroying ExPLoRAA service..");
+
+        device_manager.disconnect();
+        device_manager.cleanUp();
+
         if (user != null)
             logout();
         if (mqtt != null && mqtt.isConnected()) try {
@@ -279,8 +295,8 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                 // gentle disconnection..
                 try {
                     if (mqtt.isConnected()) {
-                        for (Parameter par : par_types)
-                            mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(par.name)).getBytes(), 1, false);
+                        for (Parameter par : new ArrayList<>(id_par_types.values()))
+                            removeParameter(this.user, par);
 
                         // we clear the following lessons..
                         for (FollowingLessonContext l_ctx : following_lessons) {
@@ -444,11 +460,7 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                         }
                     });
 
-                    for (Parameter par : user.par_types.values()) {
-                        par_types.add(par);
-                        // we broadcast the existence of a new parameter..
-                        mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
-                    }
+                    for (Parameter par : user.par_types.values()) addParameter(user, par);
 
                     if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
                         ((LocationManager) getSystemService(Context.LOCATION_SERVICE)).requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, this);
@@ -471,7 +483,6 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     private void clearAll() {
         // we clear the current data..
         par_vals.clear();
-        par_types.clear();
         id_par_types.clear();
 
         // we clear the stimuli..
@@ -504,6 +515,29 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
         id_students.clear();
         for (StudentsListener l : students_listeners)
             l.studentsCleared();
+    }
+
+    private void addParameter(User user, Parameter par) {
+        id_par_types.put(par.name, par);
+        par_vals.put(par.name, new HashMap<String, String>());
+        if (mqtt != null && mqtt.isConnected())
+            // we broadcast the existence of a new parameter..
+            try {
+                mqtt.publish(user.id + "/output", GSON.toJson(new Message.NewParameter(par)).getBytes(), 1, false);
+            } catch (MqttException e) {
+                Log.w(TAG, "MQTT Connection failed..", e);
+            }
+    }
+
+    private void removeParameter(User user, Parameter par) {
+        id_par_types.remove(par.name);
+        if (mqtt != null && mqtt.isConnected())
+            // we broadcast the lost of a parameter..
+            try {
+                mqtt.publish(this.user.id + "/output", GSON.toJson(new Message.RemoveParameter(par.name)).getBytes(), 1, false);
+            } catch (MqttException e) {
+                Log.w(TAG, "MQTT Connection failed..", e);
+            }
     }
 
     void addStimulus(@NonNull final Message.Stimulus stimulus) {
@@ -1301,9 +1335,13 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     @Override
     public void onLocationChanged(Location location) {
         if (mqtt != null && mqtt.isConnected() && isBetterLocation(location)) {
+            String latitude = Double.toString(location.getLatitude());
+            String longitude = Double.toString(location.getLatitude());
             Map<String, String> gps_pos = new HashMap<>(2);
-            gps_pos.put("latitude", Double.toString(location.getLatitude()));
-            gps_pos.put("longitude", Double.toString(location.getLongitude()));
+            gps_pos.put("latitude", latitude);
+            gps_pos.put("longitude", longitude);
+            par_vals.get("GPS").put("latitude", latitude);
+            par_vals.get("GPS").put("longitude", longitude);
             try {
                 mqtt.publish(user.id + "/output/GPS", GSON.toJson(gps_pos).getBytes(), 1, true);
             } catch (MqttException e) {
@@ -1395,8 +1433,10 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                     @Override
                     public void run() {
                         if (mqtt != null && mqtt.isConnected()) {
+                            String val = "0";
                             Map<String, String> steps_per_minute = new HashMap<>(1);
-                            steps_per_minute.put("steps_per_minute", "0");
+                            steps_per_minute.put("steps_per_minute", val);
+                            par_vals.get("Steps").put("steps_per_minute", val);
                             try {
                                 mqtt.publish(user.id + "/output/Steps", GSON.toJson(steps_per_minute).getBytes(), 1, true);
                             } catch (MqttException e) {
@@ -1407,9 +1447,10 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
                     }
                 }, STEPS_TIME, STEPS_TIME);
                 if (mqtt != null && mqtt.isConnected()) {
-
+                    String val = Double.toString(60000D / (sensorEvent.timestamp - last_step_timestamp));
                     Map<String, String> steps_per_minute = new HashMap<>(1);
-                    steps_per_minute.put("steps_per_minute", Double.toString(60000D / (sensorEvent.timestamp - last_step_timestamp)));
+                    steps_per_minute.put("steps_per_minute", val);
+                    par_vals.get("Steps").put("steps_per_minute", val);
                     try {
                         mqtt.publish(user.id + "/output/Steps", GSON.toJson(steps_per_minute).getBytes(), 1, true);
                     } catch (MqttException e) {
@@ -1514,6 +1555,147 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
 
     public void removeStudentsListener(StudentsListener l) {
         students_listeners.remove(l);
+    }
+
+    @Override
+    public void didReceiveGSR(float gsr, double timestamp) {
+        Log.i(TAG, "Galvanic Skin Response (GSR): " + gsr);
+    }
+
+    @Override
+    public void didReceiveBVP(float bvp, double timestamp) {
+        Log.i(TAG, "Blood Volume Pulse (BVP): " + bvp);
+    }
+
+    @Override
+    public void didReceiveIBI(float ibi, double timestamp) {
+        Log.i(TAG, "Interbeat interval (IBI): " + ibi);
+    }
+
+    @Override
+    public void didReceiveTemperature(float t, double timestamp) {
+        Log.i(TAG, "Temperature: " + t);
+    }
+
+    @Override
+    public void didReceiveAcceleration(int x, int y, int z, double timestamp) {
+        Log.i(TAG, "Acceleration: [" + x + ", " + y + ", " + z + "]");
+    }
+
+    @Override
+    public void didReceiveBatteryLevel(float level, double timestamp) {
+        Log.i(TAG, "Battery level: " + level);
+    }
+
+    @Override
+    public void didReceiveTag(double timestamp) {
+        Log.i(TAG, "Tag..");
+    }
+
+    @Override
+    public void didUpdateStatus(EmpaStatus status) {
+        switch (status) {
+            case READY:
+                Log.i(TAG, "Empatica E4 manager ready..");
+                device_manager.startScanning();
+                break;
+            case DISCONNECTED:
+                Log.i(TAG, "Empatica E4 disconnected device..");
+                break;
+            case CONNECTING:
+                Log.i(TAG, "Empatica E4 connecting device..");
+                // we add the Galvanic Skin Response (GSR) sensor..
+                Parameter empatica_e4_gsr = new Parameter();
+                empatica_e4_gsr.name = "EmpaticaE4_GSR";
+                empatica_e4_gsr.properties = new HashMap<>(1);
+                empatica_e4_gsr.properties.put("GSR", "numeric");
+                addParameter(user, empatica_e4_gsr);
+
+                // we add the Blood Volume Pulse (BVP) sensor..
+                Parameter empatica_e4_bvp = new Parameter();
+                empatica_e4_bvp.name = "EmpaticaE4_BVP";
+                empatica_e4_bvp.properties = new HashMap<>(1);
+                empatica_e4_bvp.properties.put("BVP", "numeric");
+                addParameter(user, empatica_e4_bvp);
+
+                // we add the Interbeat interval (IBI) sensor..
+                Parameter empatica_e4_ibi = new Parameter();
+                empatica_e4_ibi.name = "EmpaticaE4_IBI";
+                empatica_e4_ibi.properties = new HashMap<>(1);
+                empatica_e4_ibi.properties.put("IBI", "numeric");
+                addParameter(user, empatica_e4_ibi);
+
+                // we add the Temperature sensor..
+                Parameter empatica_e4_temperature = new Parameter();
+                empatica_e4_temperature.name = "EmpaticaE4_Temperature";
+                empatica_e4_temperature.properties = new HashMap<>(1);
+                empatica_e4_temperature.properties.put("Temperature", "numeric");
+                addParameter(user, empatica_e4_temperature);
+
+                // we add the Acceleration sensor..
+                Parameter empatica_e4_acceleration = new Parameter();
+                empatica_e4_acceleration.name = "EmpaticaE4_Acceleration";
+                empatica_e4_acceleration.properties = new HashMap<>(3);
+                empatica_e4_acceleration.properties.put("x", "numeric");
+                empatica_e4_acceleration.properties.put("y", "numeric");
+                empatica_e4_acceleration.properties.put("z", "numeric");
+                addParameter(user, empatica_e4_acceleration);
+
+                // we add the Battery sensor..
+                Parameter empatica_e4_battery = new Parameter();
+                empatica_e4_battery.name = "EmpaticaE4_Battery";
+                empatica_e4_battery.properties = new HashMap<>(1);
+                empatica_e4_battery.properties.put("Level", "numeric");
+                addParameter(user, empatica_e4_battery);
+
+                Toast.makeText(this, "Empatica E4 device connected!", Toast.LENGTH_LONG).show();
+                break;
+            case CONNECTED:
+                Log.i(TAG, "Empatica E4 connected device..");
+                break;
+            case DISCONNECTING:
+                Log.i(TAG, "Empatica E4 disconnecting device..");
+                removeParameter(user, id_par_types.get("EmpaticaE4_Acceleration"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_Temperature"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_IBI"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_BVP"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_GSR"));
+                removeParameter(user, id_par_types.get("EmpaticaE4_Battery"));
+                Toast.makeText(this, "Empatica E4 device disconnected!", Toast.LENGTH_LONG).show();
+                break;
+            case DISCOVERING:
+                Log.i(TAG, "Empatica E4 manager discovering devices..");
+                break;
+        }
+    }
+
+    @Override
+    public void didEstablishConnection() {
+    }
+
+    @Override
+    public void didUpdateSensorStatus(int status, EmpaSensorType type) {
+    }
+
+    @Override
+    public void didDiscoverDevice(EmpaticaDevice device, String deviceLabel, int rssi, boolean allowed) {
+        Log.i(TAG, "Discovered device " + deviceLabel);
+        if (allowed) {
+            device_manager.stopScanning();
+            try {
+                device_manager.connectDevice(device);
+            } catch (ConnectionNotAllowedException e) {
+                Log.w(TAG, e);
+            }
+        }
+    }
+
+    @Override
+    public void didRequestEnableBluetooth() {
+    }
+
+    @Override
+    public void didUpdateOnWristStatus(int status) {
     }
 
     public class ExPLoRAABinder extends Binder {

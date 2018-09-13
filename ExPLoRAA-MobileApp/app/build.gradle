@@ -12,6 +12,7 @@ android {
         buildConfigField 'String', 'HOST', '"150.146.65.167"'
         buildConfigField 'int', 'SERVICE_PORT', '8080'
         buildConfigField 'int', 'MQTT_PORT', '1883'
+        buildConfigField 'String', 'EMPATICA_API_KEY', '"951fee82b073472baab1da0fb8d0761c"'
     }
     buildTypes {
         release {
@@ -33,4 +34,6 @@ dependencies {
     implementation 'com.squareup.retrofit2:retrofit:2.4.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.4.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.0'
+    implementation 'com.squareup.okhttp:okhttp:2.5.0'
+    implementation 'com.empatica.empalink:empalink:2.2@aar'
 }
