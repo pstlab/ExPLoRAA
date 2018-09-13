@@ -1,5 +1,6 @@
 package it.cnr.istc.exploraa;
 
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.MenuItem;
 public class MainActivity extends AppCompatActivity implements ExPLoRAAService.EmpaticaE4Listener {
 
     private static final String TAG = "MainActivity";
+    private static final int REQUEST_ENABLE_BT = 42;
     private Menu main_menu;
     private ViewPager pager;
     private final StimuliFragment stimuli_fragment = new StimuliFragment();
@@ -78,7 +80,8 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAService.E
     protected void onDestroy() {
         super.onDestroy();
 
-        ExPLoRAAContext.getInstance().getService().removeEmpaticaE4Listener(this);
+        if (ExPLoRAAContext.getInstance().isServiceRunning())
+            ExPLoRAAContext.getInstance().getService().removeEmpaticaE4Listener(this);
     }
 
     @Override
@@ -115,9 +118,17 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAService.E
                 finish();
                 return true;
             case R.id.connect_empatica_e4_menu_item:
-                if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
-                    throw new RuntimeException("Service should be running..");
-                ExPLoRAAContext.getInstance().getService().connectEmpaticaE4();
+                BluetoothAdapter bluetooth_adapter = BluetoothAdapter.getDefaultAdapter();
+                if (bluetooth_adapter != null) {
+                    if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
+                        throw new RuntimeException("Service should be running..");
+                    if (bluetooth_adapter.isEnabled())
+                        ExPLoRAAContext.getInstance().getService().connectEmpaticaE4();
+                    else {
+                        Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                        startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+                    }
+                }
                 return true;
             case R.id.disconnect_empatica_e4_menu_item:
                 if (BuildConfig.DEBUG && !ExPLoRAAContext.getInstance().isServiceRunning())
@@ -126,6 +137,14 @@ public class MainActivity extends AppCompatActivity implements ExPLoRAAService.E
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == REQUEST_ENABLE_BT && resultCode == RESULT_OK) {
+            ExPLoRAAContext.getInstance().getService().connectEmpaticaE4();
         }
     }
 

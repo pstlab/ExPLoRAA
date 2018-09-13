@@ -1087,8 +1087,8 @@ public class ExPLoRAAService extends Service implements LocationListener, Sensor
     public void logout() {
         assert user != null;
         Log.i(TAG, "Logging out current user..");
-        setUser(null);
         disconnectEmpaticaE4();
+        setUser(null);
     }
 
     /**
