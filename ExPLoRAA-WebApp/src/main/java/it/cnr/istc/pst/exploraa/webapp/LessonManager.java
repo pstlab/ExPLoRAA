@@ -380,7 +380,7 @@ public class LessonManager implements TemporalListener {
         listeners.forEach(l -> l.newToken(c_tk));
         prop_q.push(c_tk);
 
-        network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
+        network.addConstraint(0, c_tk.tp, t_now + 2000, t_now + 2000);
         build();
 
         triggered_context = null;
@@ -418,7 +418,7 @@ public class LessonManager implements TemporalListener {
             for (String id : tk.template.ids) {
                 SolverToken c_tk = new SolverToken(tk, network.newTimePoint(), event_templates.get(id));
                 triggered_contexts.put(c_tk, ctx);
-                network.addConstraint(0, c_tk.tp, t_now + 1000, t_now + 1000);
+                network.addConstraint(0, c_tk.tp, t_now + 2000, t_now + 2000);
                 tokens.add(c_tk);
                 listeners.forEach(l -> l.newToken(c_tk));
                 c_tks.put(id, c_tk);
