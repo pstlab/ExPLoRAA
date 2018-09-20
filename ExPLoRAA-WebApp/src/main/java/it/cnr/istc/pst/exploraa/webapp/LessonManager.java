@@ -374,7 +374,7 @@ public class LessonManager implements TemporalListener {
         triggered_context = ctx;
 
         // this token represents the effects of the answer on the lesson..
-        SolverToken c_tk = new SolverToken(null, network.newTimePoint(), event_templates.get(answr.event));
+        SolverToken c_tk = new SolverToken(q_tk, network.newTimePoint(), event_templates.get(answr.event));
         triggered_contexts.put(c_tk, ctx);
         tokens.add(c_tk);
         listeners.forEach(l -> l.newToken(c_tk));

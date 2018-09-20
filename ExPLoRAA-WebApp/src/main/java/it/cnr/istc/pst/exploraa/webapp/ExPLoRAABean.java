@@ -415,20 +415,63 @@ public class ExPLoRAABean {
                                 }
                             }
                         }
-                    } else if ((ctx.getSourceToken().template instanceof LessonModel.StimulusTemplate.TriggerTemplate) && ((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Self) {
+                    } else if ((ctx.getSourceToken().template instanceof LessonModel.StimulusTemplate.QuestionStimulusTemplate)) {
                         if (tk.template.execution_condition == null || (isOnline(ctx.getUserId()) && isSatisfied(tk.template.execution_condition, parameter_values.get(ctx.getUserId())))) {
                             switch (tk.template.type) {
                                 case Root:
                                 case Trigger:
                                     break;
                                 case Text:
-                                    students.add(ctx.getUserId());
+                                    if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Group) {
+                                        students.addAll(lesson.students.keySet());
+                                    } else {
+                                        students.add(ctx.getUserId());
+                                    }
                                     break;
                                 case URL:
-                                    students.add(ctx.getUserId());
+                                    if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Group) {
+                                        students.addAll(lesson.students.keySet());
+                                    } else {
+                                        students.add(ctx.getUserId());
+                                    }
                                     break;
                                 case Question:
-                                    students.add(ctx.getUserId());
+                                    if (((LessonModel.StimulusTemplate.QuestionStimulusTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Group) {
+                                        students.addAll(lesson.students.keySet());
+                                    } else {
+                                        students.add(ctx.getUserId());
+                                    }
+                                    break;
+                                default:
+                                    throw new AssertionError(tk.template.type.name());
+                            }
+                        }
+                    } else if ((ctx.getSourceToken().template instanceof LessonModel.StimulusTemplate.TriggerTemplate)) {
+                        if (tk.template.execution_condition == null || (isOnline(ctx.getUserId()) && isSatisfied(tk.template.execution_condition, parameter_values.get(ctx.getUserId())))) {
+                            switch (tk.template.type) {
+                                case Root:
+                                case Trigger:
+                                    break;
+                                case Text:
+                                    if (((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Self) {
+                                        students.add(ctx.getUserId());
+                                    } else {
+                                        students.addAll(lesson.students.keySet());
+                                    }
+                                    break;
+                                case URL:
+                                    if (((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Self) {
+                                        students.add(ctx.getUserId());
+                                    } else {
+                                        students.addAll(lesson.students.keySet());
+                                    }
+                                    break;
+                                case Question:
+                                    if (((LessonModel.StimulusTemplate.TriggerTemplate) ctx.getSourceToken().template).scope == LessonModel.StimulusTemplate.EffectScope.Self) {
+                                        students.add(ctx.getUserId());
+                                    } else {
+                                        students.addAll(lesson.students.keySet());
+                                    }
                                     break;
                                 default:
                                     throw new AssertionError(tk.template.type.name());

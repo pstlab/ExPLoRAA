@@ -9,7 +9,7 @@ android {
         versionCode 1
         versionName "1.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
-        buildConfigField 'String', 'HOST', '"150.146.65.22"'
+        buildConfigField 'String', 'HOST', '"192.168.67.128"'
         buildConfigField 'int', 'SERVICE_PORT', '8080'
         buildConfigField 'int', 'MQTT_PORT', '1883'
         buildConfigField 'String', 'EMPATICA_API_KEY', '"951fee82b073472baab1da0fb8d0761c"'

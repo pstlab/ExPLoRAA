@@ -13,7 +13,7 @@
         <description/>
     </jdbc-resource>
     <custom-resource res-type="java.util.Properties" jndi-name="java:app/config" factory-class="org.glassfish.resources.custom.factory.PropertiesFactory">
-        <property name="mqtt-host" value="150.146.65.22" />
+        <property name="mqtt-host" value="192.168.67.128" />
         <property name="mqtt-port" value="1883" />
         <property name="mqtt-server-id" value="ExPLoRAA-Server" />
     </custom-resource>

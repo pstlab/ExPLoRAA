@@ -79,13 +79,13 @@ public class LessonModel {
 
             public Set<String> topics;
             public String question;
+            public EffectScope scope;
             public List<Answer> answers;
 
             public static class Answer {
 
                 public String answer;
                 public String event;
-                public EffectScope scope;
             }
         }
 
@@ -415,13 +415,13 @@ public class LessonModel {
                         out.endArray();
                     }
                     out.name("question").value(((StimulusTemplate.QuestionStimulusTemplate) value).question);
+                    if (((StimulusTemplate.QuestionStimulusTemplate) value).scope != null)
+                        out.name("scope").value(((StimulusTemplate.QuestionStimulusTemplate) value).scope.name());
                     out.name("answers");
                     out.beginArray();
                     for (StimulusTemplate.QuestionStimulusTemplate.Answer answer : ((StimulusTemplate.QuestionStimulusTemplate) value).answers) {
                         out.beginObject();
                         out.name("answer").value(answer.answer).name("event").value(answer.event);
-                        if (answer.scope != null)
-                            out.name("scope").value(answer.scope.name());
                         out.endObject();
                     }
                     out.endArray();
@@ -476,7 +476,14 @@ public class LessonModel {
                         Objects.requireNonNull((StimulusTemplate.TriggerTemplate) st).condition = Condition.ADAPTER.read(in);
                         break;
                     case "scope":
-                        ((StimulusTemplate.TriggerTemplate) st).scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
+                        switch (Objects.requireNonNull(st).type) {
+                            case Question:
+                                ((StimulusTemplate.QuestionStimulusTemplate) st).scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
+                                break;
+                            case Trigger:
+                                ((StimulusTemplate.TriggerTemplate) st).scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
+                                break;
+                        }
                         break;
                     case "periodicity":
                         ((StimulusTemplate.TriggerTemplate) st).periodicity = StimulusTemplate.TriggerTemplate.Periodicity.valueOf(in.nextString());
@@ -529,9 +536,6 @@ public class LessonModel {
                                         break;
                                     case "event":
                                         answer.event = in.nextString();
-                                        break;
-                                    case "scope":
-                                        answer.scope = StimulusTemplate.EffectScope.valueOf(in.nextString());
                                         break;
                                 }
                             }
