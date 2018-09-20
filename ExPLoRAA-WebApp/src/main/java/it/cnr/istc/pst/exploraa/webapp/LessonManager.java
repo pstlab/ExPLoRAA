@@ -402,7 +402,7 @@ public class LessonManager implements TemporalListener {
     }
 
     public void trigger(SolverToken tk, long user_id) {
-        if (((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).periodicity == LessonModel.StimulusTemplate.TriggerTemplate.Periodicity.Once) {
+        if (((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).periodicity != LessonModel.StimulusTemplate.TriggerTemplate.Periodicity.Always) {
             // we store that user 'user_id' has triggered the token..
             triggerable_tokens.get(tk).add(user_id);
         }
