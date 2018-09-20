@@ -327,7 +327,7 @@ public class ExPLoRAABean {
         for (LessonManager lm : lessons.values()) {
             if (lm.getLesson().students.containsKey(user_id)) {
                 for (LessonManager.SolverToken tk : lm.getTriggerableTokens()) {
-                    if (isSatisfied(((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).condition, parameter_values.get(user_id)) && lm.isTriggerableBy(tk, user_id)) {
+                    if (involves(((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).condition, par) && isSatisfied(((LessonModel.StimulusTemplate.TriggerTemplate) tk.template).condition, parameter_values.get(user_id)) && lm.isTriggerableBy(tk, user_id)) {
                         // the token 'tk' should be triggered..
                         lm.trigger(tk, user_id);
                     }
@@ -672,6 +672,25 @@ public class ExPLoRAABean {
     @Lock(LockType.READ)
     public LessonManager getLessonManager(long lesson_id) {
         return lessons.get(lesson_id);
+    }
+
+    private static boolean involves(LessonModel.Condition cond, String par) {
+        switch (cond.type) {
+            case And:
+                return ((LessonModel.Condition.AndCondition) cond).conditions.stream().allMatch(c -> involves(c, par));
+            case Or:
+                return ((LessonModel.Condition.OrCondition) cond).conditions.stream().anyMatch(c -> involves(c, par));
+            case Not:
+                return involves(((LessonModel.Condition.NotCondition) cond).condition, par);
+            case Numeric:
+                String[] num_par_name = ((LessonModel.Condition.NumericCondition) cond).variable.split("\\.");
+                return num_par_name[0].equals(par);
+            case Nominal:
+                String[] nom_par_name = ((LessonModel.Condition.NominalCondition) cond).variable.split("\\.");
+                return nom_par_name[0].equals(par);
+            default:
+                throw new AssertionError(cond.type.name());
+        }
     }
 
     private static boolean isSatisfied(LessonModel.Condition cond, Map<String, Map<String, String>> vals) {
