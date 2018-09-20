@@ -1,8 +1,8 @@
 <resources>
-    <string name="app_name">ExPLoRAA</string>
+    <string name="app_name" translatable="false">ExPLoRAA</string>
     <string name="learn">Learn</string>
     <string name="teach">Teach</string>
-    <string name="ExPLoRAA_logo">ExPLoRAA Logo</string>
+    <string name="ExPLoRAA_logo" translatable="false">ExPLoRAA Logo</string>
     <string name="email">Email</string>
     <string name="password">Password</string>
     <string name="first_name">First name</string>
