@@ -1,0 +1,135 @@
+{
+    "name": "Modello di lezione sulle madonnelle",
+    "stimuli": [{
+            "type": "URL",
+            "name": "m_00",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Informazioni generali su madonnelle.",
+            "url": "https://www.comune.roma.it/pcr/it/newsview.page?contentId=NEW406023"
+        },
+        {
+            "type": "URL",
+            "name": "m_01",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Madonna del Rosario.",
+            "url": "https://www.info.roma.it/monumenti_dettaglio.asp?ID_schede=748"
+        },
+        {
+            "type": "URL",
+            "name": "m_02",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Edicola Sacra.",
+            "url": "https://www.info.roma.it/monumenti_dettaglio.asp?ID_schede=8050"
+        },
+        {
+            "type": "URL",
+            "name": "m_03",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Madonna del Buon Cuore.",
+            "url": "https://www.info.roma.it/monumenti_dettaglio.asp?ID_schede=737"
+        },
+        {
+            "type": "URL",
+            "name": "m_04",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Madonna del Buon Cuore.",
+            "url": "https://www.info.roma.it/monumenti_dettaglio.asp?ID_schede=363"
+        },
+        {
+            "type": "URL",
+            "name": "m_05",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Madonna dell'accoglienza.",
+            "url": "https://www.info.roma.it/monumenti_dettaglio.asp?ID_schede=11226"
+        },
+        {
+            "type": "URL",
+            "name": "m_06",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Edicola del Monte di Pieta'.",
+            "url": "https://www.info.roma.it/monumenti_dettaglio.asp?ID_schede=1006"
+        },
+        {
+            "type": "URL",
+            "name": "m_07",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Largo del Pallaro.",
+            "url": "https://www.romasegreta.it/parione/largo-del-pallaro.html"
+        },
+        {
+            "type": "URL",
+            "name": "m_08",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Via della Posta Vecchia.",
+            "url": "https://www.romasegreta.it/parione/via-della-posta-vecchia.html"
+        },
+        {
+            "type": "URL",
+            "name": "m_09",
+            "topics": ["Arte", "Storia", "Religione", "Architettura"],
+            "content": "Le Madonnelle Prodigiose.",
+            "url": "http://roma.andreapollett.com/S2/romac13i.htm"
+        }],
+    "ids": ["m_00", "m_01", "m_02", "m_03", "m_04", "m_05", "m_06", "m_07", "m_08", "m_09"],
+    "relations": [
+        {
+            "from": "this",
+            "to": "m_00",
+            "lb": 6,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "this",
+            "to": "m_01",
+            "lb": 9,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "this",
+            "to": "m_02",
+            "lb": 13,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "this",
+            "to": "m_03",
+            "lb": 18,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "this",
+            "to": "m_04",
+            "lb": 22,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "this",
+            "to": "m_05",
+            "lb": 25,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "m_05",
+            "to": "m_06",
+            "lb": 6,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "m_05",
+            "to": "m_07",
+            "lb": 9,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "m_05",
+            "to": "m_08",
+            "lb": 13,
+            "unit": "SECONDS"
+        },
+        {
+            "from": "m_05",
+            "to": "m_09",
+            "lb": 18,
+            "unit": "SECONDS"
+        }]
+}
