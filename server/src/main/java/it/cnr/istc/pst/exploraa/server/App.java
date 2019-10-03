@@ -1,6 +1,11 @@
 package it.cnr.istc.pst.exploraa.server;
 
 import java.util.Collections;
+import java.util.List;
+
+import javax.persistence.EntityManager;
+import javax.persistence.EntityManagerFactory;
+import javax.persistence.Persistence;
 
 import io.javalin.Javalin;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -16,15 +21,32 @@ import io.moquette.interception.messages.InterceptConnectMessage;
 import io.moquette.interception.messages.InterceptConnectionLostMessage;
 import io.moquette.interception.messages.InterceptDisconnectMessage;
 import io.moquette.interception.messages.InterceptPublishMessage;
+import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 
 /**
  * ExPLoRAA Server
  */
 public class App {
 
+    static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
+
     public static void main(String[] args) throws IOException {
         // we create the app..
         final Javalin app = Javalin.create();
+
+        app.events(event -> {
+            event.serverStarting(() -> {
+                System.out.println("Starting ExPLoRAA server..");
+            });
+            event.serverStarted(() -> {
+                System.out.println("ExPLoRAA server is running..");
+                EntityManager em = EMF.createEntityManager();
+                List<LessonEntity> lessons = em.createQuery("SELECT le FROM LessonEntity le", LessonEntity.class)
+                        .getResultList();
+
+                System.out.println("Loading " + lessons.size() + " lessons..");
+            });
+        });
 
         // we start the app..
         app.start(7000);
