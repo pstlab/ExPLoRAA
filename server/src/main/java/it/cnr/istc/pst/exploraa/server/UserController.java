@@ -11,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.javalin.http.Context;
+import io.javalin.http.NotFoundResponse;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
 
@@ -24,6 +25,12 @@ public class UserController {
      * For each user id, a boolean indicating whether the user is online.
      */
     static final Map<Long, Boolean> ONLINE = new HashMap<>();
+
+    static public void login(Context ctx) {
+        String email = ctx.cookie("email");
+        String password = ctx.cookie("password");
+        LOG.info("login user {}..", email);
+    }
 
     static public void getAllUsers(Context ctx) {
         LOG.info("retrieving all users..");
@@ -56,6 +63,9 @@ public class UserController {
         LOG.info("retrieving user {}..", ctx.pathParam("id"));
         EntityManager em = App.EMF.createEntityManager();
         UserEntity user_entity = em.find(UserEntity.class, Long.valueOf(ctx.pathParam("id")));
+        if (user_entity == null)
+            throw new NotFoundResponse();
+
         ctx.json(new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
                 user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false)));
     }
@@ -66,6 +76,8 @@ public class UserController {
 
         EntityManager em = App.EMF.createEntityManager();
         UserEntity user_entity = em.find(UserEntity.class, Long.valueOf(ctx.pathParam("id")));
+        if (user_entity == null)
+            throw new NotFoundResponse();
 
         em.getTransaction().begin();
         user_entity.setFirstName(user.getFirstName());
@@ -77,6 +89,8 @@ public class UserController {
         LOG.info("deleting user {}..", ctx.pathParam("id"));
         EntityManager em = App.EMF.createEntityManager();
         UserEntity user_entity = em.find(UserEntity.class, Long.valueOf(ctx.pathParam("id")));
+        if (user_entity == null)
+            throw new NotFoundResponse();
 
         em.getTransaction().begin();
         em.remove(user_entity);

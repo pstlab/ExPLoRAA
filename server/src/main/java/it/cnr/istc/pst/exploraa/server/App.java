@@ -38,7 +38,9 @@ public class App {
 
     public static void main(String[] args) throws IOException {
         // we create the app..
-        final Javalin app = Javalin.create();
+        final Javalin app = Javalin.create(config -> {
+            config.addStaticFiles("/public");
+        });
 
         app.events(event -> {
             event.serverStarting(() -> LOG.info("Starting ExPLoRAA server.."));
@@ -61,6 +63,7 @@ public class App {
         });
 
         app.routes(() -> {
+            post("login", UserController::login);
             path("users", () -> {
                 get(UserController::getAllUsers);
                 post(UserController::createUser);
