@@ -6,11 +6,14 @@ import java.util.List;
 import java.util.Map;
 
 import javax.persistence.EntityManager;
+import javax.persistence.NoResultException;
+import javax.persistence.TypedQuery;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.javalin.http.Context;
+import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
@@ -27,9 +30,24 @@ public class UserController {
     static final Map<Long, Boolean> ONLINE = new HashMap<>();
 
     static public void login(Context ctx) {
-        String email = ctx.cookie("email");
-        String password = ctx.cookie("password");
+        String email = ctx.formParam("email");
+        String password = ctx.formParam("password");
         LOG.info("login user {}..", email);
+
+        EntityManager em = App.EMF.createEntityManager();
+        TypedQuery<UserEntity> query = em.createQuery(
+                "SELECT u FROM UserEntity u WHERE u.email = :email AND u.password = :password", UserEntity.class);
+        query.setParameter("email", email);
+        query.setParameter("password", password);
+        try {
+            UserEntity user_entity = query.getSingleResult();
+
+            User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
+                    user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false));
+            ctx.json(user);
+        } catch (NoResultException e) {
+            throw new ForbiddenResponse();
+        }
     }
 
     static public void getAllUsers(Context ctx) {
@@ -47,16 +65,19 @@ public class UserController {
     }
 
     static public void createUser(Context ctx) {
-        LOG.info("creating new user..");
+        String email = ctx.formParam("email");
+        String password = ctx.formParam("password");
+        LOG.info("creating new user {}..", email);
         EntityManager em = App.EMF.createEntityManager();
 
         UserEntity user_entity = new UserEntity();
-        user_entity.setEmail(ctx.formParam("email"));
-        user_entity.setPassword(ctx.formParam("password"));
+        user_entity.setEmail(email);
+        user_entity.setPassword(password);
 
         em.getTransaction().begin();
         em.persist(user_entity);
         em.getTransaction().commit();
+        ctx.status(201);
     }
 
     static public void getUser(Context ctx) {
@@ -66,8 +87,9 @@ public class UserController {
         if (user_entity == null)
             throw new NotFoundResponse();
 
-        ctx.json(new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false)));
+        User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
+                user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false));
+        ctx.json(user);
     }
 
     static public void updateUser(Context ctx) {
@@ -83,6 +105,7 @@ public class UserController {
         user_entity.setFirstName(user.getFirstName());
         user_entity.setLastName(user.getLastName());
         em.getTransaction().commit();
+        ctx.status(204);
     }
 
     static public void deleteUser(Context ctx) {
@@ -95,5 +118,6 @@ public class UserController {
         em.getTransaction().begin();
         em.remove(user_entity);
         em.getTransaction().commit();
+        ctx.status(204);
     }
 }
