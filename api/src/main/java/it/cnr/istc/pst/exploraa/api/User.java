@@ -1,5 +1,8 @@
 package it.cnr.istc.pst.exploraa.api;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 /**
  * User
  */
@@ -11,7 +14,9 @@ public class User {
     private String last_name;
     private boolean online;
 
-    public User(long id, String email, String first_name, String last_name, boolean online) {
+    @JsonCreator
+    public User(@JsonProperty("id") long id, @JsonProperty("email") String email, @JsonProperty("firstName") String first_name,
+            @JsonProperty("lastName") String last_name, @JsonProperty("online") boolean online) {
         this.id = id;
         this.email = email;
         this.first_name = first_name;

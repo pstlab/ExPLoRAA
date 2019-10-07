@@ -8,14 +8,55 @@
         </li>
     </ul>
     <ul class="navbar-nav ml-auto">
-        <li class="nav-item dropdown">
-            <a class="nav-link dropdown-toggle" href="#" id="account-menu" role="button" data-toggle="dropdown"
-                aria-haspopup="true" aria-expanded="false">
+        <div class="nav-item dropdown">
+            <button type="button" class="btn btn-outline-success dropdown-toggle" data-toggle="dropdown"
+                id="account-menu">
                 Account
-            </a>
-            <div class="dropdown-menu" aria-labelledby="account-menu">
-                <a class="dropdown-item" onclick="logout()">Log-out</a>
+            </button>
+            <div class="dropdown-menu">
+                <a class="dropdown-item" href="#" data-toggle="modal" data-target="#profile">Profile</a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#" onclick="logout()">Log-out</a>
             </div>
-        </li>
+        </div>
     </ul>
+
+    <div class="modal fade" id="profile" tabindex="-1" role="dialog" aria-labelledby="profileLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="profileLabel">Profile</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group row">
+                            <label for="e-mail" class="col-sm-3 col-form-label">E-Mail:</label>
+                            <div class="col-sm-9">
+                                <input type="text" readonly class="form-control" placeholder="E-Mail" id="e-mail">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="first-name" class="col-sm-3 col-form-label">First name:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="First name" id="first-name">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="last-name" class="col-sm-3 col-form-label">Last name:</label>
+                            <div class="col-sm-9">
+                                <input type="text" class="form-control" placeholder="Last name" id="last-name">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="save-profile">Save changes</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

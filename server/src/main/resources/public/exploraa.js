@@ -1,7 +1,7 @@
 $(window).on("load", function () {
     var user = sessionStorage.getItem("user");
     if (user) {
-        setUser(user);
+        setUser(JSON.parse(user));
     } else {
         var email = localStorage.getItem("email");
         var password = localStorage.getItem("password");
@@ -107,5 +107,31 @@ function setUser(user) {
         if (user.firstName) {
             $("#account-menu").text(user.firstName);
         }
+        $("#profile").on("show.bs.modal", function (event) {
+            $("#e-mail").val(user.email);
+            $("#first-name").val(user.firstName);
+            $("#last-name").val(user.lastName);
+            $("#save-profile").click(function () {
+                user.firstName = $("#first-name").val();
+                user.lastName = $("#last-name").val();
+                var url = "http://localhost:7000/users/" + user.id;
+                fetch(url, {
+                    method: 'patch',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(user)
+                }).then(response => {
+                    console.log(response);
+                    if (response.ok) {
+                        if (user.firstName) {
+                            $("#account-menu").text(user.firstName);
+                        }
+                        sessionStorage.setItem("user", JSON.stringify(user));
+                        $("#profile").modal("hide");
+                    }
+                }).catch(error => {
+                    console.log(error.json());
+                });
+            });
+        })
     });
 }
