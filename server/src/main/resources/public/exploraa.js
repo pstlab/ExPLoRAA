@@ -1,4 +1,4 @@
-$(document).ready(function () {
+$(window).on("load", function () {
     var user = sessionStorage.getItem("user");
     if (user) {
         setUser(user);
@@ -28,6 +28,9 @@ $(document).ready(function () {
             }).catch(error => {
                 console.log(error.json());
             });
+        } else {
+            $.get("login_form.html", function (data) { $("#nav-bar").append(data); });
+            $.get("signin_form.html", function (data) { $("#body").append(data); });
         }
     }
 });
@@ -63,12 +66,9 @@ function logout() {
     sessionStorage.removeItem("user");
     localStorage.removeItem("email");
     localStorage.removeItem("password");
-    $.get("login_form.html", function (data) {
-        $("#login-form").append(data);
-    });
-    $.get("signin_form.html", function (data) {
-        $("#signin-form").append(data);
-    });
+    $("#navbar-content").remove();
+    $.get("login_form.html", function (data) { $("#nav-bar").append(data); });
+    $.get("signin_form.html", function (data) { $("#body").append(data); });
 }
 
 function signin() {
@@ -83,15 +83,15 @@ function signin() {
     }).then(response => {
         console.log(response);
         if (response.ok) {
-            setCookie("email", email, 30);
-            setCookie("password", password, 30);
+            localStorage.setItem("email", email);
+            localStorage.setItem("password", password);
             response.json().then(data => {
                 setUser(data);
                 sessionStorage.setItem("user", JSON.stringify(data));
             });
         } else {
-            setCookie("email", email, -1);
-            setCookie("password", password, -1);
+            localStorage.removeItem("email");
+            localStorage.removeItem("password");
         }
     }).catch(error => {
         console.log(error.json());
@@ -99,6 +99,13 @@ function signin() {
 }
 
 function setUser(user) {
-    $("#login-form").remove();
+    console.log(user);
+    $("#navbar-content").remove();
     $("#signin-form").remove();
+    $.get("nav_bar.html", function (data) {
+        $("#nav-bar").append(data);
+        if (user.firstName) {
+            $("#account-menu").text(user.firstName);
+        }
+    });
 }
