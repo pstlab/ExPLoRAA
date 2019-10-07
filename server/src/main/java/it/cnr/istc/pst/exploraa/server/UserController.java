@@ -12,6 +12,7 @@ import javax.persistence.TypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import io.javalin.http.ConflictResponse;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
@@ -74,10 +75,14 @@ public class UserController {
         user_entity.setEmail(email);
         user_entity.setPassword(password);
 
-        em.getTransaction().begin();
-        em.persist(user_entity);
-        em.getTransaction().commit();
-        ctx.status(201);
+        try {
+            em.getTransaction().begin();
+            em.persist(user_entity);
+            em.getTransaction().commit();
+            ctx.status(201);
+        } catch (Exception ex) {
+            throw new ConflictResponse();
+        }
     }
 
     static public void getUser(Context ctx) {
