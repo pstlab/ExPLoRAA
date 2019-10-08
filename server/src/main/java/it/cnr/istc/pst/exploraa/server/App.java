@@ -1,7 +1,17 @@
 package it.cnr.istc.pst.exploraa.server;
 
+import static io.javalin.apibuilder.ApiBuilder.delete;
+import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.patch;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.post;
+import static java.nio.charset.StandardCharsets.UTF_8;
+
+import java.io.IOException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
@@ -11,20 +21,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.javalin.Javalin;
-import static io.javalin.apibuilder.ApiBuilder.*;
-import static java.nio.charset.StandardCharsets.UTF_8;
-
-import java.io.IOException;
-
 import io.moquette.broker.Server;
 import io.moquette.broker.config.ClasspathResourceLoader;
 import io.moquette.broker.config.ResourceLoaderConfig;
 import io.moquette.interception.AbstractInterceptHandler;
-import io.moquette.interception.messages.InterceptAcknowledgedMessage;
 import io.moquette.interception.messages.InterceptConnectMessage;
 import io.moquette.interception.messages.InterceptConnectionLostMessage;
 import io.moquette.interception.messages.InterceptDisconnectMessage;
 import io.moquette.interception.messages.InterceptPublishMessage;
+import io.netty.buffer.ByteBufUtil;
 import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;;
 
@@ -35,6 +40,7 @@ public class App {
 
     static final Logger LOG = LoggerFactory.getLogger(App.class);
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
+    private static final Set<String> ON_LINE = new HashSet<>();
 
     public static void main(String[] args) throws IOException {
         // we create the app..
@@ -92,27 +98,22 @@ public class App {
 
                     @Override
                     public void onDisconnect(InterceptDisconnectMessage idm) {
-                        System.out.println(idm);
+                        ON_LINE.remove(idm.getClientID());
                     }
 
                     @Override
                     public void onConnectionLost(InterceptConnectionLostMessage iclm) {
-                        System.out.println(iclm);
+                        ON_LINE.remove(iclm.getClientID());
                     }
 
                     @Override
                     public void onConnect(InterceptConnectMessage icm) {
-                        System.out.println(icm);
-                    }
-
-                    @Override
-                    public void onMessageAcknowledged(InterceptAcknowledgedMessage msg) {
-                        System.out.println(msg);
+                        ON_LINE.add(icm.getClientID());
                     }
 
                     @Override
                     public void onPublish(InterceptPublishMessage msg) {
-                        final String decodedPayload = new String(msg.getPayload().array(), UTF_8);
+                        final String decodedPayload = new String(ByteBufUtil.getBytes(msg.getPayload()), UTF_8);
                         System.out.println("Received on topic: " + msg.getTopicName() + " content: " + decodedPayload);
                     }
                 }));
@@ -120,6 +121,7 @@ public class App {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             app.stop();
             mqtt_broker.stopServer();
+            EMF.close();
         }));
     }
 }
