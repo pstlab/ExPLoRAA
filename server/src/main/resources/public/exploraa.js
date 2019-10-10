@@ -120,6 +120,9 @@ function setUser(usr) {
                 });
             });
         })
+        $.get("body.html", function (data) {
+            $("#body").append(data);
+        });
     });
 
     // Create a client instance

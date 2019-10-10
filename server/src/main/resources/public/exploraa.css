@@ -1,3 +1,15 @@
+html {
+  height: 100%;
+}
+body {
+  height: 90%;
+}
+hr {
+  margin-top: 1rem;
+  margin-bottom: 1rem;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
 .form-signin {
   width: 100%;
   max-width: 330px;
@@ -26,4 +38,55 @@
   margin-bottom: 10px;
   border-top-left-radius: 1;
   border-top-right-radius: 1;
+}
+.container-fluid {
+  height: 100%;
+  padding-top: 10px;
+  padding-left: 20px;
+  padding-right: 20px;
+}
+.tab-content {
+  height: 100%;
+}
+.body-panel {
+  height: 100%;
+}
+.first-row {
+  height: 69%;
+  overflow: hidden;
+}
+.last-row {
+  height: 29%;
+  overflow: hidden;
+}
+.col {
+  height: 100%;
+}
+.stimuli-list {
+  height: 95%;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.f-lessons-list {
+  height: 80%;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.t-lessons-list {
+  height: 95%;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.students-list {
+  height: 80%;
+  max-height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.list-group-item.active, .list-group-item.active:hover, .list-group-item.active:focus {
+  background-color: #343a40;
+  border-color: #343a40;
 }
