@@ -39,6 +39,11 @@ hr {
   border-top-left-radius: 1;
   border-top-right-radius: 1;
 }
+.form-signin button {
+  margin-top: 10px;
+  border-top-left-radius: 1;
+  border-top-right-radius: 1;
+}
 .container-fluid {
   height: 100%;
   padding-top: 10px;

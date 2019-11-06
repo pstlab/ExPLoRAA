@@ -1,11 +1,11 @@
-var user;
-var mqtt_client;
+let user;
+let mqtt_client;
 
 $(window).on("load", function () {
-    var email = localStorage.getItem("email");
-    var password = localStorage.getItem("password");
+    let email = localStorage.getItem("email");
+    let password = localStorage.getItem("password");
     if (email && password) {
-        var form = new FormData();
+        let form = new FormData();
         form.append("email", email);
         form.append("password", password);
         fetch("http://localhost:7000/login", {
@@ -30,9 +30,9 @@ $(window).on("load", function () {
 });
 
 function login() {
-    var email = $("#login-email").val();
-    var password = $("#login-password").val();
-    var form = new FormData();
+    let email = $("#login-email").val();
+    let password = $("#login-password").val();
+    let form = new FormData();
     form.append("email", email);
     form.append("password", password);
     fetch("http://localhost:7000/login", {
@@ -45,9 +45,6 @@ function login() {
             localStorage.setItem("email", email);
             localStorage.setItem("password", password);
             response.json().then(data => { setUser(data); });
-        } else {
-            localStorage.removeItem("email");
-            localStorage.removeItem("password");
         }
     }).catch(error => {
         console.log(error.json());
@@ -58,18 +55,19 @@ function logout() {
     mqtt_client.disconnect();
     localStorage.removeItem("email");
     localStorage.removeItem("password");
-    $("#navbar-content").remove();
-    $.get("login_form.html", function (data) { $("#nav-bar").append(data); });
-    $.get("signin_form.html", function (data) { $("#body").append(data); });
-    user = undefined;
+    location.reload(false);
 }
 
 function signin() {
-    var email = $("#signin-email").val();
-    var password = $("#signin-password").val();
-    var form = new FormData();
+    let email = $("#signin-email").val();
+    let password = $("#signin-password").val();
+    let first_name = $("#signin-first-name").val();
+    let last_name = $("#signin-last-name").val();
+    let form = new FormData();
     form.append("email", email);
     form.append("password", password);
+    form.append("first_name", first_name);
+    form.append("last_name", last_name);
     fetch("http://localhost:7000/users", {
         method: 'post',
         body: form
@@ -80,9 +78,21 @@ function signin() {
             localStorage.setItem("email", email);
             localStorage.setItem("password", password);
             location.reload(false);
-        } else {
+        }
+    }).catch(error => {
+        console.log(error.json());
+    });
+}
+
+function deleteUser() {
+    fetch("http://localhost:7000/users/" + user.id, {
+        method: 'delete'
+    }).then(response => {
+        if (response.ok) {
+            mqtt_client.disconnect();
             localStorage.removeItem("email");
             localStorage.removeItem("password");
+            location.reload(false);
         }
     }).catch(error => {
         console.log(error.json());
@@ -104,8 +114,7 @@ function setUser(usr) {
             $("#save-profile").click(function () {
                 user.firstName = $("#first-name").val();
                 user.lastName = $("#last-name").val();
-                var url = "http://localhost:7000/users/" + user.id;
-                fetch(url, {
+                fetch("http://localhost:7000/users/" + user.id, {
                     method: 'patch',
                     body: JSON.stringify(user)
                 }).then(response => {
@@ -147,9 +156,9 @@ function setUser(usr) {
             // Once a connection has been made, make a subscription and send a message.
             console.log("onConnect");
             user.online = true;
-            mqtt_client.subscribe("World", { qos: 2 });
+            mqtt_client.subscribe("ExPLoRAA/" + user.id + "/#", { qos: 2 });
             message = new Paho.MQTT.Message("Hello");
-            message.destinationName = "World";
+            message.destinationName = "ExPLoRAA/" + user.id;
             mqtt_client.send(message);
         }
     });

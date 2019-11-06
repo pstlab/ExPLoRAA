@@ -68,12 +68,16 @@ public class UserController {
     static public void createUser(Context ctx) {
         String email = ctx.formParam("email");
         String password = ctx.formParam("password");
+        String first_name = ctx.formParam("first_name");
+        String last_name = ctx.formParam("last_name");
         LOG.info("creating new user {}..", email);
         EntityManager em = App.EMF.createEntityManager();
 
         UserEntity user_entity = new UserEntity();
         user_entity.setEmail(email);
         user_entity.setPassword(password);
+        user_entity.setFirstName(first_name);
+        user_entity.setLastName(last_name);
 
         try {
             em.getTransaction().begin();
