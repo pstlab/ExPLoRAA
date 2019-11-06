@@ -44,7 +44,7 @@ public class UserController {
             UserEntity user_entity = query.getSingleResult();
 
             User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                    user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false));
+                    user_entity.getLastName(), null, null, null, null, ONLINE.getOrDefault(user_entity.getId(), false));
             ctx.json(user);
         } catch (NoResultException e) {
             throw new ForbiddenResponse();
@@ -60,7 +60,8 @@ public class UserController {
         List<User> users = new ArrayList<>(user_entities.size());
         for (UserEntity user_entity : user_entities)
             users.add(new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                    user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false)));
+                    user_entity.getLastName(), null, null, null, null,
+                    ONLINE.getOrDefault(user_entity.getId(), false)));
 
         ctx.json(users);
     }
@@ -97,7 +98,7 @@ public class UserController {
             throw new NotFoundResponse();
 
         User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                user_entity.getLastName(), ONLINE.getOrDefault(user_entity.getId(), false));
+                user_entity.getLastName(), null, null, null, null, ONLINE.getOrDefault(user_entity.getId(), false));
         ctx.json(user);
     }
 

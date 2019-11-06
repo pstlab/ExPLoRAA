@@ -22,6 +22,8 @@ public class Parameter {
      * @return the properties
      */
     public Map<String, String> getProperties() {
+        if (properties == null)
+            return null;
         return Collections.unmodifiableMap(properties);
     }
 }
