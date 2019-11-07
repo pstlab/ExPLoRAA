@@ -13,13 +13,18 @@ public class Lesson {
 
     private long id;
     private String name;
+    private long lesson_id;
+    private Teaching teacher;
     private Map<Long, Following> students;
 
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
+            @JsonProperty("lesson_id") long lesson_id, @JsonProperty("teacher") Teaching teacher,
             @JsonProperty("students") Map<Long, Following> students) {
         this.id = id;
         this.name = name;
+        this.lesson_id = lesson_id;
+        this.teacher = teacher;
         this.students = students;
     }
 
@@ -35,6 +40,20 @@ public class Lesson {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * @return the lesson_id
+     */
+    public long getLessonId() {
+        return lesson_id;
+    }
+
+    /**
+     * @return the teacher
+     */
+    public Teaching getTeacher() {
+        return teacher;
     }
 
     /**

@@ -79,6 +79,14 @@ public class App {
                     delete(UserController::deleteUser);
                 });
             });
+            path("lessons", () -> {
+                get(LessonController::getAllLessons);
+                post(LessonController::createLesson);
+                path(":id", () -> {
+                    get(LessonController::getLesson);
+                    delete(LessonController::deleteLesson);
+                });
+            });
         });
 
         // we start the app..
