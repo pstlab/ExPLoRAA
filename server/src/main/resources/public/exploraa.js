@@ -129,8 +129,23 @@ function setUser(usr) {
                 });
             });
         })
+
         $.get("body.html", function (data) {
             $("#body").append(data);
+
+            let stimuli = [];
+            if (user.following)
+                for (const [key, value] of Object.entries(user.following)) {
+                    $("#f-lessons-list").append("<a class=\"list-group-item list-group-item-action\" data-toggle=\"list\" href=\"#l" + key + "\"role=\"tab\">" + value.lesson.name + "</a>");
+                    $("#f-lesson").append("<div class=\"tab-pane fade\" id=\"l" + key + "\" role=\"tabpanel\">" + value.lesson.name + "</div>");
+                }
+
+            let students = [];
+            if (user.teaching)
+                for (const [key, value] of Object.entries(user.teaching)) {
+                    $("#t-lessons-list").append("<a class=\"list-group-item list-group-item-action\" data-toggle=\"list\" href=\"#l" + key + "\"role=\"tab\">" + value.lesson.name + "</a>");
+                    $("#t-lesson").append("<div class=\"tab-pane fade\" id=\"l" + key + "\" role=\"tabpanel\">" + value.lesson.name + "</div>");
+                }
         });
     });
 

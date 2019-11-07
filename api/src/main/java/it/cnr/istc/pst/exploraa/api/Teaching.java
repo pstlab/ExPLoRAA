@@ -16,4 +16,18 @@ public class Teaching {
         this.user = user;
         this.lesson = lesson;
     }
+
+    /**
+     * @return the user
+     */
+    public User getUser() {
+        return user;
+    }
+
+    /**
+     * @return the lesson
+     */
+    public Lesson getLesson() {
+        return lesson;
+    }
 }
