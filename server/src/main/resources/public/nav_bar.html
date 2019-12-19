@@ -22,7 +22,7 @@
     </ul>
 
     <div class="modal fade" id="profile" tabindex="-1" role="dialog" aria-labelledby="profileLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
+        <div class="modal-dialog modal-lg" role="document">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="profileLabel">Profile</h5>
@@ -48,6 +48,22 @@
                             <label for="last-name" class="col-sm-3 col-form-label">Last name:</label>
                             <div class="col-sm-9">
                                 <input type="text" class="form-control" placeholder="Last name" id="last-name">
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="lesson-models" class="col-sm-3 col-form-label">Lesson models:</label>
+                            <div class="col-sm-8">
+                                <select class="form-control" id="lesson-models">
+                                    <option>1</option>
+                                    <option>2</option>
+                                    <option>3</option>
+                                    <option>4</option>
+                                    <option>5</option>
+                                </select>
+                            </div>
+                            <div class="col-sm-1">
+                                <input type="file" class="form-control-file" id="lesson-model"
+                                    accept="image/png, image/jpeg">
                             </div>
                         </div>
                     </form>

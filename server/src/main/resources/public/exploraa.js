@@ -20,8 +20,6 @@ $(window).on("load", function () {
                 $.get("login_form.html", function (data) { $("#nav-bar").append(data); });
                 $.get("signin_form.html", function (data) { $("#body").append(data); });
             }
-        }).catch(error => {
-            console.log(error.json());
         });
     } else {
         $.get("login_form.html", function (data) { $("#nav-bar").append(data); });
@@ -46,8 +44,6 @@ function login() {
             localStorage.setItem("password", password);
             response.json().then(data => { setUser(data); });
         }
-    }).catch(error => {
-        console.log(error.json());
     });
 }
 
@@ -79,8 +75,6 @@ function signin() {
             localStorage.setItem("password", password);
             location.reload(false);
         }
-    }).catch(error => {
-        console.log(error.json());
     });
 }
 
@@ -94,8 +88,6 @@ function deleteUser() {
             localStorage.removeItem("password");
             location.reload(false);
         }
-    }).catch(error => {
-        console.log(error.json());
     });
 }
 
@@ -124,8 +116,6 @@ function setUser(usr) {
                         }
                         $("#profile").modal("hide");
                     }
-                }).catch(error => {
-                    console.log(error.json());
                 });
             });
         })
