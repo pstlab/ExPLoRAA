@@ -8,8 +8,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class Teaching {
 
-    private User user;
-    private Lesson lesson;
+    private final User user;
+    private final Lesson lesson;
 
     @JsonCreator
     public Teaching(@JsonProperty("user") User user, @JsonProperty("lesson") Lesson lesson) {

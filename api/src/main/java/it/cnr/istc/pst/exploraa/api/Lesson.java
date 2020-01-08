@@ -11,11 +11,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class Lesson {
 
-    private long id;
-    private String name;
-    private long lesson_id;
-    private Teaching teacher;
-    private Map<Long, Following> students;
+    private final long id;
+    private final String name;
+    private final long lesson_id;
+    private final Teaching teacher;
+    private final Map<Long, Following> students;
 
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,

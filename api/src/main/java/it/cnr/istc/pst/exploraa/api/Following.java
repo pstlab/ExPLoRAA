@@ -11,9 +11,9 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class Following {
 
-    private User user;
-    private Lesson lesson;
-    private Set<String> interests;
+    private final User user;
+    private final Lesson lesson;
+    private final Set<String> interests;
 
     @JsonCreator
     public Following(@JsonProperty("user") User user, @JsonProperty("lesson") Lesson lesson,

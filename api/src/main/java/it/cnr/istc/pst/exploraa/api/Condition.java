@@ -23,7 +23,7 @@ public class Condition {
 
     public static class AndCondition extends Condition {
 
-        private List<Condition> conditions;
+        private final List<Condition> conditions;
 
         public AndCondition(Condition... conditions) {
             this(Arrays.asList(conditions));
@@ -44,7 +44,7 @@ public class Condition {
 
     public static class OrCondition extends Condition {
 
-        private List<Condition> conditions;
+        private final List<Condition> conditions;
 
         public OrCondition(Condition... conditions) {
             this(Arrays.asList(conditions));
@@ -65,7 +65,7 @@ public class Condition {
 
     public static class NotCondition extends Condition {
 
-        private Condition condition;
+        private final Condition condition;
 
         @JsonCreator
         public NotCondition(@JsonProperty("condition") Condition condition) {
@@ -82,8 +82,8 @@ public class Condition {
 
     public static class NominalCondition extends Condition {
 
-        private String variable;
-        private String value;
+        private final String variable;
+        private final String value;
 
         @JsonCreator
         public NominalCondition(@JsonProperty("variable") String variable, @JsonProperty("value") String value) {
@@ -108,9 +108,9 @@ public class Condition {
 
     public static class NumericCondition extends Condition {
 
-        private NumericConditionType type;
-        private String variable;
-        private double value;
+        private final NumericConditionType type;
+        private final String variable;
+        private final double value;
 
         @JsonCreator
         public NumericCondition(@JsonProperty("numeric-condition-type") NumericConditionType type,

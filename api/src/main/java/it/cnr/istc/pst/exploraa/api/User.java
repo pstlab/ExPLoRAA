@@ -11,15 +11,15 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  */
 public class User {
 
-    private long id;
-    private String email;
-    private String first_name;
-    private String last_name;
-    private Map<String, Parameter> par_types;
-    private Map<String, Map<String, String>> par_values;
-    private Map<Long, Following> following;
-    private Map<Long, Teaching> teaching;
-    private boolean online;
+    private final long id;
+    private final String email;
+    private final String first_name;
+    private final String last_name;
+    private final Map<String, Parameter> par_types;
+    private final Map<String, Map<String, String>> par_values;
+    private final Map<Long, Following> following;
+    private final Map<Long, Teaching> teaching;
+    private final boolean online;
 
     @JsonCreator
     public User(@JsonProperty("id") long id, @JsonProperty("email") String email,

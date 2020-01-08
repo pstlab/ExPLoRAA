@@ -17,11 +17,11 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
  */
 public class LessonModel {
 
-    private Long id;
-    private String name;
-    private Map<String, StimulusTemplate> stimuli;
-    private Set<String> ids;
-    private List<Relation> relations;
+    private final Long id;
+    private final String name;
+    private final Map<String, StimulusTemplate> stimuli;
+    private final Set<String> ids;
+    private final List<Relation> relations;
 
     @JsonCreator
     public LessonModel(@JsonProperty("id") Long id, @JsonProperty("name") String name,
@@ -80,9 +80,9 @@ public class LessonModel {
             @Type(value = TextStimulusTemplate.class, name = "text") })
     public static class StimulusTemplate {
 
-        private String name;
-        private Set<String> ids;
-        private List<Relation> relations;
+        private final String name;
+        private final Set<String> ids;
+        private final List<Relation> relations;
 
         @JsonCreator
         public StimulusTemplate(@JsonProperty("name") String name, @JsonProperty("ids") Set<String> ids,
@@ -120,9 +120,9 @@ public class LessonModel {
 
     public static class URLStimulusTemplate extends StimulusTemplate {
 
-        private Set<String> topics;
-        private String content;
-        private String url;
+        private final Set<String> topics;
+        private final String content;
+        private final String url;
 
         @JsonCreator
         public URLStimulusTemplate(@JsonProperty("name") String name, @JsonProperty("ids") Set<String> ids,
@@ -160,8 +160,8 @@ public class LessonModel {
 
     public static class TextStimulusTemplate extends StimulusTemplate {
 
-        private Set<String> topics;
-        private String content;
+        private final Set<String> topics;
+        private final String content;
 
         @JsonCreator
         public TextStimulusTemplate(@JsonProperty("name") String name, @JsonProperty("ids") Set<String> ids,
@@ -191,11 +191,11 @@ public class LessonModel {
 
     public static class Relation {
 
-        private String from;
-        private String to;
-        private Long lb;
-        private Long ub;
-        private TimeUnit unit;
+        private final String from;
+        private final String to;
+        private final Long lb;
+        private final Long ub;
+        private final TimeUnit unit;
 
         @JsonCreator
         public Relation(@JsonProperty("from") String from, @JsonProperty("to") String to, @JsonProperty("lb") Long lb,
