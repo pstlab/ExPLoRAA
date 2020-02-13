@@ -8,7 +8,7 @@ $(window).on("load", function () {
         let form = new FormData();
         form.append("email", email);
         form.append("password", password);
-        fetch("http://localhost:7000/login", {
+        fetch("http://localhost/login", {
             method: 'post',
             body: form
         }).then(response => {
@@ -33,7 +33,7 @@ function login() {
     let form = new FormData();
     form.append("email", email);
     form.append("password", password);
-    fetch("http://localhost:7000/login", {
+    fetch("http://localhost/login", {
         method: 'post',
         body: form
     }).then(response => {
@@ -64,7 +64,7 @@ function signin() {
     form.append("password", password);
     form.append("first_name", first_name);
     form.append("last_name", last_name);
-    fetch("http://localhost:7000/users", {
+    fetch("http://localhost/users", {
         method: 'post',
         body: form
     }).then(response => {
@@ -79,7 +79,7 @@ function signin() {
 }
 
 function deleteUser() {
-    fetch("http://localhost:7000/users/" + user.id, {
+    fetch("http://localhost/users/" + user.id, {
         method: 'delete'
     }).then(response => {
         if (response.ok) {
@@ -106,7 +106,7 @@ function setUser(usr) {
             $("#save-profile").click(function () {
                 user.firstName = $("#first-name").val();
                 user.lastName = $("#last-name").val();
-                fetch("http://localhost:7000/users/" + user.id, {
+                fetch("http://localhost/users/" + user.id, {
                     method: 'patch',
                     body: JSON.stringify(user)
                 }).then(response => {

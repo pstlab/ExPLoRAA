@@ -5,6 +5,7 @@ import static io.javalin.apibuilder.ApiBuilder.get;
 import static io.javalin.apibuilder.ApiBuilder.patch;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.core.security.SecurityUtil.roles;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
@@ -17,10 +18,17 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.javalin.Javalin;
+import io.javalin.core.security.Role;
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
+import io.javalin.http.UnauthorizedResponse;
 import io.moquette.broker.Server;
 import io.moquette.broker.config.ClasspathResourceLoader;
 import io.moquette.broker.config.ResourceLoaderConfig;
@@ -45,7 +53,28 @@ public class App {
     public static void main(String[] args) throws IOException {
         // we create the app..
         final Javalin app = Javalin.create(config -> {
+            config.enforceSsl = true;
             config.addStaticFiles("/public");
+            config.accessManager((Handler handler, Context ctx, Set<Role> permittedRoles) -> {
+                if (permittedRoles.contains(getRole(ctx)))
+                    handler.handle(ctx);
+                else
+                    throw new UnauthorizedResponse();
+            });
+            config.server(() -> {
+                org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
+
+                SslContextFactory sslContextFactory = new SslContextFactory.Server();
+                sslContextFactory.setKeyStorePath(App.class.getResource("/keystore.jks").toExternalForm());
+                sslContextFactory.setKeyStorePassword("ExPLoRAA001");
+
+                ServerConnector sslConnector = new ServerConnector(server, sslContextFactory);
+                sslConnector.setPort(443);
+                ServerConnector connector = new ServerConnector(server);
+                connector.setPort(80);
+                server.setConnectors(new Connector[] { sslConnector, connector });
+                return server;
+            });
         });
 
         app.events(event -> {
@@ -69,22 +98,22 @@ public class App {
         });
 
         app.routes(() -> {
-            post("login", UserController::login);
+            post("login", UserController::login, roles(ExplRole.Guest, ExplRole.Admin));
             path("users", () -> {
-                get(UserController::getAllUsers);
-                post(UserController::createUser);
+                get(UserController::getAllUsers, roles(ExplRole.Admin, ExplRole.User));
+                post(UserController::createUser, roles(ExplRole.Guest, ExplRole.Admin));
                 path(":id", () -> {
-                    get(UserController::getUser);
-                    patch(UserController::updateUser);
-                    delete(UserController::deleteUser);
+                    get(UserController::getUser, roles(ExplRole.Admin, ExplRole.User));
+                    patch(UserController::updateUser, roles(ExplRole.Admin, ExplRole.User));
+                    delete(UserController::deleteUser, roles(ExplRole.Admin, ExplRole.User));
                 });
             });
             path("lessons", () -> {
-                get(LessonController::getAllLessons);
-                post(LessonController::createLesson);
+                get(LessonController::getAllLessons, roles(ExplRole.Admin, ExplRole.User));
+                post(LessonController::createLesson, roles(ExplRole.Admin, ExplRole.User));
                 path(":id", () -> {
-                    get(LessonController::getLesson);
-                    delete(LessonController::deleteLesson);
+                    get(LessonController::getLesson, roles(ExplRole.Admin, ExplRole.User));
+                    delete(LessonController::deleteLesson, roles(ExplRole.Admin, ExplRole.User));
                 });
             });
         });
@@ -131,5 +160,15 @@ public class App {
             mqtt_broker.stopServer();
             EMF.close();
         }));
+    }
+
+    static Role getRole(Context ctx) {
+        // determine user role based on request
+        // typically done by inspecting headers
+        return ExplRole.Admin;
+    }
+
+    enum ExplRole implements Role {
+        Guest, User, Admin
     }
 }

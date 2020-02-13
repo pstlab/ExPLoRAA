@@ -35,6 +35,11 @@
       <version>3.7.0</version>
     </dependency>
     <dependency>
+      <groupId>org.eclipse.jetty</groupId>
+      <artifactId>jetty-server</artifactId>
+      <version>9.4.26.v20200117</version>
+    </dependency>
+    <dependency>
       <groupId>io.moquette</groupId>
       <artifactId>moquette-broker</artifactId>
       <version>0.12.1</version>
