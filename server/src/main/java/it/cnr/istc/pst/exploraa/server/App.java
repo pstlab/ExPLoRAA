@@ -10,7 +10,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -38,6 +37,9 @@ import io.moquette.interception.messages.InterceptConnectionLostMessage;
 import io.moquette.interception.messages.InterceptDisconnectMessage;
 import io.moquette.interception.messages.InterceptPublishMessage;
 import io.netty.buffer.ByteBufUtil;
+import io.netty.buffer.Unpooled;
+import io.netty.handler.codec.mqtt.MqttMessageBuilders;
+import io.netty.handler.codec.mqtt.MqttQoS;
 import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;;
 
@@ -48,29 +50,28 @@ public class App {
 
     static final Logger LOG = LoggerFactory.getLogger(App.class);
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
-    private static final Set<String> ON_LINE = new HashSet<>();
 
-    public static void main(String[] args) throws IOException {
+    public static void main(final String[] args) throws IOException {
         // we create the app..
         final Javalin app = Javalin.create(config -> {
             config.enforceSsl = true;
             config.addStaticFiles("/public");
-            config.accessManager((Handler handler, Context ctx, Set<Role> permittedRoles) -> {
+            config.accessManager((final Handler handler, final Context ctx, final Set<Role> permittedRoles) -> {
                 if (permittedRoles.contains(getRole(ctx)))
                     handler.handle(ctx);
                 else
                     throw new UnauthorizedResponse();
             });
             config.server(() -> {
-                org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
+                final org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
 
-                SslContextFactory sslContextFactory = new SslContextFactory.Server();
+                final SslContextFactory sslContextFactory = new SslContextFactory.Server();
                 sslContextFactory.setKeyStorePath(App.class.getResource("/keystore.jks").toExternalForm());
                 sslContextFactory.setKeyStorePassword("ExPLoRAA001");
 
-                ServerConnector sslConnector = new ServerConnector(server, sslContextFactory);
+                final ServerConnector sslConnector = new ServerConnector(server, sslContextFactory);
                 sslConnector.setPort(443);
-                ServerConnector connector = new ServerConnector(server);
+                final ServerConnector connector = new ServerConnector(server);
                 connector.setPort(80);
                 server.setConnectors(new Connector[] { sslConnector, connector });
                 return server;
@@ -81,16 +82,14 @@ public class App {
             event.serverStarting(() -> LOG.info("Starting ExPLoRAA server.."));
             event.serverStarted(() -> {
                 LOG.info("ExPLoRAA server is running..");
-                EntityManager em = EMF.createEntityManager();
+                final EntityManager em = EMF.createEntityManager();
 
-                List<UserEntity> users = em.createQuery("SELECT ue FROM UserEntity ue", UserEntity.class)
+                final List<UserEntity> users = em.createQuery("SELECT ue FROM UserEntity ue", UserEntity.class)
                         .getResultList();
 
                 LOG.info("Loading {} users..", users.size());
-                for (UserEntity ue : users)
-                    UserController.ONLINE.put(ue.getId(), false);
 
-                List<LessonEntity> lessons = em.createQuery("SELECT le FROM LessonEntity le", LessonEntity.class)
+                final List<LessonEntity> lessons = em.createQuery("SELECT le FROM LessonEntity le", LessonEntity.class)
                         .getResultList();
 
                 LOG.info("Loading {} lessons..", lessons.size());
@@ -134,24 +133,45 @@ public class App {
                     }
 
                     @Override
-                    public void onDisconnect(InterceptDisconnectMessage idm) {
-                        ON_LINE.remove(idm.getClientID());
+                    public void onDisconnect(final InterceptDisconnectMessage idm) {
+                        long user_id = Long.parseLong(idm.getClientID());
+                        UserController.ONLINE.remove(user_id);
+
+                        // we broadcast the information that the user is no more online..
+                        mqtt_broker.internalPublish(MqttMessageBuilders.publish().topicName(user_id + "/output/on-line")
+                                .retained(true).qos(MqttQoS.EXACTLY_ONCE)
+                                .payload(Unpooled.copiedBuffer(Boolean.FALSE.toString().getBytes(UTF_8))).build(),
+                                getID());
                     }
 
                     @Override
-                    public void onConnectionLost(InterceptConnectionLostMessage iclm) {
-                        ON_LINE.remove(iclm.getClientID());
+                    public void onConnectionLost(final InterceptConnectionLostMessage iclm) {
+                        long user_id = Long.parseLong(iclm.getClientID());
+                        UserController.ONLINE.remove(user_id);
+
+                        // we broadcast the information that the user is no more online..
+                        mqtt_broker.internalPublish(MqttMessageBuilders.publish().topicName(user_id + "/output/on-line")
+                                .retained(true).qos(MqttQoS.EXACTLY_ONCE)
+                                .payload(Unpooled.copiedBuffer(Boolean.FALSE.toString().getBytes(UTF_8))).build(),
+                                getID());
                     }
 
                     @Override
-                    public void onConnect(InterceptConnectMessage icm) {
-                        ON_LINE.add(icm.getClientID());
+                    public void onConnect(final InterceptConnectMessage icm) {
+                        long user_id = Long.parseLong(icm.getClientID());
+                        UserController.ONLINE.add(user_id);
+
+                        // we broadcast the information that the user is currently online..
+                        mqtt_broker.internalPublish(MqttMessageBuilders.publish().topicName(user_id + "/output/on-line")
+                                .retained(true).qos(MqttQoS.EXACTLY_ONCE)
+                                .payload(Unpooled.copiedBuffer(Boolean.TRUE.toString().getBytes(UTF_8))).build(),
+                                getID());
                     }
 
                     @Override
-                    public void onPublish(InterceptPublishMessage msg) {
+                    public void onPublish(final InterceptPublishMessage msg) {
                         final String decodedPayload = new String(ByteBufUtil.getBytes(msg.getPayload()), UTF_8);
-                        System.out.println("Received on topic: " + msg.getTopicName() + " content: " + decodedPayload);
+                        LOG.info("Received on topic: " + msg.getTopicName() + " content: " + decodedPayload);
                     }
                 }));
 
@@ -162,7 +182,7 @@ public class App {
         }));
     }
 
-    static Role getRole(Context ctx) {
+    static Role getRole(final Context ctx) {
         // determine user role based on request
         // typically done by inspecting headers
         return ExplRole.Admin;

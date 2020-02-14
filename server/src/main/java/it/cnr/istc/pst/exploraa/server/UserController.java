@@ -2,8 +2,10 @@ package it.cnr.istc.pst.exploraa.server;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -16,6 +18,7 @@ import io.javalin.http.ConflictResponse;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
+import it.cnr.istc.pst.exploraa.api.Parameter;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
 
@@ -28,7 +31,12 @@ public class UserController {
     /**
      * For each user id, a boolean indicating whether the user is online.
      */
-    static final Map<Long, Boolean> ONLINE = new HashMap<>();
+    static final Set<Long> ONLINE = new HashSet<>();
+    /**
+     * For each user id, a map of parameter types containing the name of the
+     * parameter as key.
+     */
+    static final Map<Long, Map<String, Parameter>> PARAMETER_TYPES = new HashMap<>();
 
     static public void login(Context ctx) {
         String email = ctx.formParam("email");
@@ -44,7 +52,7 @@ public class UserController {
             UserEntity user_entity = query.getSingleResult();
 
             User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                    user_entity.getLastName(), null, null, null, null, ONLINE.getOrDefault(user_entity.getId(), false));
+                    user_entity.getLastName(), null, null, null, null, ONLINE.contains(user_entity.getId()));
             ctx.json(user);
         } catch (NoResultException e) {
             throw new ForbiddenResponse();
@@ -60,8 +68,7 @@ public class UserController {
         List<User> users = new ArrayList<>(user_entities.size());
         for (UserEntity user_entity : user_entities)
             users.add(new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                    user_entity.getLastName(), null, null, null, null,
-                    ONLINE.getOrDefault(user_entity.getId(), false)));
+                    user_entity.getLastName(), null, null, null, null, ONLINE.contains(user_entity.getId())));
 
         ctx.json(users);
     }
@@ -98,7 +105,7 @@ public class UserController {
             throw new NotFoundResponse();
 
         User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                user_entity.getLastName(), null, null, null, null, ONLINE.getOrDefault(user_entity.getId(), false));
+                user_entity.getLastName(), null, null, null, null, ONLINE.contains(user_entity.getId()));
         ctx.json(user);
     }
 
