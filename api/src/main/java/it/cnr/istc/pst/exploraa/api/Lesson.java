@@ -14,6 +14,7 @@ public class Lesson {
 
     private final long id;
     private final String name;
+    private final long model_id;
     private final Set<String> topics;
     private final Teaching teacher;
     private final Map<Long, Following> students;
@@ -22,11 +23,12 @@ public class Lesson {
 
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
-            @JsonProperty("topics") Set<String> topics, @JsonProperty("teacher") Teaching teacher,
-            @JsonProperty("students") Map<Long, Following> students, @JsonProperty("state") LessonState state,
-            @JsonProperty("time") long time) {
+            @JsonProperty("model_id") long model_id, @JsonProperty("topics") Set<String> topics,
+            @JsonProperty("teacher") Teaching teacher, @JsonProperty("students") Map<Long, Following> students,
+            @JsonProperty("state") LessonState state, @JsonProperty("time") long time) {
         this.id = id;
         this.name = name;
+        this.model_id = model_id;
         this.topics = topics;
         this.teacher = teacher;
         this.students = students;
@@ -46,6 +48,13 @@ public class Lesson {
      */
     public String getName() {
         return name;
+    }
+
+    /**
+     * @return the model id
+     */
+    public long getModelId() {
+        return model_id;
     }
 
     /**

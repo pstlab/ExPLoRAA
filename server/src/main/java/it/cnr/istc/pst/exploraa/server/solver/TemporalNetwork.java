@@ -351,5 +351,10 @@ public class TemporalNetwork {
     }
 
     private static class TemporalConstraintList extends ArrayList<TemporalConstraint> {
+
+        /**
+         *
+         */
+        private static final long serialVersionUID = 1L;
     }
 }
