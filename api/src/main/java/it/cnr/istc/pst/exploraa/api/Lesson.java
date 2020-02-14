@@ -13,19 +13,24 @@ public class Lesson {
 
     private final long id;
     private final String name;
-    private final long lesson_id;
+    private final Set<String> topics;
     private final Teaching teacher;
     private final Map<Long, Following> students;
+    private LessonState state;
+    private long time;
 
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
-            @JsonProperty("lesson_id") long lesson_id, @JsonProperty("teacher") Teaching teacher,
-            @JsonProperty("students") Map<Long, Following> students) {
+            @JsonProperty("topics") Set<String> topics, @JsonProperty("teacher") Teaching teacher,
+            @JsonProperty("students") Map<Long, Following> students, @JsonProperty("state") LessonState state,
+            @JsonProperty("time") long time) {
         this.id = id;
         this.name = name;
-        this.lesson_id = lesson_id;
+        this.topics = topics;
         this.teacher = teacher;
         this.students = students;
+        this.state = state;
+        this.time = time;
     }
 
     /**
@@ -43,10 +48,12 @@ public class Lesson {
     }
 
     /**
-     * @return the lesson_id
+     * @return the topics
      */
-    public long getLessonId() {
-        return lesson_id;
+    public Set<String> getTopics() {
+        if (topics == null)
+            return null;
+        return Collections.unmodifiableSet(topics);
     }
 
     /**
@@ -63,5 +70,37 @@ public class Lesson {
         if (students == null)
             return null;
         return Collections.unmodifiableMap(students);
+    }
+
+    /**
+     * @return the state
+     */
+    public LessonState getState() {
+        return state;
+    }
+
+    /**
+     * @param state the state to set
+     */
+    public void setState(LessonState state) {
+        this.state = state;
+    }
+
+    /**
+     * @return the time
+     */
+    public long getTime() {
+        return time;
+    }
+
+    /**
+     * @param time the time to set
+     */
+    public void setTime(long time) {
+        this.time = time;
+    }
+
+    public enum LessonState {
+        Running, Paused, Stopped
     }
 }

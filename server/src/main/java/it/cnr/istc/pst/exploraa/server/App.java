@@ -10,12 +10,18 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import java.io.IOException;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.ServerConnector;
@@ -40,6 +46,14 @@ import io.netty.buffer.ByteBufUtil;
 import io.netty.buffer.Unpooled;
 import io.netty.handler.codec.mqtt.MqttMessageBuilders;
 import io.netty.handler.codec.mqtt.MqttQoS;
+import it.cnr.istc.pst.exploraa.api.Following;;
+import it.cnr.istc.pst.exploraa.api.Lesson;
+import it.cnr.istc.pst.exploraa.api.LessonModel;
+import it.cnr.istc.pst.exploraa.api.Teaching;
+import it.cnr.istc.pst.exploraa.api.User;
+import it.cnr.istc.pst.exploraa.api.LessonModel.TextStimulusTemplate;
+import it.cnr.istc.pst.exploraa.api.LessonModel.URLStimulusTemplate;
+import it.cnr.istc.pst.exploraa.server.db.FollowEntity;
 import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;;
 
@@ -50,6 +64,7 @@ public class App {
 
     static final Logger LOG = LoggerFactory.getLogger(App.class);
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
+    static final ObjectMapper mapper = new ObjectMapper();
 
     public static void main(final String[] args) throws IOException {
         // we create the app..
@@ -93,6 +108,43 @@ public class App {
                         .getResultList();
 
                 LOG.info("Loading {} lessons..", lessons.size());
+                for (LessonEntity l_entity : lessons) {
+                    // warning! we do not store the current time of the lesson, nor its state
+                    // if the service is restarted, the lesson is not lost, yet its state is!
+                    LessonModel lm = mapper.readValue(l_entity.getModel().getModel(), LessonModel.class);
+
+                    Set<String> topics = lm.getStimuli().values().stream().flatMap(template -> {
+                        if (template instanceof TextStimulusTemplate) {
+                            TextStimulusTemplate txt = (TextStimulusTemplate) template;
+                            return (txt.getTopics() != null) ? txt.getTopics().stream()
+                                    : new HashSet<String>().stream();
+                        } else if (template instanceof URLStimulusTemplate) {
+                            URLStimulusTemplate url = (URLStimulusTemplate) template;
+                            return (url.getTopics() != null) ? url.getTopics().stream()
+                                    : new HashSet<String>().stream();
+                        } else
+                            throw new AssertionError(template.getClass().getName());
+                    }).collect(Collectors.toSet());
+
+                    Map<Long, Following> students = new HashMap<>();
+                    for (FollowEntity follow : l_entity.getStudents()) {
+                        students.put(follow.getStudent().getId(),
+                                new Following(new User(follow.getStudent().getId(), follow.getStudent().getEmail(),
+                                        follow.getStudent().getFirstName(), follow.getStudent().getLastName(), null,
+                                        null, null, null, UserController.ONLINE.contains(follow.getStudent().getId())),
+                                        null, new HashSet<>(follow.getInterests())));
+                    }
+                    Lesson l = new Lesson(l_entity.getId(), l_entity.getName(), topics,
+                            new Teaching(
+                                    new User(l_entity.getTeacher().getTeacher().getId(),
+                                            l_entity.getTeacher().getTeacher().getEmail(),
+                                            l_entity.getTeacher().getTeacher().getFirstName(),
+                                            l_entity.getTeacher().getTeacher().getLastName(), null, null, null, null,
+                                            UserController.ONLINE.contains(l_entity.getTeacher().getTeacher().getId())),
+                                    null),
+                            students, Lesson.LessonState.Stopped, 0);
+
+                }
             });
         });
 

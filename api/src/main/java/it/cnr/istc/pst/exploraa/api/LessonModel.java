@@ -71,7 +71,7 @@ public class LessonModel {
      */
     public List<Relation> getRelations() {
         if (relations == null)
-            return relations;
+            return null;
         return Collections.unmodifiableList(relations);
     }
 
@@ -104,7 +104,7 @@ public class LessonModel {
          */
         public Set<String> getIds() {
             if (ids == null)
-                return ids;
+                return null;
             return Collections.unmodifiableSet(ids);
         }
 
@@ -139,7 +139,7 @@ public class LessonModel {
          */
         public Set<String> getTopics() {
             if (topics == null)
-                return topics;
+                return null;
             return Collections.unmodifiableSet(topics);
         }
 
@@ -177,7 +177,7 @@ public class LessonModel {
          */
         public Set<String> getTopics() {
             if (topics == null)
-                return topics;
+                return null;
             return Collections.unmodifiableSet(topics);
         }
 
