@@ -2,6 +2,7 @@ package it.cnr.istc.pst.exploraa.api;
 
 import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
