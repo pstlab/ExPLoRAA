@@ -23,7 +23,7 @@ public class Lesson {
 
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
-            @JsonProperty("model_id") long model_id, @JsonProperty("topics") Set<String> topics,
+            @JsonProperty("modelId") long model_id, @JsonProperty("topics") Set<String> topics,
             @JsonProperty("teacher") Teaching teacher, @JsonProperty("students") Map<Long, Following> students,
             @JsonProperty("state") LessonState state, @JsonProperty("time") long time) {
         this.id = id;

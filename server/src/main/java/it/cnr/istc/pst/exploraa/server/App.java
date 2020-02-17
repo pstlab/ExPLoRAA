@@ -46,7 +46,8 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
-import it.cnr.istc.pst.exploraa.server.db.UserEntity;;
+import it.cnr.istc.pst.exploraa.server.db.UserEntity;
+import it.cnr.istc.pst.exploraa.server.solver.LessonManager;;
 
 /**
  * ExPLoRAA Server
@@ -110,10 +111,13 @@ public class App {
                                     .map(student -> LessonController.toFollowing(student)).collect(Collectors
                                             .toMap(following -> following.getUser().getId(), following -> following)),
                             Lesson.LessonState.Stopped, 0);
+
+                    LessonController.LESSONS.put(l.getId(), new LessonManager(l));
                 }
             });
         });
 
+        // we create the routes..
         app.routes(() -> {
             post("login", UserController::login, roles(ExplRole.Guest, ExplRole.Admin));
             path("users", () -> {
@@ -132,6 +136,11 @@ public class App {
                     get(LessonController::getLesson, roles(ExplRole.Admin, ExplRole.User));
                     delete(LessonController::deleteLesson, roles(ExplRole.Admin, ExplRole.User));
                 });
+                path("play/:id", () -> post(LessonController::playLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("pause/:id", () -> post(LessonController::pauseLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("stop/:id", () -> post(LessonController::stopLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("follow", () -> post(LessonController::followLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("unfollow", () -> post(LessonController::unfollowLesson, roles(ExplRole.Admin, ExplRole.User)));
             });
         });
 
@@ -164,7 +173,7 @@ public class App {
 
                     @Override
                     public void onConnectionLost(final InterceptConnectionLostMessage iclm) {
-                        long user_id = Long.parseLong(iclm.getClientID());
+                        long user_id = Long.parseLong(iclm.getClientID().replace("user-", ""));
                         UserController.ONLINE.remove(user_id);
 
                         // we broadcast the information that the user is no more online..
@@ -176,7 +185,7 @@ public class App {
 
                     @Override
                     public void onConnect(final InterceptConnectMessage icm) {
-                        long user_id = Long.parseLong(icm.getClientID());
+                        long user_id = Long.parseLong(icm.getClientID().replace("user-", ""));
                         UserController.ONLINE.add(user_id);
 
                         // we broadcast the information that the user is currently online..

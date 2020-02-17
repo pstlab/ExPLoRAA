@@ -164,7 +164,7 @@ public abstract class Message {
         private final String refEvent;
 
         @JsonCreator
-        public Token(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id,
+        public Token(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
                 @JsonProperty("cause") Integer cause, @JsonProperty("min") Long min, @JsonProperty("max") Long max,
                 @JsonProperty("time") long time, @JsonProperty("refEvent") String refEvent) {
             this.lesson_id = lesson_id;
@@ -238,7 +238,7 @@ public abstract class Message {
         private final long time;
 
         @JsonCreator
-        public TokenUpdate(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id,
+        public TokenUpdate(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
                 @JsonProperty("min") Long min, @JsonProperty("max") Long max, @JsonProperty("time") long time) {
             this.lesson_id = lesson_id;
             this.id = id;
@@ -293,7 +293,7 @@ public abstract class Message {
         private final int id;
 
         @JsonCreator
-        public RemoveToken(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id) {
+        public RemoveToken(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id) {
             this.lesson_id = lesson_id;
             this.id = id;
         }
@@ -328,7 +328,7 @@ public abstract class Message {
         private final long time;
 
         @JsonCreator
-        public Stimulus(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id,
+        public Stimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
                 @JsonProperty("time") long time) {
             this.lesson_id = lesson_id;
             this.id = id;
@@ -364,7 +364,7 @@ public abstract class Message {
             private final String content;
 
             @JsonCreator
-            public TextStimulus(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id,
+            public TextStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
                     @JsonProperty("time") long time, @JsonProperty("content") String content) {
                 super(lesson_id, id, time);
                 this.content = content;
@@ -389,7 +389,7 @@ public abstract class Message {
             private final Integer answer;
 
             @JsonCreator
-            public QuestionStimulus(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id,
+            public QuestionStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
                     @JsonProperty("time") long time, @JsonProperty("question") String question,
                     @JsonProperty("answers") List<String> answers, @JsonProperty("answer") Integer answer) {
                 super(lesson_id, id, time);
@@ -426,7 +426,7 @@ public abstract class Message {
                 private final int answer;
 
                 @JsonCreator
-                public Answer(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("question_id") int question_id,
+                public Answer(@JsonProperty("lessonId") long lesson_id, @JsonProperty("question_id") int question_id,
                         @JsonProperty("answer") int answer) {
                     this.lesson_id = lesson_id;
                     this.question_id = question_id;
@@ -465,7 +465,7 @@ public abstract class Message {
             private final String url;
 
             @JsonCreator
-            public URLStimulus(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") int id,
+            public URLStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
                     @JsonProperty("time") long time, @JsonProperty("content") String content,
                     @JsonProperty("url") String url) {
                 super(lesson_id, id, time);
@@ -499,7 +499,7 @@ public abstract class Message {
         private final long id;
 
         @JsonCreator
-        public RemoveStimulus(@JsonProperty("lesson_id") long lesson_id, @JsonProperty("id") long id) {
+        public RemoveStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") long id) {
             this.lesson_id = lesson_id;
             this.id = id;
         }

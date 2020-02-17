@@ -1,12 +1,17 @@
 package it.cnr.istc.pst.exploraa.server;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,6 +31,7 @@ import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.LessonModelEntity;
 import it.cnr.istc.pst.exploraa.server.db.TeachEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
+import it.cnr.istc.pst.exploraa.server.solver.LessonManager;
 
 /**
  * LessonController
@@ -33,8 +39,12 @@ import it.cnr.istc.pst.exploraa.server.db.UserEntity;
 public class LessonController {
 
     static final Logger LOG = LoggerFactory.getLogger(LessonController.class);
+    /**
+     * For each lesson, the context of the lesson.
+     */
+    static final Map<Long, LessonManager> LESSONS = new HashMap<>();
 
-    static public void getAllLessons(Context ctx) {
+    static void getAllLessons(Context ctx) {
         LOG.info("retrieving all lessons..");
         EntityManager em = App.EMF.createEntityManager();
         List<LessonEntity> lesson_entities = em.createQuery("SELECT le FROM LessonEntity le", LessonEntity.class)
@@ -59,7 +69,7 @@ public class LessonController {
         }
     }
 
-    static public void createLesson(Context ctx) {
+    static void createLesson(Context ctx) {
         String name = ctx.formParam("name");
         long teacher_id = Long.parseLong(ctx.formParam("teacher_id"));
         long model_id = Long.parseLong(ctx.formParam("model_id"));
@@ -70,18 +80,33 @@ public class LessonController {
         LessonEntity lesson_entity = new LessonEntity();
         lesson_entity.setName(name);
         lesson_entity.setTeacher(new TeachEntity(em.find(UserEntity.class, teacher_id), lesson_entity));
-        lesson_entity.setModel(em.find(LessonModelEntity.class, model_id));
+        LessonModelEntity lme = em.find(LessonModelEntity.class, model_id);
+        lesson_entity.setModel(lme);
 
         em.getTransaction().begin();
         em.persist(lesson_entity);
         em.getTransaction().commit();
+
+        try {
+            LessonModel lm = App.mapper.readValue(lme.getModel(), LessonModel.class);
+            Lesson l = new Lesson(lesson_entity.getId(), lesson_entity.getName(), model_id, getTopics(lm),
+                    toTeaching(lesson_entity.getTeacher()),
+                    lesson_entity.getStudents().stream().map(student -> toFollowing(student)).collect(
+                            Collectors.toMap(following -> following.getUser().getId(), following -> following)),
+                    null, 0);
+            LESSONS.put(l.getId(), new LessonManager(l));
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorResponse(e.getMessage());
+        }
+
         ctx.status(201);
     }
 
-    static public void getLesson(Context ctx) {
-        LOG.info("retrieving lesson {}..", ctx.pathParam("id"));
+    static void getLesson(Context ctx) {
+        long lesson_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("retrieving lesson {}..", lesson_id);
         EntityManager em = App.EMF.createEntityManager();
-        LessonEntity lesson_entity = em.find(LessonEntity.class, Long.valueOf(ctx.pathParam("id")));
+        LessonEntity lesson_entity = em.find(LessonEntity.class, lesson_id);
         if (lesson_entity == null)
             throw new NotFoundResponse();
 
@@ -99,16 +124,55 @@ public class LessonController {
         }
     }
 
-    static public void deleteLesson(Context ctx) {
-        LOG.info("deleting lesson {}..", ctx.pathParam("id"));
+    static void deleteLesson(Context ctx) {
+        long lesson_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("deleting lesson {}..", lesson_id);
         EntityManager em = App.EMF.createEntityManager();
-        LessonEntity lesson_entity = em.find(LessonEntity.class, Long.valueOf(ctx.pathParam("id")));
+        LessonEntity lesson_entity = em.find(LessonEntity.class, lesson_id);
         if (lesson_entity == null)
             throw new NotFoundResponse();
 
         em.getTransaction().begin();
         em.remove(lesson_entity);
         em.getTransaction().commit();
+        ctx.status(204);
+    }
+
+    static void followLesson(Context ctx) {
+        try {
+            long student_id = Long.parseLong(ctx.formParam("student_id"));
+            long lesson_id = Long.parseLong(ctx.formParam("lesson_id"));
+            Set<String> interests = App.mapper.readValue(ctx.formParam("lesson_id"), new TypeReference<Set<String>>() {
+            });
+            LOG.info("user {} is following lesson {} with interests {}..", student_id, lesson_id, interests);
+            ctx.status(204);
+        } catch (JsonProcessingException e) {
+            throw new InternalServerErrorResponse(e.getMessage());
+        }
+    }
+
+    static void unfollowLesson(Context ctx) {
+        long student_id = Long.parseLong(ctx.formParam("student_id"));
+        long lesson_id = Long.parseLong(ctx.formParam("lesson_id"));
+        LOG.info("user {} is unfollowing lesson {} ..", student_id, lesson_id);
+        ctx.status(204);
+    }
+
+    static void playLesson(Context ctx) {
+        long lesson_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("playing lesson {}..", lesson_id);
+        ctx.status(204);
+    }
+
+    static void pauseLesson(Context ctx) {
+        long lesson_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("pausing lesson {}..", lesson_id);
+        ctx.status(204);
+    }
+
+    static void stopLesson(Context ctx) {
+        long lesson_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("stopping lesson {}..", lesson_id);
         ctx.status(204);
     }
 

@@ -37,11 +37,16 @@ public class UserController {
      * parameter as key.
      */
     static final Map<Long, Map<String, Parameter>> PARAMETER_TYPES = new HashMap<>();
+    /**
+     * For each user id, a map of parameter values containing the name of the
+     * parameter as key. Notice that parameter values are represented through a map.
+     */
+    static final Map<Long, Map<String, Map<String, String>>> PARAMETER_VALUES = new HashMap<>();
 
-    static public void login(Context ctx) {
+    static void login(Context ctx) {
         String email = ctx.formParam("email");
         String password = ctx.formParam("password");
-        LOG.info("login user {}..", email);
+        LOG.info("user {} is logging in..", email);
 
         EntityManager em = App.EMF.createEntityManager();
         TypedQuery<UserEntity> query = em.createQuery(
@@ -59,7 +64,7 @@ public class UserController {
         }
     }
 
-    static public void getAllUsers(Context ctx) {
+    static void getAllUsers(Context ctx) {
         LOG.info("retrieving all users..");
         EntityManager em = App.EMF.createEntityManager();
         List<UserEntity> user_entities = em.createQuery("SELECT ue FROM UserEntity ue", UserEntity.class)
@@ -68,12 +73,13 @@ public class UserController {
         List<User> users = new ArrayList<>(user_entities.size());
         for (UserEntity user_entity : user_entities)
             users.add(new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                    user_entity.getLastName(), null, null, null, null, ONLINE.contains(user_entity.getId())));
+                    user_entity.getLastName(), PARAMETER_TYPES.get(user_entity.getId()),
+                    PARAMETER_VALUES.get(user_entity.getId()), null, null, ONLINE.contains(user_entity.getId())));
 
         ctx.json(users);
     }
 
-    static public void createUser(Context ctx) {
+    static void createUser(Context ctx) {
         String email = ctx.formParam("email");
         String password = ctx.formParam("password");
         String first_name = ctx.formParam("first_name");
@@ -97,24 +103,27 @@ public class UserController {
         }
     }
 
-    static public void getUser(Context ctx) {
-        LOG.info("retrieving user {}..", ctx.pathParam("id"));
+    static void getUser(Context ctx) {
+        long user_id = Long.valueOf(ctx.pathParam("id"));
+        LOG.info("retrieving user {}..", user_id);
         EntityManager em = App.EMF.createEntityManager();
-        UserEntity user_entity = em.find(UserEntity.class, Long.valueOf(ctx.pathParam("id")));
+        UserEntity user_entity = em.find(UserEntity.class, user_id);
         if (user_entity == null)
             throw new NotFoundResponse();
 
         User user = new User(user_entity.getId(), user_entity.getEmail(), user_entity.getFirstName(),
-                user_entity.getLastName(), null, null, null, null, ONLINE.contains(user_entity.getId()));
+                user_entity.getLastName(), PARAMETER_TYPES.get(user_entity.getId()),
+                PARAMETER_VALUES.get(user_entity.getId()), null, null, ONLINE.contains(user_entity.getId()));
         ctx.json(user);
     }
 
-    static public void updateUser(Context ctx) {
-        LOG.info("updating user {}..", ctx.pathParam("id"));
+    static void updateUser(Context ctx) {
+        long user_id = Long.valueOf(ctx.pathParam("id"));
+        LOG.info("updating user {}..", user_id);
         User user = ctx.bodyAsClass(User.class);
 
         EntityManager em = App.EMF.createEntityManager();
-        UserEntity user_entity = em.find(UserEntity.class, Long.valueOf(ctx.pathParam("id")));
+        UserEntity user_entity = em.find(UserEntity.class, user_id);
         if (user_entity == null)
             throw new NotFoundResponse();
 
@@ -125,16 +134,20 @@ public class UserController {
         ctx.status(204);
     }
 
-    static public void deleteUser(Context ctx) {
-        LOG.info("deleting user {}..", ctx.pathParam("id"));
+    static void deleteUser(Context ctx) {
+        long user_id = Long.valueOf(ctx.pathParam("id"));
+        LOG.info("deleting user {}..", user_id);
         EntityManager em = App.EMF.createEntityManager();
-        UserEntity user_entity = em.find(UserEntity.class, Long.valueOf(ctx.pathParam("id")));
+        UserEntity user_entity = em.find(UserEntity.class, user_id);
         if (user_entity == null)
             throw new NotFoundResponse();
 
         em.getTransaction().begin();
         em.remove(user_entity);
         em.getTransaction().commit();
+
+        PARAMETER_TYPES.remove(user_entity.getId());
+        PARAMETER_VALUES.remove(user_entity.getId());
         ctx.status(204);
     }
 }

@@ -1,5 +1,11 @@
 let user;
 let mqtt_client;
+let config = {
+    "host": "localhost",
+    "service_port": 80,
+    "websocket_port": 8080,
+    "mqtt_port": 1883
+};
 
 $(window).on("load", function () {
     let email = localStorage.getItem("email");
@@ -8,7 +14,7 @@ $(window).on("load", function () {
         let form = new FormData();
         form.append("email", email);
         form.append("password", password);
-        fetch("http://localhost/login", {
+        fetch("http://" + config.host + ":" + config.service_port + "/login", {
             method: 'post',
             body: form
         }).then(response => {
@@ -33,7 +39,7 @@ function login() {
     let form = new FormData();
     form.append("email", email);
     form.append("password", password);
-    fetch("http://localhost/login", {
+    fetch("http://" + config.host + ":" + config.service_port + "/login", {
         method: 'post',
         body: form
     }).then(response => {
@@ -43,7 +49,8 @@ function login() {
             localStorage.setItem("email", email);
             localStorage.setItem("password", password);
             response.json().then(data => { setUser(data); });
-        }
+        } else
+            alert(response.statusText);
     });
 }
 
@@ -64,7 +71,7 @@ function signin() {
     form.append("password", password);
     form.append("first_name", first_name);
     form.append("last_name", last_name);
-    fetch("http://localhost/users", {
+    fetch("http://" + config.host + ":" + config.service_port + "/users", {
         method: 'post',
         body: form
     }).then(response => {
@@ -74,12 +81,13 @@ function signin() {
             localStorage.setItem("email", email);
             localStorage.setItem("password", password);
             location.reload(false);
-        }
+        } else
+            alert(response.statusText);
     });
 }
 
 function deleteUser() {
-    fetch("http://localhost/users/" + user.id, {
+    fetch("http://" + config.host + ":" + config.service_port + "/users/" + user.id, {
         method: 'delete'
     }).then(response => {
         if (response.ok) {
@@ -87,7 +95,8 @@ function deleteUser() {
             localStorage.removeItem("email");
             localStorage.removeItem("password");
             location.reload(false);
-        }
+        } else
+            alert(response.statusText);
     });
 }
 
@@ -106,7 +115,7 @@ function setUser(usr) {
             $("#save-profile").click(function () {
                 user.firstName = $("#first-name").val();
                 user.lastName = $("#last-name").val();
-                fetch("http://localhost/users/" + user.id, {
+                fetch("http://" + config.host + ":" + config.service_port + "/users/" + user.id, {
                     method: 'patch',
                     body: JSON.stringify(user)
                 }).then(response => {
@@ -115,7 +124,8 @@ function setUser(usr) {
                             $("#account-menu").text(user.firstName);
                         }
                         $("#profile").modal("hide");
-                    }
+                    } else
+                        alert(response.statusText);
                 });
             });
         })
@@ -140,7 +150,7 @@ function setUser(usr) {
     });
 
     // Create a client instance
-    mqtt_client = new Paho.MQTT.Client("localhost", 8080, "user" + user.id);
+    mqtt_client = new Paho.MQTT.Client(config.host, config.websocket_port, "user-" + user.id);
 
     // set callback handlers
     // called when the client loses its connection
