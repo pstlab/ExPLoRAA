@@ -88,7 +88,8 @@ function signin() {
 
 function deleteUser() {
     fetch("http://" + config.host + ":" + config.service_port + "/users/" + user.id, {
-        method: 'delete'
+        method: 'delete',
+        headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
         if (response.ok) {
             mqtt_client.disconnect();
@@ -117,6 +118,7 @@ function setUser(usr) {
                 user.lastName = $("#last-name").val();
                 fetch("http://" + config.host + ":" + config.service_port + "/users/" + user.id, {
                     method: 'patch',
+                    headers: { 'Authorization': 'Basic ' + user.id },
                     body: JSON.stringify(user)
                 }).then(response => {
                     if (response.ok) {

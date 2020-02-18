@@ -161,7 +161,7 @@ public class App {
 
                     @Override
                     public void onDisconnect(final InterceptDisconnectMessage idm) {
-                        long user_id = Long.parseLong(idm.getClientID());
+                        long user_id = Long.parseLong(idm.getClientID().replace("user-", ""));
                         UserController.ONLINE.remove(user_id);
 
                         // we broadcast the information that the user is no more online..
@@ -210,9 +210,17 @@ public class App {
     }
 
     static Role getRole(final Context ctx) {
-        // determine user role based on request
-        // typically done by inspecting headers
-        return ExplRole.Admin;
+        String auth_head = ctx.header("Authorization");
+        if (auth_head == null)
+            return ExplRole.Guest;
+        EntityManager em = App.EMF.createEntityManager();
+        UserEntity user_entity = em.find(UserEntity.class, Long.parseLong(auth_head.replace("Basic ", "")));
+        if (user_entity == null)
+            return ExplRole.Guest;
+        else if (user_entity.getRoles().contains(ExplRole.Admin.name()))
+            return ExplRole.Admin;
+        else
+            return ExplRole.User;
     }
 
     enum ExplRole implements Role {

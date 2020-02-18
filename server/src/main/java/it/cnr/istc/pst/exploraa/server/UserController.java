@@ -20,6 +20,7 @@ import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
 import it.cnr.istc.pst.exploraa.api.Parameter;
 import it.cnr.istc.pst.exploraa.api.User;
+import it.cnr.istc.pst.exploraa.server.App.ExplRole;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
 
 /**
@@ -92,6 +93,7 @@ public class UserController {
         user_entity.setPassword(password);
         user_entity.setFirstName(first_name);
         user_entity.setLastName(last_name);
+        user_entity.addRole(ExplRole.User.name());
 
         try {
             em.getTransaction().begin();

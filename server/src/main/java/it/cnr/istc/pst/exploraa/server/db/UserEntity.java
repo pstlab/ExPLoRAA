@@ -6,6 +6,7 @@ import java.util.Collections;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -26,6 +27,8 @@ public class UserEntity {
     private String password;
     private String first_name;
     private String last_name;
+    @ElementCollection
+    private final Collection<String> roles = new ArrayList<>();
     @OneToMany
     private final Collection<LessonModelEntity> models = new ArrayList<>();
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -67,6 +70,21 @@ public class UserEntity {
 
     public void setLastName(String last_name) {
         this.last_name = last_name;
+    }
+
+    /**
+     * @return the interests
+     */
+    public Collection<String> getRoles() {
+        return Collections.unmodifiableCollection(roles);
+    }
+
+    public void addRole(String role) {
+        roles.add(role);
+    }
+
+    public void removeRole(String role) {
+        roles.remove(role);
     }
 
     public Collection<LessonModelEntity> getModels() {
