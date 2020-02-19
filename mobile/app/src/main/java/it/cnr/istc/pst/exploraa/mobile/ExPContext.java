@@ -15,6 +15,7 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.io.IOException;
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 
 import javax.net.ssl.HostnameVerifier;
@@ -116,7 +117,7 @@ public class ExPContext {
             if (user != null) {
                 // we create a new MQTT connection..
                 try {
-                    mqtt = new MqttClient("tcp://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, "user-" + String.valueOf(user.getId()), new MemoryPersistence());
+                    mqtt = new MqttClient("ssl://" + BuildConfig.HOST + ":" + BuildConfig.MQTT_PORT, "user-" + String.valueOf(user.getId()), new MemoryPersistence());
                     mqtt.setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {
@@ -134,12 +135,34 @@ public class ExPContext {
                         }
                     });
 
+                    // Create a trust manager that does not validate certificate chains
+                    final TrustManager[] trustAllCerts = new TrustManager[]{
+                            new X509TrustManager() {
+                                @Override
+                                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                                }
+
+                                @Override
+                                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                                }
+
+                                @Override
+                                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                                    return new java.security.cert.X509Certificate[]{};
+                                }
+                            }
+                    };
+
+                    SSLContext sslContext = SSLContext.getInstance("TLS");
+                    sslContext.init(null, trustAllCerts, new SecureRandom());
+
                     MqttConnectOptions options = new MqttConnectOptions();
                     options.setCleanSession(true);
+                    options.setSocketFactory(sslContext.getSocketFactory());
                     options.setAutomaticReconnect(true);
                     mqtt.connect(options);
                     Log.i(ExPContext.class.getName(), "Connected to the MQTT broker..");
-                } catch (MqttException e) {
+                } catch (Exception e) {
                     Log.w(ExPContext.class.getName(), "MQTT Connection failed..", e);
                 }
             }

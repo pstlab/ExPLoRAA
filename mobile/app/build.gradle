@@ -10,8 +10,8 @@ android {
         versionCode 1
         versionName "1.0"
         buildConfigField 'String', 'HOST', '"150.146.65.22"'
-        buildConfigField 'int', 'SERVICE_PORT', '443'
-        buildConfigField 'int', 'MQTT_PORT', '1883'
+        buildConfigField 'int', 'SERVICE_PORT', '8181'
+        buildConfigField 'int', 'MQTT_PORT', '8883'
     }
     buildTypes {
         release {
