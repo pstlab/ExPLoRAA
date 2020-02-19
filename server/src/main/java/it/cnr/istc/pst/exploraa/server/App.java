@@ -77,10 +77,8 @@ public class App {
                 sslContextFactory.setKeyStorePassword("ExPLoRAA001");
 
                 final ServerConnector sslConnector = new ServerConnector(server, sslContextFactory);
-                sslConnector.setPort(443);
-                final ServerConnector connector = new ServerConnector(server);
-                connector.setPort(80);
-                server.setConnectors(new Connector[] { sslConnector, connector });
+                sslConnector.setPort(8181);
+                server.setConnectors(new Connector[] { sslConnector });
                 return server;
             });
         });
@@ -145,7 +143,7 @@ public class App {
         });
 
         // we start the app..
-        app.start(7000);
+        app.start();
 
         // we create the MQTT broker..
         final Server mqtt_broker = new Server();
