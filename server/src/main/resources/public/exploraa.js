@@ -1,10 +1,9 @@
 let user;
 let mqtt_client;
 let config = {
-    'host': 'localhost',
-    'service_port': 443,
-    'websocket_port': 8080,
-    'mqtt_port': 1883
+    'host': '150.146.65.22',
+    'service_port': 8181,
+    'websocket_port': 8080
 };
 
 $(window).on('load', function () {
@@ -168,7 +167,8 @@ function setUser(usr) {
     };
 
     // connect the client
-    mqtt_client.connect({
+    var options = {
+        useSSL: true,
         onSuccess: function () { // called when the client connects
             // Once a connection has been made, make a subscription and send a message.
             console.log('onConnect');
@@ -177,6 +177,10 @@ function setUser(usr) {
             message = new Paho.MQTT.Message('Hello');
             message.destinationName = 'ExPLoRAA/' + user.id;
             mqtt_client.send(message);
+        },
+        onFailure: function () { // called when the client fails to connect
+            console.log('onFailure');
         }
-    });
+    };
+    mqtt_client.connect(options);
 }
