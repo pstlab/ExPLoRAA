@@ -1,10 +1,10 @@
 package it.cnr.istc.pst.exploraa.api;
 
-import java.util.Collections;
-import java.util.Map;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * Parameter

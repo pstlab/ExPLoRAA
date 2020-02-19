@@ -1,14 +1,14 @@
 package it.cnr.istc.pst.exploraa.api;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
+import com.fasterxml.jackson.annotation.JsonTypeInfo;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 /**
  * This is the base class for representing messages.

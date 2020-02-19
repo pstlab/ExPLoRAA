@@ -2,7 +2,7 @@ let user;
 let mqtt_client;
 let config = {
     'host': 'localhost',
-    'service_port': 80,
+    'service_port': 443,
     'websocket_port': 8080,
     'mqtt_port': 1883
 };
@@ -14,7 +14,7 @@ $(window).on('load', function () {
         let form = new FormData();
         form.append('email', email);
         form.append('password', password);
-        fetch('http://' + config.host + ':' + config.service_port + '/login', {
+        fetch('https://' + config.host + ':' + config.service_port + '/login', {
             method: 'post',
             body: form
         }).then(response => {
@@ -39,7 +39,7 @@ function login() {
     let form = new FormData();
     form.append('email', email);
     form.append('password', password);
-    fetch('http://' + config.host + ':' + config.service_port + '/login', {
+    fetch('https://' + config.host + ':' + config.service_port + '/login', {
         method: 'post',
         body: form
     }).then(response => {
@@ -71,7 +71,7 @@ function signin() {
     form.append('password', password);
     form.append('first_name', first_name);
     form.append('last_name', last_name);
-    fetch('http://' + config.host + ':' + config.service_port + '/users', {
+    fetch('https://' + config.host + ':' + config.service_port + '/users', {
         method: 'post',
         body: form
     }).then(response => {
@@ -87,7 +87,7 @@ function signin() {
 }
 
 function deleteUser() {
-    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+    fetch('https://' + config.host + ':' + config.service_port + '/users/' + user.id, {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
@@ -116,7 +116,7 @@ function setUser(usr) {
             $('#save-profile').click(function () {
                 user.firstName = $('#first-name').val();
                 user.lastName = $('#last-name').val();
-                fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+                fetch('https://' + config.host + ':' + config.service_port + '/users/' + user.id, {
                     method: 'patch',
                     headers: { 'Authorization': 'Basic ' + user.id },
                     body: JSON.stringify(user)
