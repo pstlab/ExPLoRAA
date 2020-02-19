@@ -73,7 +73,7 @@ public class App {
                 final org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
 
                 final SslContextFactory sslContextFactory = new SslContextFactory.Server();
-                sslContextFactory.setKeyStorePath(App.class.getResource("/keystore").toExternalForm());
+                sslContextFactory.setKeyStorePath(App.class.getResource("/keystore.jks").toExternalForm());
                 sslContextFactory.setKeyStorePassword("ExPLoRAA001");
 
                 final ServerConnector sslConnector = new ServerConnector(server, sslContextFactory);

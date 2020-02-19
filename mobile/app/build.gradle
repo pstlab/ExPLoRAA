@@ -9,7 +9,7 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
-        buildConfigField 'String', 'HOST', '"192.168.43.53"'
+        buildConfigField 'String', 'HOST', '"192.168.67.133"'
         buildConfigField 'int', 'SERVICE_PORT', '443'
         buildConfigField 'int', 'MQTT_PORT', '1883'
     }
