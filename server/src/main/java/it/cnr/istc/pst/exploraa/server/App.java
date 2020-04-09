@@ -20,9 +20,6 @@ import javax.persistence.Persistence;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
-import org.eclipse.jetty.server.Connector;
-import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -61,7 +58,6 @@ public class App {
     public static void main(final String[] args) throws IOException {
         // we create the app..
         final Javalin app = Javalin.create(config -> {
-            config.enforceSsl = true;
             config.addStaticFiles("/public");
             config.accessManager((final Handler handler, final Context ctx, final Set<Role> permittedRoles) -> {
                 if (permittedRoles.contains(getRole(ctx)))
@@ -69,18 +65,7 @@ public class App {
                 else
                     throw new UnauthorizedResponse();
             });
-            config.server(() -> {
-                final org.eclipse.jetty.server.Server server = new org.eclipse.jetty.server.Server();
-
-                final SslContextFactory sslContextFactory = new SslContextFactory.Server();
-                sslContextFactory.setKeyStorePath(App.class.getResource("/keystore.jks").toExternalForm());
-                sslContextFactory.setKeyStorePassword("ExPLoRAA001");
-
-                final ServerConnector sslConnector = new ServerConnector(server, sslContextFactory);
-                sslConnector.setPort(8181);
-                server.setConnectors(new Connector[] { sslConnector });
-                return server;
-            });
+            config.enableCorsForAllOrigins();
         });
 
         app.events(event -> {
@@ -143,7 +128,7 @@ public class App {
         });
 
         // we start the app..
-        app.start();
+        app.start(80);
 
         // we create the MQTT broker..
         final Server mqtt_broker = new Server();

@@ -7,7 +7,6 @@ import java.util.Collections;
 import javax.persistence.ElementCollection;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 
@@ -19,10 +18,10 @@ public class FollowEntity {
 
     @EmbeddedId
     private FollowId id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("student_id")
     private UserEntity student;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("lesson_id")
     private LessonEntity lesson;
     @ElementCollection

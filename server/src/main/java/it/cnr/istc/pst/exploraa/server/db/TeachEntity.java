@@ -2,7 +2,6 @@ package it.cnr.istc.pst.exploraa.server.db;
 
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 
@@ -14,10 +13,10 @@ public class TeachEntity {
 
     @EmbeddedId
     private TeachId id;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("teacher_id")
     private UserEntity teacher;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne
     @MapsId("lesson_id")
     private LessonEntity lesson;
 

@@ -1,9 +1,9 @@
 let user;
 let mqtt_client;
 let config = {
-    'host': '150.146.65.22',
-    'service_port': 8181,
-    'websocket_port': 8080
+    'host': '127.0.0.1',
+    "service_port": 80,
+    "websocket_port": 8080
 };
 
 $(window).on('load', function () {
@@ -13,7 +13,7 @@ $(window).on('load', function () {
         let form = new FormData();
         form.append('email', email);
         form.append('password', password);
-        fetch('https://' + config.host + ':' + config.service_port + '/login', {
+        fetch('http://' + config.host + ':' + config.service_port + '/login', {
             method: 'post',
             body: form
         }).then(response => {
@@ -38,7 +38,7 @@ function login() {
     let form = new FormData();
     form.append('email', email);
     form.append('password', password);
-    fetch('https://' + config.host + ':' + config.service_port + '/login', {
+    fetch('http://' + config.host + ':' + config.service_port + '/login', {
         method: 'post',
         body: form
     }).then(response => {
@@ -70,7 +70,7 @@ function signin() {
     form.append('password', password);
     form.append('first_name', first_name);
     form.append('last_name', last_name);
-    fetch('https://' + config.host + ':' + config.service_port + '/users', {
+    fetch('http://' + config.host + ':' + config.service_port + '/users', {
         method: 'post',
         body: form
     }).then(response => {
@@ -86,7 +86,7 @@ function signin() {
 }
 
 function deleteUser() {
-    fetch('https://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
@@ -115,7 +115,7 @@ function setUser(usr) {
             $('#save-profile').click(function () {
                 user.firstName = $('#first-name').val();
                 user.lastName = $('#last-name').val();
-                fetch('https://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+                fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
                     method: 'patch',
                     headers: { 'Authorization': 'Basic ' + user.id },
                     body: JSON.stringify(user)
@@ -168,7 +168,6 @@ function setUser(usr) {
 
     // connect the client
     var options = {
-        useSSL: true,
         onSuccess: function () { // called when the client connects
             // Once a connection has been made, make a subscription and send a message.
             console.log('onConnect');
