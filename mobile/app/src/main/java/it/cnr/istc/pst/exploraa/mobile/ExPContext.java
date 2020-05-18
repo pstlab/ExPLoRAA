@@ -19,7 +19,6 @@ import org.eclipse.paho.client.mqttv3.MqttMessage;
 import org.eclipse.paho.client.mqttv3.persist.MemoryPersistence;
 
 import java.io.IOException;
-import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 
 import javax.net.ssl.HostnameVerifier;
@@ -213,31 +212,11 @@ public class ExPContext {
                         }
                     });
 
-                    // Create a trust manager that does not validate certificate chains
-                    final TrustManager[] trustAllCerts = new TrustManager[]{
-                            new X509TrustManager() {
-                                @Override
-                                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-                                }
-
-                                @Override
-                                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-                                }
-
-                                @Override
-                                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-                                    return new java.security.cert.X509Certificate[]{};
-                                }
-                            }
-                    };
-
-                    SSLContext sslContext = SSLContext.getInstance("TLS");
-                    sslContext.init(null, trustAllCerts, new SecureRandom());
-
                     MqttConnectOptions options = new MqttConnectOptions();
-                    options.setCleanSession(true);
-                    options.setSocketFactory(sslContext.getSocketFactory());
-                    options.setAutomaticReconnect(true);
+                    SocketFactory.SocketFactoryOptions socketFactoryOptions = new SocketFactory.SocketFactoryOptions();
+                    socketFactoryOptions.withCaInputStream(ctx.getResources().openRawResource(R.raw.exploraa));
+                    options.setSocketFactory(new SocketFactory(socketFactoryOptions));
+
                     mqtt.connect(options);
                     Log.i(ExPContext.class.getName(), "Connected to the MQTT broker..");
 

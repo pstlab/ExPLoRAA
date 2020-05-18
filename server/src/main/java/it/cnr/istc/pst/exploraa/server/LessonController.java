@@ -52,7 +52,7 @@ public class LessonController {
         try {
             List<Lesson> lessons = new ArrayList<>(lesson_entities.size());
             for (LessonEntity lesson_entity : lesson_entities) {
-                LessonModel lm = App.mapper.readValue(lesson_entity.getModel().getModel(), LessonModel.class);
+                LessonModel lm = App.MAPPER.readValue(lesson_entity.getModel().getModel(), LessonModel.class);
 
                 Lesson lesson = new Lesson(lesson_entity.getId(), lesson_entity.getName(), lm.getId(), getTopics(lm),
                         toTeaching(lesson_entity.getTeacher()),
@@ -88,7 +88,7 @@ public class LessonController {
         em.getTransaction().commit();
 
         try {
-            LessonModel lm = App.mapper.readValue(lme.getModel(), LessonModel.class);
+            LessonModel lm = App.MAPPER.readValue(lme.getModel(), LessonModel.class);
             Lesson l = new Lesson(lesson_entity.getId(), lesson_entity.getName(), model_id, getTopics(lm),
                     toTeaching(lesson_entity.getTeacher()),
                     lesson_entity.getStudents().stream().map(student -> toFollowing(student)).collect(
@@ -111,7 +111,7 @@ public class LessonController {
             throw new NotFoundResponse();
 
         try {
-            LessonModel lm = App.mapper.readValue(lesson_entity.getModel().getModel(), LessonModel.class);
+            LessonModel lm = App.MAPPER.readValue(lesson_entity.getModel().getModel(), LessonModel.class);
 
             Lesson lesson = new Lesson(lesson_entity.getId(), lesson_entity.getName(), lm.getId(), getTopics(lm),
                     toTeaching(lesson_entity.getTeacher()),
@@ -142,7 +142,7 @@ public class LessonController {
         try {
             long student_id = Long.parseLong(ctx.formParam("student_id"));
             long lesson_id = Long.parseLong(ctx.formParam("lesson_id"));
-            Set<String> interests = App.mapper.readValue(ctx.formParam("lesson_id"), new TypeReference<Set<String>>() {
+            Set<String> interests = App.MAPPER.readValue(ctx.formParam("lesson_id"), new TypeReference<Set<String>>() {
             });
             LOG.info("user {} is following lesson {} with interests {}..", student_id, lesson_id, interests);
             ctx.status(204);

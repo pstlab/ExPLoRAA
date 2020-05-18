@@ -20,7 +20,7 @@ import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
 import it.cnr.istc.pst.exploraa.api.Parameter;
 import it.cnr.istc.pst.exploraa.api.User;
-import it.cnr.istc.pst.exploraa.server.App.ExplRole;
+import it.cnr.istc.pst.exploraa.server.RESTService.ExplRole;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
 
 /**
