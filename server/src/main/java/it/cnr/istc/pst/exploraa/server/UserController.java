@@ -46,7 +46,7 @@ public class UserController {
 
     static void login(Context ctx) {
         String email = ctx.formParam("email");
-        String password = ctx.formParam("password");
+        String password = App.hashPassword(ctx.formParam("password"), App.generateSalt(512));
         LOG.info("user {} is logging in..", email);
 
         EntityManager em = App.EMF.createEntityManager();
@@ -82,7 +82,7 @@ public class UserController {
 
     static void createUser(Context ctx) {
         String email = ctx.formParam("email");
-        String password = ctx.formParam("password");
+        String password = App.hashPassword(ctx.formParam("password"), App.generateSalt(512));
         String first_name = ctx.formParam("first_name");
         String last_name = ctx.formParam("last_name");
         LOG.info("creating new user {}..", email);
