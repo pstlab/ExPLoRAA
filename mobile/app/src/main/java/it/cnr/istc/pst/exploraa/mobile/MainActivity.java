@@ -9,6 +9,8 @@ import android.os.Bundle;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.preference.PreferenceManager;
 
+import it.cnr.istc.pst.exploraa.mobile.ctx.ExPLoRAAContext;
+
 public class MainActivity extends AppCompatActivity {
 
     @Override
@@ -19,10 +21,10 @@ public class MainActivity extends AppCompatActivity {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         nm.createNotificationChannel(new NotificationChannel(getString(R.string.app_name), getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT));
 
-        if (ExPContext.getInstance().getUser() == null) {
+        if (ExPLoRAAContext.getInstance().getUser() == null) {
             SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
             if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password)))
-                ExPContext.getInstance().login(this, shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
+                ExPLoRAAContext.getInstance().login(this, shared_prefs.getString(getString(R.string.email), null), shared_prefs.getString(getString(R.string.password), null));
             else {
                 startActivity(new Intent(MainActivity.this, LoginActivity.class));
                 finish();

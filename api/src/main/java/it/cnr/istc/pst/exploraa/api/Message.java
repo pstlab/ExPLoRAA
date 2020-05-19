@@ -158,22 +158,14 @@ public abstract class Message {
 
         private final long lesson_id;
         private final int id;
-        private final Integer cause;
-        private Long min, max;
         private long time;
-        private final String refEvent;
 
         @JsonCreator
         public Token(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                @JsonProperty("cause") Integer cause, @JsonProperty("min") Long min, @JsonProperty("max") Long max,
-                @JsonProperty("time") long time, @JsonProperty("refEvent") String refEvent) {
+                @JsonProperty("time") long time) {
             this.lesson_id = lesson_id;
             this.id = id;
-            this.cause = cause;
-            this.min = min;
-            this.max = max;
             this.time = time;
-            this.refEvent = refEvent;
         }
 
         /**
@@ -191,38 +183,10 @@ public abstract class Message {
         }
 
         /**
-         * @return the cause
-         */
-        public Integer getCause() {
-            return cause;
-        }
-
-        /**
-         * @return the min
-         */
-        public Long getMin() {
-            return min;
-        }
-
-        /**
-         * @return the max
-         */
-        public Long getMax() {
-            return max;
-        }
-
-        /**
          * @return the time
          */
         public long getTime() {
             return time;
-        }
-
-        /**
-         * @return the refEvent
-         */
-        public String getRefEvent() {
-            return refEvent;
         }
     }
 

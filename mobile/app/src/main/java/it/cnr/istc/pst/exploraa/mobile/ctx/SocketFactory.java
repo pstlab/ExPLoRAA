@@ -1,4 +1,4 @@
-package it.cnr.istc.pst.exploraa.mobile;
+package it.cnr.istc.pst.exploraa.mobile.ctx;
 
 import android.util.Log;
 

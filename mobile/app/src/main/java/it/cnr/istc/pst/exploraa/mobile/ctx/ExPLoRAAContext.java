@@ -1,4 +1,4 @@
-package it.cnr.istc.pst.exploraa.mobile;
+package it.cnr.istc.pst.exploraa.mobile.ctx;
 
 import android.content.Context;
 import android.content.Intent;
@@ -28,7 +28,12 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import it.cnr.istc.pst.exploraa.api.Following;
+import it.cnr.istc.pst.exploraa.api.Teaching;
 import it.cnr.istc.pst.exploraa.api.User;
+import it.cnr.istc.pst.exploraa.mobile.BuildConfig;
+import it.cnr.istc.pst.exploraa.mobile.ExPLoRAAActivity;
+import it.cnr.istc.pst.exploraa.mobile.R;
 import okhttp3.OkHttpClient;
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -36,23 +41,23 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
-public class ExPContext {
+public class ExPLoRAAContext {
 
-    private static final ExPContext instance = new ExPContext();
+    private static final ExPLoRAAContext instance = new ExPLoRAAContext();
+    MqttClient mqtt;
     private ExPLoRAA resource;
-    private MqttClient mqtt;
     /**
      * The current user.
      */
     private User user;
 
-    private ExPContext() {
-        Log.i(ExPContext.class.getName(), "Creating ExPLoRAA context..");
+    private ExPLoRAAContext() {
+        Log.i(ExPLoRAAContext.class.getName(), "Creating ExPLoRAA context..");
         Retrofit retrofit = new Retrofit.Builder().baseUrl("https://" + BuildConfig.HOST + ":" + BuildConfig.SERVICE_PORT + "/").client(getUnsafeOkHttpClient()).addConverterFactory(JacksonConverterFactory.create()).build();
         resource = retrofit.create(ExPLoRAA.class);
     }
 
-    public static ExPContext getInstance() {
+    public static ExPLoRAAContext getInstance() {
         return instance;
     }
 
@@ -106,12 +111,12 @@ public class ExPContext {
      * @param password the password of the user.
      */
     public void login(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password) {
-        Log.i(ExPContext.class.getName(), "Logging in..");
+        Log.i(ExPLoRAAContext.class.getName(), "Logging in..");
         resource.login(email, password).enqueue(new Callback<User>() {
             @Override
             public void onResponse(Call<User> call, Response<User> response) {
                 if (response.isSuccessful()) {
-                    Log.i(ExPContext.class.getName(), "Login successful..");
+                    Log.i(ExPLoRAAContext.class.getName(), "Login successful..");
 
                     // we store email and password so as to avoid asking them every time the app is started..
                     SharedPreferences shared_prefs = PreferenceManager.getDefaultSharedPreferences(ctx);
@@ -125,14 +130,14 @@ public class ExPContext {
                     try {
                         Toast.makeText(ctx, response.errorBody().string(), Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
-                        Log.e(ExPContext.class.getName(), null, e);
+                        Log.e(ExPLoRAAContext.class.getName(), null, e);
                     }
                 }
             }
 
             @Override
             public void onFailure(Call<User> call, Throwable t) {
-                Log.e(ExPContext.class.getName(), "User login failed..", t);
+                Log.e(ExPLoRAAContext.class.getName(), "User login failed..", t);
             }
         });
     }
@@ -142,30 +147,30 @@ public class ExPContext {
      */
     public void logout(@NonNull final Context ctx) {
         assert user != null;
-        Log.i(ExPContext.class.getName(), "Logging out current user..");
+        Log.i(ExPLoRAAContext.class.getName(), "Logging out current user..");
         setUser(ctx, null);
     }
 
     public void new_user(@NonNull final Context ctx, @NonNull final String email, @NonNull final String password, @NonNull final String first_name, @NonNull final String last_name) {
-        Log.i(ExPContext.class.getName(), "Creating new user..");
+        Log.i(ExPLoRAAContext.class.getName(), "Creating new user..");
         resource.new_user(email, password, first_name, last_name).enqueue(new Callback<Void>() {
             @Override
             public void onResponse(Call<Void> call, Response<Void> response) {
                 if (response.isSuccessful()) {
-                    Log.i(ExPContext.class.getName(), "User creation successful..");
+                    Log.i(ExPLoRAAContext.class.getName(), "User creation successful..");
                     login(ctx, email, password);
                 } else {
                     try {
                         Toast.makeText(ctx, response.errorBody().string(), Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
-                        Log.e(ExPContext.class.getName(), null, e);
+                        Log.e(ExPLoRAAContext.class.getName(), null, e);
                     }
                 }
             }
 
             @Override
             public void onFailure(Call<Void> call, Throwable t) {
-                Log.e(ExPContext.class.getName(), "User login failed..", t);
+                Log.e(ExPLoRAAContext.class.getName(), "User login failed..", t);
             }
         });
     }
@@ -183,9 +188,9 @@ public class ExPContext {
                     if (mqtt.isConnected())
                         mqtt.disconnect();
                     mqtt.close();
-                    Log.i(ExPContext.class.getName(), "Disconnected from the MQTT broker..");
+                    Log.i(ExPLoRAAContext.class.getName(), "Disconnected from the MQTT broker..");
                 } catch (MqttException e) {
-                    Log.w(ExPContext.class.getName(), "MQTT Disconnection failed..", e);
+                    Log.e(ExPLoRAAContext.class.getName(), "MQTT Disconnection failed..", e);
                 } finally {
                     mqtt = null;
                 }
@@ -198,13 +203,13 @@ public class ExPContext {
                     mqtt.setCallback(new MqttCallback() {
                         @Override
                         public void connectionLost(Throwable cause) {
-                            Log.e(ExPContext.class.getName(), "Connection lost..", cause);
+                            Log.v(ExPLoRAAContext.class.getName(), "Connection lost..", cause);
                             logout(ctx);
                         }
 
                         @Override
                         public void messageArrived(String topic, MqttMessage message) {
-                            Log.w(ExPContext.class.getName(), "Message arrived: " + topic + " - " + message);
+                            Log.v(ExPLoRAAContext.class.getName(), "Message arrived: " + topic + " - " + message);
                         }
 
                         @Override
@@ -218,12 +223,20 @@ public class ExPContext {
                     options.setSocketFactory(new SocketFactory(socketFactoryOptions));
 
                     mqtt.connect(options);
-                    Log.i(ExPContext.class.getName(), "Connected to the MQTT broker..");
+                    Log.i(ExPLoRAAContext.class.getName(), "Connected to the MQTT broker..");
+
+                    // we add the following lessons..
+                    for (Following following : user.getFollowingLessons().values())
+                        FollowingLessonsContext.getInstance().addLesson(following.getLesson());
+
+                    // we add the teaching lessons..
+                    for (Teaching teaching : user.getTeachingLessons().values())
+                        TeachingLessonsContext.getInstance().addLesson(teaching.getLesson());
 
                     ctx.startActivity(new Intent(ctx, ExPLoRAAActivity.class));
                     ((AppCompatActivity) ctx).finish();
                 } catch (Exception e) {
-                    Log.w(ExPContext.class.getName(), "MQTT Connection failed..", e);
+                    Log.e(ExPLoRAAContext.class.getName(), "MQTT Connection failed..", e);
                 }
             }
 

@@ -24,6 +24,7 @@ import io.netty.handler.codec.mqtt.MqttQoS;
 public class MessagingService {
 
     static final Logger LOG = LoggerFactory.getLogger(MessagingService.class);
+    public static final String ID = "EmbeddedLauncherPublishListener";
     private static MessagingService instance;
     private final Server mqtt_broker;
 
@@ -49,7 +50,7 @@ public class MessagingService {
 
                         @Override
                         public String getID() {
-                            return "EmbeddedLauncherPublishListener";
+                            return ID;
                         }
 
                         @Override
@@ -58,10 +59,7 @@ public class MessagingService {
                             UserController.ONLINE.remove(user_id);
 
                             // we broadcast the information that the user is no more online..
-                            mqtt_broker.internalPublish(MqttMessageBuilders.publish()
-                                    .topicName(user_id + "/output/on-line").retained(true).qos(MqttQoS.EXACTLY_ONCE)
-                                    .payload(Unpooled.copiedBuffer(Boolean.FALSE.toString().getBytes(UTF_8))).build(),
-                                    getID());
+                            publish(user_id + "/on-line", Boolean.FALSE.toString(), true);
                         }
 
                         @Override
@@ -70,10 +68,7 @@ public class MessagingService {
                             UserController.ONLINE.remove(user_id);
 
                             // we broadcast the information that the user is no more online..
-                            mqtt_broker.internalPublish(MqttMessageBuilders.publish()
-                                    .topicName(user_id + "/output/on-line").retained(true).qos(MqttQoS.EXACTLY_ONCE)
-                                    .payload(Unpooled.copiedBuffer(Boolean.FALSE.toString().getBytes(UTF_8))).build(),
-                                    getID());
+                            publish(user_id + "/on-line", Boolean.FALSE.toString(), true);
                         }
 
                         @Override
@@ -82,10 +77,7 @@ public class MessagingService {
                             UserController.ONLINE.add(user_id);
 
                             // we broadcast the information that the user is currently online..
-                            mqtt_broker.internalPublish(MqttMessageBuilders.publish()
-                                    .topicName(user_id + "/output/on-line").retained(true).qos(MqttQoS.EXACTLY_ONCE)
-                                    .payload(Unpooled.copiedBuffer(Boolean.TRUE.toString().getBytes(UTF_8))).build(),
-                                    getID());
+                            publish(user_id + "/on-line", Boolean.TRUE.toString(), true);
                         }
 
                         @Override
@@ -102,5 +94,10 @@ public class MessagingService {
 
     public void stop() {
         mqtt_broker.stopServer();
+    }
+
+    public void publish(final String topic, final String msg, final boolean retained) {
+        mqtt_broker.internalPublish(MqttMessageBuilders.publish().topicName(topic).retained(retained)
+                .qos(MqttQoS.EXACTLY_ONCE).payload(Unpooled.copiedBuffer(msg.getBytes(UTF_8))).build(), ID);
     }
 }

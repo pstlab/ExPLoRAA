@@ -7,6 +7,8 @@ import android.widget.EditText;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import it.cnr.istc.pst.exploraa.mobile.ctx.ExPLoRAAContext;
+
 public class LoginActivity extends AppCompatActivity {
 
     private EditText email;
@@ -22,7 +24,7 @@ public class LoginActivity extends AppCompatActivity {
     }
 
     public void login(View v) {
-        ExPContext.getInstance().login(this, email.getText().toString(), password.getText().toString());
+        ExPLoRAAContext.getInstance().login(this, email.getText().toString(), password.getText().toString());
     }
 
     public void new_user(View v) {
