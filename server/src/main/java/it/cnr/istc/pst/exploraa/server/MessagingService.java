@@ -91,7 +91,8 @@ public class MessagingService {
                         @Override
                         public void onPublish(final InterceptPublishMessage msg) {
                             final String decodedPayload = new String(ByteBufUtil.getBytes(msg.getPayload()), UTF_8);
-                            LOG.info("Received on topic: " + msg.getTopicName() + " content: " + decodedPayload);
+                            LOG.info(
+                                    "Received message on topic: " + msg.getTopicName() + " content: " + decodedPayload);
                         }
                     }));
         } catch (IOException e) {

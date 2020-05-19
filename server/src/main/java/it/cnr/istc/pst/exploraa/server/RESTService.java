@@ -35,7 +35,6 @@ import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
-import it.cnr.istc.pst.exploraa.server.solver.LessonManager;
 
 public class RESTService {
 

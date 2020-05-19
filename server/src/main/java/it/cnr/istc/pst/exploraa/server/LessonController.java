@@ -31,7 +31,6 @@ import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.LessonModelEntity;
 import it.cnr.istc.pst.exploraa.server.db.TeachEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
-import it.cnr.istc.pst.exploraa.server.solver.LessonManager;
 
 /**
  * LessonController

@@ -30,6 +30,11 @@
       <version>2.0</version>
     </dependency>
     <dependency>
+      <groupId>it.cnr.istc.oratio</groupId>
+      <artifactId>java-api</artifactId>
+      <version>1.0</version>
+    </dependency>
+    <dependency>
       <groupId>io.javalin</groupId>
       <artifactId>javalin</artifactId>
       <version>3.8.0</version>
