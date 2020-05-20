@@ -55,29 +55,29 @@ public class MessagingService {
 
                         @Override
                         public void onDisconnect(final InterceptDisconnectMessage idm) {
-                            long user_id = Long.parseLong(idm.getClientID().replace("user-", ""));
+                            final long user_id = Long.parseLong(idm.getClientID().replace("user-", ""));
                             UserController.ONLINE.remove(user_id);
 
                             // we broadcast the information that the user is no more online..
-                            publish(user_id + "/on-line", Boolean.FALSE.toString(), true);
+                            publish("user/" + user_id + "/on-line", Boolean.FALSE.toString(), true);
                         }
 
                         @Override
                         public void onConnectionLost(final InterceptConnectionLostMessage iclm) {
-                            long user_id = Long.parseLong(iclm.getClientID().replace("user-", ""));
+                            final long user_id = Long.parseLong(iclm.getClientID().replace("user-", ""));
                             UserController.ONLINE.remove(user_id);
 
                             // we broadcast the information that the user is no more online..
-                            publish(user_id + "/on-line", Boolean.FALSE.toString(), true);
+                            publish("user/" + user_id + "/on-line", Boolean.FALSE.toString(), true);
                         }
 
                         @Override
                         public void onConnect(final InterceptConnectMessage icm) {
-                            long user_id = Long.parseLong(icm.getClientID().replace("user-", ""));
+                            final long user_id = Long.parseLong(icm.getClientID().replace("user-", ""));
                             UserController.ONLINE.add(user_id);
 
                             // we broadcast the information that the user is currently online..
-                            publish(user_id + "/on-line", Boolean.TRUE.toString(), true);
+                            publish("user/" + user_id + "/on-line", Boolean.TRUE.toString(), true);
                         }
 
                         @Override
@@ -87,7 +87,7 @@ public class MessagingService {
                                     "Received message on topic: " + msg.getTopicName() + " content: " + decodedPayload);
                         }
                     }));
-        } catch (IOException e) {
+        } catch (final IOException e) {
             LOG.error("Failed at starting messaging service..", e);
         }
     }

@@ -41,7 +41,11 @@ public class TeachingLessonsContext {
         return lesson_ctx;
     }
 
-    public void removeLesson(Lesson lesson) {
+    public void removeLesson(long id) {
+        final TeachingLessonContext lesson_ctx = lessons.remove(id);
+        if (lesson_ctx != null) {
+            for (TeachingLessonsListener l : listeners) l.lessonRemoved(lesson_ctx);
+        }
     }
 
     public void addListener(@NonNull TeachingLessonsListener l) {

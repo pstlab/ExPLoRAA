@@ -9,7 +9,6 @@ import static io.javalin.core.security.SecurityUtil.roles;
 
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -31,8 +30,6 @@ import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.http.UnauthorizedResponse;
-import it.cnr.istc.pst.exploraa.api.Lesson;
-import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.server.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.server.db.UserEntity;
 
@@ -80,20 +77,11 @@ public class RESTService {
                         .getResultList();
 
                 LOG.info("Loading {} lessons..", lessons.size());
-                for (LessonEntity l_entity : lessons) {
-                    // warning! we do not store the current time of the lesson, nor its state
-                    // if the service is restarted, the lesson is not lost, yet its state is!
-                    LessonModel lm = App.MAPPER.readValue(l_entity.getModel().getModel(), LessonModel.class);
-
-                    Lesson l = new Lesson(
-                            l_entity.getId(), l_entity.getName(), lm.getId(), LessonController.getTopics(lm),
-                            LessonController.toTeaching(l_entity.getTeacher()), l_entity.getStudents().stream()
-                                    .map(student -> LessonController.toFollowing(student)).collect(Collectors
-                                            .toMap(following -> following.getUser().getId(), following -> following)),
-                            Lesson.LessonState.Stopped, 0);
-
-                    LessonController.LESSONS.put(l.getId(), new LessonManager(l));
-                }
+                // warning! we do not store the current time of the lesson, nor its state
+                // if the service is restarted, the lesson is not lost, yet its state is!
+                for (final LessonEntity l_entity : lessons)
+                    LessonController.LESSONS.put(l_entity.getId(),
+                            new LessonManager(l_entity.getId(), l_entity.getModel().getModel()));
             });
         });
 
@@ -136,11 +124,12 @@ public class RESTService {
     }
 
     static Role getRole(final Context ctx) {
-        String auth_head = ctx.header("Authorization");
+        final String auth_head = ctx.header("Authorization");
         if (auth_head == null)
             return ExplRole.Guest;
-        EntityManager em = App.EMF.createEntityManager();
-        UserEntity user_entity = em.find(UserEntity.class, Long.parseLong(auth_head.replace("Basic ", "")));
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity user_entity = em.find(UserEntity.class, Long.parseLong(auth_head.replace("Basic ", "")));
+        em.close();
         if (user_entity == null)
             return ExplRole.Guest;
         else if (user_entity.getRoles().contains(ExplRole.Admin.name()))

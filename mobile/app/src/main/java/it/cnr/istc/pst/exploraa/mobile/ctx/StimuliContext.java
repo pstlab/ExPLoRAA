@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
-import it.cnr.istc.pst.exploraa.api.Message;
+import it.cnr.istc.pst.exploraa.api.Message.Stimulus;
 
 public class StimuliContext {
 
@@ -15,26 +15,26 @@ public class StimuliContext {
     /**
      * The stimuli received so far.
      */
-    private final List<Message.Stimulus> stimuli = new ArrayList<>();
+    private final List<Stimulus> stimuli = new ArrayList<>();
     private final Collection<StimuliListener> listeners = new ArrayList<>();
 
     public static StimuliContext getInstance() {
         return instance;
     }
 
-    public void addStimulus(@NonNull final Message.Stimulus stimulus) {
+    public void addStimulus(@NonNull final Stimulus stimulus) {
         stimuli.add(stimulus);
         for (StimuliListener listener : listeners)
             listener.stimulusAdded(stimulus);
     }
 
-    public void removeStimulus(@NonNull final Message.Stimulus stimulus) {
+    public void removeStimulus(@NonNull final Stimulus stimulus) {
         stimuli.remove(stimulus);
         for (StimuliListener listener : listeners)
             listener.stimulusRemoved(stimulus);
     }
 
-    public List<Message.Stimulus> getStimuli() {
+    public List<Stimulus> getStimuli() {
         return Collections.unmodifiableList(stimuli);
     }
 
@@ -48,8 +48,8 @@ public class StimuliContext {
 
     public interface StimuliListener {
 
-        void stimulusAdded(Message.Stimulus stimulus);
+        void stimulusAdded(Stimulus stimulus);
 
-        void stimulusRemoved(Message.Stimulus stimulus);
+        void stimulusRemoved(Stimulus stimulus);
     }
 }

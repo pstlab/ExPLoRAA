@@ -3,6 +3,7 @@ package it.cnr.istc.pst.exploraa.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -17,8 +18,8 @@ public class User {
     private final String last_name;
     private final Map<String, Parameter> par_types;
     private final Map<String, Map<String, String>> par_values;
-    private final Map<Long, Following> following;
-    private final Map<Long, Teaching> teaching;
+    private final Collection<Following> following;
+    private final Collection<Teaching> teaching;
     private final boolean online;
 
     @JsonCreator
@@ -26,8 +27,8 @@ public class User {
             @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
             @JsonProperty("parameterTypes") Map<String, Parameter> par_types,
             @JsonProperty("parameterValues") Map<String, Map<String, String>> par_values,
-            @JsonProperty("followingLessons") Map<Long, Following> following,
-            @JsonProperty("teachingLessons") Map<Long, Teaching> teaching, @JsonProperty("online") boolean online) {
+            @JsonProperty("followingLessons") Collection<Following> following,
+            @JsonProperty("teachingLessons") Collection<Teaching> teaching, @JsonProperty("online") boolean online) {
         this.id = id;
         this.email = email;
         this.first_name = first_name;
@@ -95,18 +96,18 @@ public class User {
     /**
      * @return the following
      */
-    public Map<Long, Following> getFollowingLessons() {
+    public Collection<Following> getFollowingLessons() {
         if (following == null)
             return null;
-        return Collections.unmodifiableMap(following);
+        return Collections.unmodifiableCollection(following);
     }
 
     /**
      * @return the teaching
      */
-    public Map<Long, Teaching> getTeachingLessons() {
+    public Collection<Teaching> getTeachingLessons() {
         if (teaching == null)
             return null;
-        return Collections.unmodifiableMap(teaching);
+        return Collections.unmodifiableCollection(teaching);
     }
 }
