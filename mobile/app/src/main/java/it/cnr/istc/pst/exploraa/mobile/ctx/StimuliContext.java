@@ -38,6 +38,12 @@ public class StimuliContext {
         return Collections.unmodifiableList(stimuli);
     }
 
+    public void clear() {
+        stimuli.clear();
+        for (StimuliListener listener : listeners)
+            listener.stimuliCleared();
+    }
+
     public void addStimuliListener(StimuliListener l) {
         listeners.add(l);
     }
@@ -51,5 +57,7 @@ public class StimuliContext {
         void stimulusAdded(Stimulus stimulus);
 
         void stimulusRemoved(Stimulus stimulus);
+
+        void stimuliCleared();
     }
 }

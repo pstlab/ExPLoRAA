@@ -127,6 +127,7 @@ public class ExPLoRAAContext {
 
                     setUser(ctx, response.body());
                 } else {
+                    Log.i(ExPLoRAAContext.class.getName(), "Login unsuccessful..");
                     try {
                         Toast.makeText(ctx, response.errorBody().string(), Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
@@ -160,6 +161,7 @@ public class ExPLoRAAContext {
                     Log.i(ExPLoRAAContext.class.getName(), "User creation successful..");
                     login(ctx, email, password);
                 } else {
+                    Log.i(ExPLoRAAContext.class.getName(), "User creation unsuccessful..");
                     try {
                         Toast.makeText(ctx, response.errorBody().string(), Toast.LENGTH_SHORT).show();
                     } catch (IOException e) {
@@ -182,7 +184,11 @@ public class ExPLoRAAContext {
     private void setUser(@NonNull final Context ctx, @NonNull final User user) {
         if (this.user != user) {
             if (this.user != null) {
-                // TODO: we make some cleanings..
+                // we make some cleanings..
+                StimuliContext.getInstance().clear();
+                TokensContext.getInstance().clear();
+                FollowingLessonsContext.getInstance().clear();
+                TeachingLessonsContext.getInstance().clear();
 
                 try {
                     if (mqtt.isConnected())
@@ -226,11 +232,11 @@ public class ExPLoRAAContext {
                     Log.i(ExPLoRAAContext.class.getName(), "Connected to the MQTT broker..");
 
                     // we add the following lessons..
-                    for (Following following : user.getFollowingLessons().values())
+                    for (Following following : user.getFollowingLessons())
                         FollowingLessonsContext.getInstance().addLesson(following.getLesson());
 
                     // we add the teaching lessons..
-                    for (Teaching teaching : user.getTeachingLessons().values())
+                    for (Teaching teaching : user.getTeachingLessons())
                         TeachingLessonsContext.getInstance().addLesson(teaching.getLesson());
 
                     ctx.startActivity(new Intent(ctx, ExPLoRAAActivity.class));

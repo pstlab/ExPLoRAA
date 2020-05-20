@@ -37,8 +37,8 @@ public class FollowingLessonsContext {
             lesson_ctx = new FollowingLessonContext(lesson);
             lessons.put(lesson.getId(), lesson_ctx);
             for (Stimulus stimulus : lesson.getStimuli())
-                StimuliContext.getInstance().addStimulus(stimulus);
-            for (FollowingLessonsListener l : listeners) l.lessonAdded(lesson_ctx);
+                lesson_ctx.addStimulus(stimulus);
+            for (FollowingLessonsListener l : listeners) l.followingLessonAdded(lesson_ctx);
         }
         return lesson_ctx;
     }
@@ -46,10 +46,16 @@ public class FollowingLessonsContext {
     public void removeLesson(long id) {
         final FollowingLessonContext lesson_ctx = lessons.remove(id);
         if (lesson_ctx != null) {
-            for (Stimulus stimulus : lesson_ctx.stimuli)
-                StimuliContext.getInstance().removeStimulus(stimulus);
-            for (FollowingLessonsListener l : listeners) l.lessonRemoved(lesson_ctx);
+            lesson_ctx.clear();
+            for (FollowingLessonsListener l : listeners) l.followingLessonRemoved(lesson_ctx);
         }
+    }
+
+    public void clear() {
+        for (FollowingLessonContext lesson_ctx : lessons.values())
+            lesson_ctx.clear();
+        lessons.clear();
+        for (FollowingLessonsListener l : listeners) l.followingLessonsCleared();
     }
 
     public void addListener(@NonNull FollowingLessonsListener l) {
@@ -62,9 +68,11 @@ public class FollowingLessonsContext {
 
     public interface FollowingLessonsListener {
 
-        void lessonAdded(@NonNull FollowingLessonContext lesson);
+        void followingLessonAdded(@NonNull FollowingLessonContext lesson);
 
-        void lessonRemoved(@NonNull FollowingLessonContext lesson);
+        void followingLessonRemoved(@NonNull FollowingLessonContext lesson);
+
+        void followingLessonsCleared();
     }
 
     public static class FollowingLessonContext {
@@ -83,18 +91,28 @@ public class FollowingLessonsContext {
 
         public void addStimulus(@NonNull final Stimulus stimulus) {
             stimuli.add(stimulus);
+            StimuliContext.getInstance().addStimulus(stimulus);
             for (FollowingLessonListener listener : listeners)
                 listener.stimulusAdded(stimulus);
         }
 
         public void removeStimulus(@NonNull final Stimulus stimulus) {
             stimuli.remove(stimulus);
+            StimuliContext.getInstance().removeStimulus(stimulus);
             for (FollowingLessonListener listener : listeners)
                 listener.stimulusRemoved(stimulus);
         }
 
         public List<Stimulus> getStimuli() {
             return Collections.unmodifiableList(stimuli);
+        }
+
+        public void clear() {
+            for (Stimulus stimulus : stimuli)
+                StimuliContext.getInstance().removeStimulus(stimulus);
+            stimuli.clear();
+            for (FollowingLessonListener listener : listeners)
+                listener.stimuliCleared();
         }
 
         public void addFollowingLessonListener(FollowingLessonListener l) {
@@ -110,6 +128,8 @@ public class FollowingLessonsContext {
             void stimulusAdded(Stimulus stimulus);
 
             void stimulusRemoved(Stimulus stimulus);
+
+            void stimuliCleared();
         }
     }
 }
