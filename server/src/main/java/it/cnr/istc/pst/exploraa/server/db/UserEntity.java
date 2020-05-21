@@ -11,19 +11,25 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.Index;
 import javax.persistence.OneToMany;
+import javax.persistence.Table;
 
 /**
  * UserEntity
  */
 @Entity
+@Table(indexes = { @Index(name = "email_index", columnList = "email", unique = true) })
 public class UserEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
-    @Column(unique = true)
+    @Column(nullable = false)
     private String email;
+    @Column(nullable = false, length = 684)
+    private String salt;
+    @Column(nullable = false)
     private String password;
     private String first_name;
     private String last_name;
@@ -46,6 +52,14 @@ public class UserEntity {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
     }
 
     public String getPassword() {

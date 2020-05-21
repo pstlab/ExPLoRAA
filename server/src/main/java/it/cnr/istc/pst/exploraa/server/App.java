@@ -42,8 +42,8 @@ public class App {
         }));
     }
 
-    public static String generateSalt(final int length) {
-        byte[] salt = new byte[length];
+    public static String generateSalt() {
+        byte[] salt = new byte[KEY_LENGTH];
         RAND.nextBytes(salt);
         return Base64.getEncoder().encodeToString(salt);
     }

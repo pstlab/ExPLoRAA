@@ -48,19 +48,23 @@ public class UserController {
 
     static void login(final Context ctx) {
         final String email = ctx.formParam("email");
-        final String password = App.hashPassword(ctx.formParam("password"), App.generateSalt(512));
+        final String password = ctx.formParam("password");
         LOG.info("user {} is logging in..", email);
 
         final EntityManager em = App.EMF.createEntityManager();
-        final TypedQuery<UserEntity> query = em.createQuery(
-                "SELECT u FROM UserEntity u WHERE u.email = :email AND u.password = :password", UserEntity.class);
+        final TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email",
+                UserEntity.class);
         query.setParameter("email", email);
-        query.setParameter("password", password);
+        UserEntity user_entity = null;
         try {
-            ctx.json(toUser(query.getSingleResult()));
+            user_entity = query.getSingleResult();
         } catch (final NoResultException e) {
             throw new ForbiddenResponse();
         }
+        if (!App.hashPassword(password, user_entity.getSalt()).equals(user_entity.getPassword()))
+            throw new ForbiddenResponse();
+
+        ctx.json(toUser(user_entity));
         em.close();
     }
 
@@ -76,7 +80,8 @@ public class UserController {
 
     static void createUser(final Context ctx) {
         final String email = ctx.formParam("email");
-        final String password = App.hashPassword(ctx.formParam("password"), App.generateSalt(512));
+        final String salt = App.generateSalt();
+        final String password = App.hashPassword(ctx.formParam("password"), salt);
         final String first_name = ctx.formParam("first_name");
         final String last_name = ctx.formParam("last_name");
         LOG.info("creating new user {}..", email);
@@ -84,6 +89,7 @@ public class UserController {
 
         final UserEntity user_entity = new UserEntity();
         user_entity.setEmail(email);
+        user_entity.setSalt(salt);
         user_entity.setPassword(password);
         user_entity.setFirstName(first_name);
         user_entity.setLastName(last_name);
