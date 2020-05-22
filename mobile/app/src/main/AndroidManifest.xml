@@ -18,7 +18,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity android:name=".ExPLoRAAActivity"></activity>
-        <activity android:name=".ExPActivity" />
         <activity android:name=".NewUserActivity" />
         <activity android:name=".LoginActivity" />
         <activity android:name=".MainActivity">
