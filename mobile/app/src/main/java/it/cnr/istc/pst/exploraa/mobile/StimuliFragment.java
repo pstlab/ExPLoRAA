@@ -19,8 +19,8 @@ import it.cnr.istc.pst.exploraa.mobile.ctx.StimuliContext;
 
 public class StimuliFragment extends Fragment implements StimuliContext.StimuliListener {
 
-    private RecyclerView stimuli_recycler_view;
     private final StimuliAdapter stimuli_adapter = new StimuliAdapter();
+    private RecyclerView stimuli_recycler_view;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -65,6 +65,32 @@ public class StimuliFragment extends Fragment implements StimuliContext.StimuliL
     @Override
     public void stimuliCleared() {
         stimuli_adapter.stimuli.clear();
+    }
+
+    private static class StimulusView extends RecyclerView.ViewHolder implements View.OnClickListener {
+
+        private TextView title;
+        private Message.Stimulus stimulus;
+
+        private StimulusView(View view) {
+            super(view);
+            view.setOnClickListener(this);
+            title = view.findViewById(R.id.stimulus_title);
+        }
+
+        private void setStimulus(Message.Stimulus stimulus) {
+            this.stimulus = stimulus;
+            if (stimulus instanceof Message.Stimulus.TextStimulus)
+                title.setText(((Message.Stimulus.TextStimulus) stimulus).getContent());
+            else if (stimulus instanceof Message.Stimulus.QuestionStimulus)
+                title.setText(((Message.Stimulus.QuestionStimulus) stimulus).getQuestion());
+            else if (stimulus instanceof Message.Stimulus.URLStimulus)
+                title.setText(((Message.Stimulus.URLStimulus) stimulus).getContent());
+        }
+
+        @Override
+        public void onClick(View v) {
+        }
     }
 
     private class StimuliAdapter extends RecyclerView.Adapter<StimulusView> {
@@ -124,33 +150,6 @@ public class StimuliFragment extends Fragment implements StimuliContext.StimuliL
         @Override
         public int getItemCount() {
             return stimuli.size();
-        }
-    }
-
-    private class StimulusView extends RecyclerView.ViewHolder implements View.OnClickListener {
-
-        private TextView title;
-        private Message.Stimulus stimulus;
-
-        private StimulusView(View view) {
-            super(view);
-            view.setOnClickListener(this);
-            title = view.findViewById(R.id.stimulus_title);
-        }
-
-        private void setStimulus(Message.Stimulus stimulus) {
-            this.stimulus = stimulus;
-            if (stimulus instanceof Message.Stimulus.TextStimulus)
-                title.setText(((Message.Stimulus.TextStimulus) stimulus).getContent());
-            else if (stimulus instanceof Message.Stimulus.QuestionStimulus)
-                title.setText(((Message.Stimulus.QuestionStimulus) stimulus).getQuestion());
-            else if (stimulus instanceof Message.Stimulus.URLStimulus)
-                title.setText(((Message.Stimulus.URLStimulus) stimulus).getContent());
-        }
-
-        @Override
-        public void onClick(View v) {
-
         }
     }
 }

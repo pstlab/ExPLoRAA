@@ -3,13 +3,13 @@ package it.cnr.istc.pst.exploraa.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import it.cnr.istc.pst.exploraa.api.Message.Stimulus;
-import it.cnr.istc.pst.exploraa.api.Message.Token;
-
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
+
+import it.cnr.istc.pst.exploraa.api.Message.Stimulus;
+import it.cnr.istc.pst.exploraa.api.Message.Token;
 
 /**
  * Lesson
@@ -29,11 +29,11 @@ public class Lesson {
 
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
-            @JsonProperty("modelId") long model_id, @JsonProperty("topics") Set<String> topics,
-            @JsonProperty("teacher") Teaching teacher, @JsonProperty("students") Map<Long, Following> students,
-            @JsonProperty("stimuli") Collection<Message.Stimulus> stimuli,
-            @JsonProperty("tokens") Collection<Message.Token> tokens, @JsonProperty("state") LessonState state,
-            @JsonProperty("time") long time) {
+                  @JsonProperty("modelId") long model_id, @JsonProperty("topics") Set<String> topics,
+                  @JsonProperty("teacher") Teaching teacher, @JsonProperty("students") Map<Long, Following> students,
+                  @JsonProperty("stimuli") Collection<Message.Stimulus> stimuli,
+                  @JsonProperty("tokens") Collection<Message.Token> tokens, @JsonProperty("state") LessonState state,
+                  @JsonProperty("time") long time) {
         this.id = id;
         this.name = name;
         this.model_id = model_id;

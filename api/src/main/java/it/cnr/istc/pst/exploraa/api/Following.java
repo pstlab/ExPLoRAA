@@ -17,7 +17,7 @@ public class Following {
 
     @JsonCreator
     public Following(@JsonProperty("user") User user, @JsonProperty("lesson") Lesson lesson,
-            @JsonProperty("interests") Set<String> interests) {
+                     @JsonProperty("interests") Set<String> interests) {
         this.user = user;
         this.lesson = lesson;
         this.interests = interests;

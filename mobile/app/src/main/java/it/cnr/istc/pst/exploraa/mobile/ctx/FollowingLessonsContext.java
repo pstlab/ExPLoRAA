@@ -89,6 +89,10 @@ public class FollowingLessonsContext {
             stimuli.addAll(lesson.getStimuli());
         }
 
+        public Lesson getLesson() {
+            return lesson;
+        }
+
         public void addStimulus(@NonNull final Stimulus stimulus) {
             stimuli.add(stimulus);
             StimuliContext.getInstance().addStimulus(stimulus);

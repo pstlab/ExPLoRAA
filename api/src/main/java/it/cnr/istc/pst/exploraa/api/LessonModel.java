@@ -25,8 +25,8 @@ public class LessonModel {
 
     @JsonCreator
     public LessonModel(@JsonProperty("id") Long id, @JsonProperty("name") String name,
-            @JsonProperty("stimuli") Map<String, StimulusTemplate> stimuli, @JsonProperty("ids") Set<String> ids,
-            @JsonProperty("relations") List<Relation> relations) {
+                       @JsonProperty("stimuli") Map<String, StimulusTemplate> stimuli, @JsonProperty("ids") Set<String> ids,
+                       @JsonProperty("relations") List<Relation> relations) {
         this.id = id;
         this.name = name;
         this.stimuli = stimuli;
@@ -76,8 +76,8 @@ public class LessonModel {
     }
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-    @JsonSubTypes({ @Type(value = URLStimulusTemplate.class, name = "url"),
-            @Type(value = TextStimulusTemplate.class, name = "text") })
+    @JsonSubTypes({@Type(value = URLStimulusTemplate.class, name = "url"),
+            @Type(value = TextStimulusTemplate.class, name = "text")})
     public static class StimulusTemplate {
 
         private final String name;
@@ -86,7 +86,7 @@ public class LessonModel {
 
         @JsonCreator
         public StimulusTemplate(@JsonProperty("name") String name, @JsonProperty("ids") Set<String> ids,
-                @JsonProperty("relations") List<Relation> relations) {
+                                @JsonProperty("relations") List<Relation> relations) {
             this.name = name;
             this.ids = ids;
             this.relations = relations;
@@ -126,8 +126,8 @@ public class LessonModel {
 
         @JsonCreator
         public URLStimulusTemplate(@JsonProperty("name") String name, @JsonProperty("ids") Set<String> ids,
-                @JsonProperty("relations") List<Relation> relations, @JsonProperty("topics") Set<String> topics,
-                @JsonProperty("content") String content, @JsonProperty("url") String url) {
+                                   @JsonProperty("relations") List<Relation> relations, @JsonProperty("topics") Set<String> topics,
+                                   @JsonProperty("content") String content, @JsonProperty("url") String url) {
             super(name, ids, relations);
             this.topics = topics;
             this.content = content;
@@ -165,8 +165,8 @@ public class LessonModel {
 
         @JsonCreator
         public TextStimulusTemplate(@JsonProperty("name") String name, @JsonProperty("ids") Set<String> ids,
-                @JsonProperty("relations") List<Relation> relations, @JsonProperty("topics") Set<String> topics,
-                @JsonProperty("content") String content) {
+                                    @JsonProperty("relations") List<Relation> relations, @JsonProperty("topics") Set<String> topics,
+                                    @JsonProperty("content") String content) {
             super(name, ids, relations);
             this.topics = topics;
             this.content = content;
@@ -199,7 +199,7 @@ public class LessonModel {
 
         @JsonCreator
         public Relation(@JsonProperty("from") String from, @JsonProperty("to") String to, @JsonProperty("lb") Long lb,
-                @JsonProperty("ub") Long ub, @JsonProperty("unit") TimeUnit unit) {
+                        @JsonProperty("ub") Long ub, @JsonProperty("unit") TimeUnit unit) {
             this.from = from;
             this.to = to;
             this.lb = lb;

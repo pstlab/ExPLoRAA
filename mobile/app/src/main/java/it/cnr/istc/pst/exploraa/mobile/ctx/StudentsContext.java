@@ -114,11 +114,11 @@ public class StudentsContext {
             }
         }
 
-        public void addListener(@NonNull StudentListener l) {
+        public void addStudentListener(@NonNull StudentListener l) {
             listeners.add(l);
         }
 
-        public void removeListener(@NonNull StudentListener l) {
+        public void removeStudentListener(@NonNull StudentListener l) {
             listeners.remove(l);
         }
     }

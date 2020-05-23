@@ -18,4 +18,6 @@
     <string name="disconnect_empatica_e4">Disconnect Empatica E4</string>
     <string name="location_rationale">The ExPLoRAA application requires GPS location for providing finer personalization capabilitites</string>
     <string name="ok">ok</string>
+    <string name="connection_status">Connection status</string>
+    <string name="lesson_status">Lesson status</string>
 </resources>

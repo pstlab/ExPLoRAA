@@ -14,11 +14,11 @@ import java.util.Set;
  * This is the base class for representing messages.
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({ @Type(value = Message.NewParameter.class, name = "new-parameter"),
+@JsonSubTypes({@Type(value = Message.NewParameter.class, name = "new-parameter"),
         @Type(value = Message.RemoveParameter.class, name = "remove-parameter"),
         @Type(value = Message.FollowLesson.class, name = "follow-lesson"),
         @Type(value = Message.UnfollowLesson.class, name = "unfollow-lesson"),
-        @Type(value = Message.RemoveLesson.class, name = "remove-lesson") })
+        @Type(value = Message.RemoveLesson.class, name = "remove-lesson")})
 public abstract class Message {
 
     /**
@@ -28,16 +28,16 @@ public abstract class Message {
 
         private final Parameter parameter;
 
+        @JsonCreator
+        public NewParameter(@JsonProperty("parameter") Parameter parameter) {
+            this.parameter = parameter;
+        }
+
         /**
          * @return the created parameter.
          */
         public Parameter getParameter() {
             return parameter;
-        }
-
-        @JsonCreator
-        public NewParameter(@JsonProperty("parameter") Parameter parameter) {
-            this.parameter = parameter;
         }
     }
 
@@ -48,16 +48,16 @@ public abstract class Message {
 
         private final String parameter;
 
+        @JsonCreator
+        public RemoveParameter(@JsonProperty("parameter") String parameter) {
+            this.parameter = parameter;
+        }
+
         /**
          * @return the name of the removed parameter.
          */
         public String getParameter() {
             return parameter;
-        }
-
-        @JsonCreator
-        public RemoveParameter(@JsonProperty("parameter") String parameter) {
-            this.parameter = parameter;
         }
     }
 
@@ -72,7 +72,7 @@ public abstract class Message {
 
         @JsonCreator
         public FollowLesson(@JsonProperty("student") User student, @JsonProperty("lesson") long lesson,
-                @JsonProperty("interests") Set<String> interests) {
+                            @JsonProperty("interests") Set<String> interests) {
             this.student = student;
             this.lesson = lesson;
             this.interests = interests;
@@ -162,7 +162,7 @@ public abstract class Message {
 
         @JsonCreator
         public Token(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                @JsonProperty("time") long time) {
+                     @JsonProperty("time") long time) {
             this.lesson_id = lesson_id;
             this.id = id;
             this.time = time;
@@ -203,7 +203,7 @@ public abstract class Message {
 
         @JsonCreator
         public TokenUpdate(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                @JsonProperty("min") Long min, @JsonProperty("max") Long max, @JsonProperty("time") long time) {
+                           @JsonProperty("min") Long min, @JsonProperty("max") Long max, @JsonProperty("time") long time) {
             this.lesson_id = lesson_id;
             this.id = id;
             this.min = min;
@@ -282,9 +282,9 @@ public abstract class Message {
      * is the base class for representing stimuli.
      */
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "stimulus-type")
-    @JsonSubTypes({ @Type(value = Message.Stimulus.TextStimulus.class, name = "text-stimulus"),
+    @JsonSubTypes({@Type(value = Message.Stimulus.TextStimulus.class, name = "text-stimulus"),
             @Type(value = Message.Stimulus.QuestionStimulus.class, name = "question-stimulus"),
-            @Type(value = Message.Stimulus.URLStimulus.class, name = "url-stimulus") })
+            @Type(value = Message.Stimulus.URLStimulus.class, name = "url-stimulus")})
     public abstract static class Stimulus extends Message {
 
         private final long lesson_id;
@@ -293,7 +293,7 @@ public abstract class Message {
 
         @JsonCreator
         public Stimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                @JsonProperty("time") long time) {
+                        @JsonProperty("time") long time) {
             this.lesson_id = lesson_id;
             this.id = id;
             this.time = time;
@@ -329,7 +329,7 @@ public abstract class Message {
 
             @JsonCreator
             public TextStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                    @JsonProperty("time") long time, @JsonProperty("content") String content) {
+                                @JsonProperty("time") long time, @JsonProperty("content") String content) {
                 super(lesson_id, id, time);
                 this.content = content;
             }
@@ -354,8 +354,8 @@ public abstract class Message {
 
             @JsonCreator
             public QuestionStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                    @JsonProperty("time") long time, @JsonProperty("question") String question,
-                    @JsonProperty("answers") List<String> answers, @JsonProperty("answer") Integer answer) {
+                                    @JsonProperty("time") long time, @JsonProperty("question") String question,
+                                    @JsonProperty("answers") List<String> answers, @JsonProperty("answer") Integer answer) {
                 super(lesson_id, id, time);
                 this.question = question;
                 this.answers = answers;
@@ -391,7 +391,7 @@ public abstract class Message {
 
                 @JsonCreator
                 public Answer(@JsonProperty("lessonId") long lesson_id, @JsonProperty("question_id") int question_id,
-                        @JsonProperty("answer") int answer) {
+                              @JsonProperty("answer") int answer) {
                     this.lesson_id = lesson_id;
                     this.question_id = question_id;
                     this.answer = answer;
@@ -430,8 +430,8 @@ public abstract class Message {
 
             @JsonCreator
             public URLStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                    @JsonProperty("time") long time, @JsonProperty("content") String content,
-                    @JsonProperty("url") String url) {
+                               @JsonProperty("time") long time, @JsonProperty("content") String content,
+                               @JsonProperty("url") String url) {
                 super(lesson_id, id, time);
                 this.content = content;
                 this.url = url;

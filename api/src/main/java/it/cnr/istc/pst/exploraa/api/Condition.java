@@ -14,11 +14,11 @@ import java.util.List;
  * Condition
  */
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({ @Type(value = Condition.AndCondition.class, name = "and"),
+@JsonSubTypes({@Type(value = Condition.AndCondition.class, name = "and"),
         @Type(value = Condition.OrCondition.class, name = "or"),
         @Type(value = Condition.NotCondition.class, name = "not"),
         @Type(value = Condition.NominalCondition.class, name = "nominal"),
-        @Type(value = Condition.NumericCondition.class, name = "numeric") })
+        @Type(value = Condition.NumericCondition.class, name = "numeric")})
 public class Condition {
 
     public static class AndCondition extends Condition {
@@ -114,7 +114,7 @@ public class Condition {
 
         @JsonCreator
         public NumericCondition(@JsonProperty("numeric-condition-type") NumericConditionType type,
-                @JsonProperty("variable") String variable, @JsonProperty("value") double value) {
+                                @JsonProperty("variable") String variable, @JsonProperty("value") double value) {
             this.type = type;
             this.variable = variable;
             this.value = value;

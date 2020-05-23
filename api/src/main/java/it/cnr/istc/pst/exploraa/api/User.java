@@ -24,11 +24,11 @@ public class User {
 
     @JsonCreator
     public User(@JsonProperty("id") long id, @JsonProperty("email") String email,
-            @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
-            @JsonProperty("parameterTypes") Map<String, Parameter> par_types,
-            @JsonProperty("parameterValues") Map<String, Map<String, String>> par_values,
-            @JsonProperty("followingLessons") Collection<Following> following,
-            @JsonProperty("teachingLessons") Collection<Teaching> teaching, @JsonProperty("online") boolean online) {
+                @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
+                @JsonProperty("parameterTypes") Map<String, Parameter> par_types,
+                @JsonProperty("parameterValues") Map<String, Map<String, String>> par_values,
+                @JsonProperty("followingLessons") Collection<Following> following,
+                @JsonProperty("teachingLessons") Collection<Teaching> teaching, @JsonProperty("online") boolean online) {
         this.id = id;
         this.email = email;
         this.first_name = first_name;

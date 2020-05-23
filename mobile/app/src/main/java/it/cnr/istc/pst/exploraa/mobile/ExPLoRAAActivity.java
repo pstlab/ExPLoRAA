@@ -25,12 +25,12 @@ import androidx.viewpager2.widget.ViewPager2;
 public class ExPLoRAAActivity extends AppCompatActivity {
 
     public static final int ACCESS_FINE_LOCATION_REQUEST_CODE_ASK_PERMISSIONS = 123;
-    private Menu main_menu;
-    private ViewPager2 pager;
     private final StimuliFragment stimuli_fragment = new StimuliFragment();
     private final FollowingLessonsFragment following_lessons_fragment = new FollowingLessonsFragment();
     private final TeachingLessonsFragment teaching_lessons_fragment = new TeachingLessonsFragment();
     private final StudentsFragment students_fragment = new StudentsFragment();
+    private Menu main_menu;
+    private ViewPager2 pager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {

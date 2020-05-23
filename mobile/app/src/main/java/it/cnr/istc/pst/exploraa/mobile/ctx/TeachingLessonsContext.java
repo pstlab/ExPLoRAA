@@ -88,6 +88,10 @@ public class TeachingLessonsContext {
             this.lesson = lesson;
         }
 
+        public Lesson getLesson() {
+            return lesson;
+        }
+
         public void addToken(@NonNull final Token token) {
             tokens.add(token);
             TokensContext.getInstance().addToken(token);
@@ -112,6 +116,14 @@ public class TeachingLessonsContext {
             tokens.clear();
             for (TeachingLessonListener listener : listeners)
                 listener.tokensCleared();
+        }
+
+        public void addTeachingLessonListener(@NonNull TeachingLessonListener l) {
+            listeners.add(l);
+        }
+
+        public void removeTeachingLessonListener(@NonNull TeachingLessonListener l) {
+            listeners.remove(l);
         }
 
         public interface TeachingLessonListener {
