@@ -7,21 +7,64 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SortedList;
 
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.mobile.ctx.TeachingLessonsContext;
 
-public class TeachingLessonsFragment extends Fragment {
+public class TeachingLessonsFragment extends Fragment implements TeachingLessonsContext.TeachingLessonsListener {
 
-    public TeachingLessonsFragment() {
+    private final TeachingLessonsAdapter teaching_lessons_adapter = new TeachingLessonsAdapter();
+    private RecyclerView teaching_lessons_recycler_view;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        teaching_lessons_adapter.teaching_lessons.addAll(TeachingLessonsContext.getInstance().getLessons());
+        TeachingLessonsContext.getInstance().addTeachingLessonsListener(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        TeachingLessonsContext.getInstance().removeTeachingLessonsListener(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_teaching_lessons, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        teaching_lessons_recycler_view = view.findViewById(R.id.teaching_lessons_recycler_view);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        teaching_lessons_recycler_view.setHasFixedSize(true);
+        teaching_lessons_recycler_view.setLayoutManager(new LinearLayoutManager(getContext()));
+        teaching_lessons_recycler_view.setAdapter(teaching_lessons_adapter);
+        teaching_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+    }
+
+    @Override
+    public void teachingLessonAdded(@NonNull TeachingLessonsContext.TeachingLessonContext lesson) {
+        teaching_lessons_adapter.teaching_lessons.add(lesson);
+    }
+
+    @Override
+    public void teachingLessonRemoved(@NonNull TeachingLessonsContext.TeachingLessonContext lesson) {
+        teaching_lessons_adapter.teaching_lessons.remove(lesson);
+    }
+
+    @Override
+    public void teachingLessonsCleared() {
+        teaching_lessons_adapter.teaching_lessons.clear();
     }
 
     private static class TeachingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener, TeachingLessonsContext.TeachingLessonContext.TeachingLessonListener {

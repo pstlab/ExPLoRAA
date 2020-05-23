@@ -7,20 +7,63 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SortedList;
 
 import it.cnr.istc.pst.exploraa.mobile.ctx.StudentsContext;
 
-public class StudentsFragment extends Fragment {
+public class StudentsFragment extends Fragment implements StudentsContext.StudentsListener {
 
-    public StudentsFragment() {
+    private final StudentsAdapter students_adapter = new StudentsAdapter();
+    private RecyclerView students_recycler_view;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        students_adapter.students.addAll(StudentsContext.getInstance().getStudents());
+        StudentsContext.getInstance().addStudentsListener(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        StudentsContext.getInstance().removeStudentsListener(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_students, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        students_recycler_view = view.findViewById(R.id.students_recycler_view);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        students_recycler_view.setHasFixedSize(true);
+        students_recycler_view.setLayoutManager(new LinearLayoutManager(getContext()));
+        students_recycler_view.setAdapter(students_adapter);
+        students_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+    }
+
+    @Override
+    public void studentAdded(@NonNull StudentsContext.StudentContext student) {
+        students_adapter.students.add(student);
+    }
+
+    @Override
+    public void studentRemoved(@NonNull StudentsContext.StudentContext student) {
+        students_adapter.students.remove(student);
+    }
+
+    @Override
+    public void studentsCleared() {
+        students_adapter.students.clear();
     }
 
     private static class StudentView extends RecyclerView.ViewHolder implements View.OnClickListener, StudentsContext.StudentListener {

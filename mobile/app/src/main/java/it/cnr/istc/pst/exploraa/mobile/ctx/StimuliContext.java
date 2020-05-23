@@ -34,8 +34,8 @@ public class StimuliContext {
             listener.stimulusRemoved(stimulus);
     }
 
-    public List<Stimulus> getStimuli() {
-        return Collections.unmodifiableList(stimuli);
+    public Collection<Stimulus> getStimuli() {
+        return Collections.unmodifiableCollection(stimuli);
     }
 
     public void clear() {

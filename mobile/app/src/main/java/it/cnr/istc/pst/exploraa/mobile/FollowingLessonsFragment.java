@@ -7,21 +7,64 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import androidx.recyclerview.widget.SortedList;
 
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.mobile.ctx.FollowingLessonsContext;
 
-public class FollowingLessonsFragment extends Fragment {
+public class FollowingLessonsFragment extends Fragment implements FollowingLessonsContext.FollowingLessonsListener {
 
-    public FollowingLessonsFragment() {
+    private final FollowingLessonsAdapter following_lessons_adapter = new FollowingLessonsAdapter();
+    private RecyclerView following_lessons_recycler_view;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        following_lessons_adapter.following_lessons.addAll(FollowingLessonsContext.getInstance().getLessons());
+        FollowingLessonsContext.getInstance().addFollowingLessonsListener(this);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        FollowingLessonsContext.getInstance().removeFollowingLessonsListener(this);
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         return inflater.inflate(R.layout.fragment_following_lessons, container, false);
+    }
+
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        following_lessons_recycler_view = view.findViewById(R.id.following_lessons_recycler_view);
+
+        // use this setting to improve performance if you know that changes
+        // in content do not change the layout size of the RecyclerView
+        following_lessons_recycler_view.setHasFixedSize(true);
+        following_lessons_recycler_view.setLayoutManager(new LinearLayoutManager(getContext()));
+        following_lessons_recycler_view.setAdapter(following_lessons_adapter);
+        following_lessons_recycler_view.addItemDecoration(new DividerItemDecoration(getContext(), DividerItemDecoration.VERTICAL));
+    }
+
+    @Override
+    public void followingLessonAdded(@NonNull FollowingLessonsContext.FollowingLessonContext lesson) {
+        following_lessons_adapter.following_lessons.add(lesson);
+    }
+
+    @Override
+    public void followingLessonRemoved(@NonNull FollowingLessonsContext.FollowingLessonContext lesson) {
+        following_lessons_adapter.following_lessons.remove(lesson);
+    }
+
+    @Override
+    public void followingLessonsCleared() {
+        following_lessons_adapter.following_lessons.clear();
     }
 
     private static class FollowingLessonView extends RecyclerView.ViewHolder implements View.OnClickListener, FollowingLessonsContext.FollowingLessonContext.FollowingLessonListener {

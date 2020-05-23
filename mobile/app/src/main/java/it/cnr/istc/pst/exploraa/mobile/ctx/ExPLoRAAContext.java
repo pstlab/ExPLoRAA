@@ -187,6 +187,7 @@ public class ExPLoRAAContext {
                 // we make some cleanings..
                 StimuliContext.getInstance().clear();
                 TokensContext.getInstance().clear();
+                StudentsContext.getInstance().clear();
                 FollowingLessonsContext.getInstance().clear();
                 TeachingLessonsContext.getInstance().clear();
 

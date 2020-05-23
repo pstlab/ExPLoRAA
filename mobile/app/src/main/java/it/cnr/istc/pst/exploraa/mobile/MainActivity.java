@@ -23,7 +23,11 @@ public class MainActivity extends AppCompatActivity {
         NotificationManager nm = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         nm.createNotificationChannel(new NotificationChannel(getString(R.string.app_name), getString(R.string.app_name), NotificationManager.IMPORTANCE_DEFAULT));
 
-        if (ExPLoRAAContext.getInstance().getUser() == null) {
+        if (ExPLoRAAContext.getInstance().getUser() != null) {
+            Log.i(MainActivity.class.getName(), "We are already logged in..");
+            startActivity(new Intent(MainActivity.this, ExPLoRAAActivity.class));
+            finish();
+        } else {
             Log.i(MainActivity.class.getName(), "There is no current user..");
             shared_prefs = PreferenceManager.getDefaultSharedPreferences(this);
             if (shared_prefs.contains(getString(R.string.email)) && shared_prefs.contains(getString(R.string.password))) {

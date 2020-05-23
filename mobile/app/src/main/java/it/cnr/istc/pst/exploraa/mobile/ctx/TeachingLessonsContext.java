@@ -51,6 +51,10 @@ public class TeachingLessonsContext {
         }
     }
 
+    public Collection<TeachingLessonContext> getLessons() {
+        return lessons.values();
+    }
+
     public void clear() {
         for (TeachingLessonContext lesson_ctx : lessons.values())
             lesson_ctx.clear();
@@ -58,11 +62,11 @@ public class TeachingLessonsContext {
         for (TeachingLessonsListener l : listeners) l.teachingLessonsCleared();
     }
 
-    public void addListener(@NonNull TeachingLessonsListener l) {
+    public void addTeachingLessonsListener(@NonNull TeachingLessonsListener l) {
         listeners.add(l);
     }
 
-    public void removeListener(@NonNull TeachingLessonsListener l) {
+    public void removeTeachingLessonsListener(@NonNull TeachingLessonsListener l) {
         listeners.remove(l);
     }
 

@@ -7,6 +7,7 @@ import androidx.annotation.NonNull;
 import org.eclipse.paho.client.mqttv3.MqttException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,11 +60,21 @@ public class StudentsContext {
         return students.get(id);
     }
 
-    public void addListener(@NonNull StudentsListener l) {
+    public Collection<StudentContext> getStudents() {
+        return students.values();
+    }
+
+    public void clear() {
+        students.clear();
+        for (StudentsListener listener : listeners)
+            listener.studentsCleared();
+    }
+
+    public void addStudentsListener(@NonNull StudentsListener l) {
         listeners.add(l);
     }
 
-    public void removeListener(@NonNull StudentsListener l) {
+    public void removeStudentsListener(@NonNull StudentsListener l) {
         listeners.remove(l);
     }
 
@@ -72,6 +83,8 @@ public class StudentsContext {
         void studentAdded(@NonNull StudentContext student);
 
         void studentRemoved(@NonNull StudentContext student);
+
+        void studentsCleared();
     }
 
     public interface StudentListener {
