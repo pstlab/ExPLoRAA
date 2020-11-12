@@ -1,4 +1,2 @@
-/ExPLoRAA-API/target/
-/TemporalNetwork/target/
-/ExPLoRAA-WebApp/target/
-/ExPLoRAA-DesktopApp/target/
+.vscode
+/server/target/
