@@ -13,6 +13,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 
@@ -29,6 +30,9 @@ import org.slf4j.LoggerFactory;
 
 import io.javalin.Javalin;
 import io.javalin.core.security.Role;
+import io.javalin.http.Context;
+import io.javalin.http.Handler;
+import io.javalin.http.UnauthorizedResponse;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
@@ -51,6 +55,13 @@ public class App {
     public static void main(String[] args) {
         final Javalin app = Javalin.create(config -> {
             config.addStaticFiles("/public");
+            config.accessManager((final Handler handler, final Context ctx, final Set<Role> permittedRoles) -> {
+                if (permittedRoles.contains(getRole(ctx)))
+                    handler.handle(ctx);
+                else
+                    throw new UnauthorizedResponse();
+            });
+            config.enableCorsForAllOrigins();
         });
 
         app.events(event -> {
@@ -91,6 +102,21 @@ public class App {
         });
 
         app.start();
+    }
+
+    static Role getRole(final Context ctx) {
+        final String auth_head = ctx.header("Authorization");
+        if (auth_head == null)
+            return ExplRole.Guest;
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity user_entity = em.find(UserEntity.class, Long.parseLong(auth_head.replace("Basic ", "")));
+        em.close();
+        if (user_entity == null)
+            return ExplRole.Guest;
+        else if (user_entity.getRoles().contains(ExplRole.Admin.name()))
+            return ExplRole.Admin;
+        else
+            return ExplRole.User;
     }
 
     public static String generateSalt() {
