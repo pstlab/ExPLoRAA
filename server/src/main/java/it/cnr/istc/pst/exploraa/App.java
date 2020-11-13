@@ -1,5 +1,12 @@
 package it.cnr.istc.pst.exploraa;
 
+import static io.javalin.apibuilder.ApiBuilder.delete;
+import static io.javalin.apibuilder.ApiBuilder.get;
+import static io.javalin.apibuilder.ApiBuilder.patch;
+import static io.javalin.apibuilder.ApiBuilder.path;
+import static io.javalin.apibuilder.ApiBuilder.post;
+import static io.javalin.core.security.SecurityUtil.roles;
+
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -15,11 +22,14 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.javalin.Javalin;
 import io.javalin.core.security.Role;
+import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 /**
@@ -31,6 +41,7 @@ public class App {
     static final Logger LOG = LoggerFactory.getLogger(UserController.class);
     static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
+    static final ObjectMapper MAPPER = new ObjectMapper();
     private static final SecureRandom RAND = new SecureRandom();
     // private static final int ITERATIONS = 65536;
     private static final int ITERATIONS = 5;
@@ -52,6 +63,30 @@ public class App {
                         .getResultList();
 
                 LOG.info("Loading {} users..", users.size());
+
+                final List<LessonEntity> lessons = em.createQuery("SELECT le FROM LessonEntity le", LessonEntity.class)
+                        .getResultList();
+
+                LOG.info("Loading {} lessons..", lessons.size());
+                // warning! we do not store the current time of the lesson, nor its state
+                // if the service is restarted, the lesson is not lost, yet its state is!
+                for (final LessonEntity l_entity : lessons)
+                    LessonController.LESSONS.put(l_entity.getId(),
+                            new LessonManager(l_entity.getId(), l_entity.getModel().getModel()));
+            });
+        });
+
+        // we create the routes..
+        app.routes(() -> {
+            post("login", UserController::login, roles(ExplRole.Guest, ExplRole.Admin));
+            path("users", () -> {
+                get(UserController::getAllUsers, roles(ExplRole.Admin, ExplRole.User));
+                post(UserController::createUser, roles(ExplRole.Guest, ExplRole.Admin));
+                path(":id", () -> {
+                    get(UserController::getUser, roles(ExplRole.Admin, ExplRole.User));
+                    patch(UserController::updateUser, roles(ExplRole.Admin, ExplRole.User));
+                    delete(UserController::deleteUser, roles(ExplRole.Admin, ExplRole.User));
+                });
             });
         });
 

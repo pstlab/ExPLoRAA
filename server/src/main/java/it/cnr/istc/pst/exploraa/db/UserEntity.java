@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -11,6 +12,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 @Entity
@@ -30,6 +32,12 @@ public class UserEntity {
     private String last_name;
     @ElementCollection
     private final Collection<String> roles = new ArrayList<>();
+    @OneToMany
+    private final Collection<LessonModelEntity> models = new ArrayList<>();
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final Collection<FollowEntity> follows = new ArrayList<>();
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final Collection<TeachEntity> teachs = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -88,5 +96,41 @@ public class UserEntity {
 
     public void removeRole(String role) {
         roles.remove(role);
+    }
+
+    public Collection<LessonModelEntity> getModels() {
+        return Collections.unmodifiableCollection(models);
+    }
+
+    public void addModel(LessonModelEntity model) {
+        models.add(model);
+    }
+
+    public void removeModel(LessonModelEntity model) {
+        models.remove(model);
+    }
+
+    public Collection<FollowEntity> getFollowedLessons() {
+        return Collections.unmodifiableCollection(follows);
+    }
+
+    public void addFollowedLesson(FollowEntity model) {
+        follows.add(model);
+    }
+
+    public void removeFollowedLesson(FollowEntity model) {
+        follows.remove(model);
+    }
+
+    public Collection<TeachEntity> getTeachedLessons() {
+        return Collections.unmodifiableCollection(teachs);
+    }
+
+    public void addTeachedLesson(TeachEntity model) {
+        teachs.add(model);
+    }
+
+    public void removeTeachedLesson(TeachEntity model) {
+        teachs.remove(model);
     }
 }
