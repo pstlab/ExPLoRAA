@@ -5,10 +5,34 @@ const config = {
     "websocket_port": 8884
 };
 
+$(window).on('load', function () {
+    const email = localStorage.getItem('email');
+    const password = localStorage.getItem('password');
+    if (email && password) {
+        const form = new FormData();
+        form.append('email', email);
+        form.append('password', password);
+        fetch('http://' + config.host + ':' + config.service_port + '/login', {
+            method: 'post',
+            body: form
+        }).then(response => {
+            if (response.ok) {
+                response.json().then(data => { setUser(data); });
+            } else {
+                localStorage.removeItem('email');
+                localStorage.removeItem('password');
+                $.get('body_guest.html', function (data) { $('#exploraa-body').append(data); });
+            }
+        });
+    } else {
+        $.get('body_guest.html', function (data) { $('#exploraa-body').append(data); });
+    }
+});
+
 function login() {
     const email = $('#login-email').val();
     const password = $('#login-password').val();
-    let form = new FormData();
+    const form = new FormData();
     form.append('email', email);
     form.append('password', password);
     fetch('http://' + config.host + ':' + config.service_port + '/login', {
@@ -16,14 +40,18 @@ function login() {
         body: form
     }).then(response => {
         if (response.ok) {
-            $('#navbar-content').remove();
-            $('#signin-form').remove();
             localStorage.setItem('email', email);
             localStorage.setItem('password', password);
-            response.json().then(data => { setUser(data); });
+            location.reload();
         } else
             alert(response.statusText);
     });
+}
+
+function logout() {
+    localStorage.removeItem('email');
+    localStorage.removeItem('password');
+    location.reload();
 }
 
 function signin() {
@@ -45,12 +73,21 @@ function signin() {
         body: form
     }).then(response => {
         if (response.ok) {
-            $('#navbar-content').remove();
-            $('#signin-form').remove();
             localStorage.setItem('email', email);
             localStorage.setItem('password', password);
             location.reload();
         } else
             alert(response.statusText);
+    });
+}
+
+function setUser(usr) {
+    user = usr;
+    $('#body-guest').remove();
+    $.get('body_user.html', function (data) {
+        $('#exploraa-body').append(data);
+        if (user.firstName) {
+            $('#account-menu').text(user.firstName);
+        }
     });
 }

@@ -1,0 +1,125 @@
+<div id="body-guest">
+    <nav class="navbar navbar-expand-sm navbar-light bg-light" id="nav-bar">
+        <a class="navbar-brand" href="#">
+            <img src="/exploraa.png" width="30" height="30" class="d-inline-block align-top" alt="" loading="lazy">
+            ExPLoRAA
+        </a>
+        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar-content"
+            aria-controls="navbar-content" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbar-content">
+            <ul class="navbar-nav ml-auto navbar-right" id="navbar-connect">
+                <li class="nav-item">
+                    <button class="btn btn-sm btn-primary mr-1" data-toggle="modal" data-target="#login-modal"
+                        type="button">Accedi</button>
+                </li>
+                <li class="nav-item">
+                    <button class="btn btn-sm btn-secondary" data-toggle="modal" data-target="#signup-modal"
+                        type="button">Registrati</button>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="intro">
+        <h2>ExPLoRAA (ExPeriential LeaRning for Active Aging)</h2>
+
+        <p> Partendo da una rappresentazione statica contenente una traccia con un alto livello di astrazione delle
+            lezioni, inizialmente memorizzata in un database, viene pianificata una lezione su un argomento di
+            interesse, adattata dinamicamente durante la sua lezione e personalizzata sulla base utenti coinvolti.
+        </p>
+
+        <p>
+            L'idea di utilizzare delle tecnologie legate all'<a
+                href="https://it.wikipedia.org/wiki/Intelligenza_artificiale">Intelligenza Artificiale</a> (AI) nasce
+            dall'esigenza di creare un'esperienza didattica sufficientemente ampia da permettere la riproduzione di un
+            gran numero di situazioni diverse che sono, allo stesso tempo, caratterizzate da un'elevata variabilità di
+            stimoli, finalizzata a aumentare il livello di coinvolgimento degli utenti. La <a
+                href="https://it.wikipedia.org/wiki/Pianificazione_automatica">pianificazione automatica</a>, infatti,
+            favorisce la generazione di lezioni diverse che sarebbe troppo complicato ottenere con una semplice
+            pre-compilazione di storie. L'approccio alla <a href="https://github.com/pstlab/oRatio">pianificazione
+                basato su timeline</a>, in particolare, rappresenta l'elemento unificante dei vari moduli garantendo
+            l'adattabilità dinamica dei piani e promuovendo l'apprendimento esperienziale.
+        </p>
+
+        <p>
+            Da un punto di vista di alto livello è possibile distinguere due tipologie di utenti coinvolti: gli
+            <b>studenti</b>, cioè un gruppo di persone, potenzialmente, di qualsiasi età, interessate ad utilizzare i
+            servizi di apprendimento offerti dall'ExPLoRAA, e gli <b>insegnanti</b>, ovvero utenti con privilegi
+            speciali che hanno la possibilità di osservare gli studenti, monitorando l'andamento delle azioni e
+            l'ambiente di apprendimento. Gli utenti di cui sopra interagiscono con il sistema ExPLoRAA che è composto da
+            tre blocchi funzionali, intesi come sottosistemi architettonici, implementando le corrispondenti
+            funzionalità di alto livello: (i) la <em>modellazione dell'utente</em>, il cui obiettivo è creare e
+            mantenere un modello utente e fornire una guida per migliorare il processo di apprendimento; (ii) la
+            <em>modellazione delle lezioni</em>, il cui ruolo è combinare le informazioni dal sottosistema precedente e
+            creare la lezione personalizzata oltre che controllarne l'evoluzione; (iii) la <em>presentazione della
+                lezione</em>, il cui scopo è rappresentare efficacemente la lezione.
+        </p>
+
+        <p>
+            &copy; 2018 <a href="https://www.istc.cnr.it/en/group/pst">Planning and Scheduling Technology
+                Laboratory</a>.
+        </p>
+    </div>
+
+    <div class="modal fade" id="login-modal" tabindex="-1" role="dialog" aria-labelledby="login-modal-label"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="login-modal-label">Accedi</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="login-email" class="col-form-label">Email:</label>
+                            <input type="text" class="form-control" id="login-email">
+                            <label for="login-password" class="col-form-label">Password:</label>
+                            <input type="password" class="form-control" id="login-password"></input>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="login()">Accedi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="signup-modal" tabindex="-1" role="dialog" aria-labelledby="signup-modal-label"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="signup-modal-label">Registrati</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-group">
+                            <label for="signin-first-name" class="col-form-label">Nome:</label>
+                            <input type="text" class="form-control" id="signin-first-name">
+                            <label for="signin-last-name" class="col-form-label">Cognome:</label>
+                            <input type="text" class="form-control" id="signin-last-name">
+                            <label for="signin-email" class="col-form-label">Email:</label>
+                            <input type="text" class="form-control" id="signin-email">
+                            <label for="signin-password" class="col-form-label">Password:</label>
+                            <input type="password" class="form-control" id="signin-password"></input>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" onclick="signin()">Registrati</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
