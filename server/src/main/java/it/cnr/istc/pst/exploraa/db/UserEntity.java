@@ -35,9 +35,13 @@ public class UserEntity {
     @OneToMany
     private final Collection<LessonModelEntity> models = new ArrayList<>();
     @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<FollowEntity> follows = new ArrayList<>();
+    private final Collection<FollowingEntity> teachers = new ArrayList<>();
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<TeachEntity> teachs = new ArrayList<>();
+    private final Collection<FollowingEntity> students = new ArrayList<>();
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final Collection<FollowingLessonEntity> following_lessons = new ArrayList<>();
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    private final Collection<TeachingLessonEntity> teaching_lessons = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -110,27 +114,51 @@ public class UserEntity {
         models.remove(model);
     }
 
-    public Collection<FollowEntity> getFollowedLessons() {
-        return Collections.unmodifiableCollection(follows);
+    public Collection<FollowingEntity> getStudents() {
+        return Collections.unmodifiableCollection(students);
     }
 
-    public void addFollowedLesson(FollowEntity model) {
-        follows.add(model);
+    public void addStudent(FollowingEntity student) {
+        students.add(student);
     }
 
-    public void removeFollowedLesson(FollowEntity model) {
-        follows.remove(model);
+    public void removeStudent(FollowingEntity student) {
+        students.remove(student);
     }
 
-    public Collection<TeachEntity> getTeachedLessons() {
-        return Collections.unmodifiableCollection(teachs);
+    public Collection<FollowingEntity> getTeachers() {
+        return Collections.unmodifiableCollection(teachers);
     }
 
-    public void addTeachedLesson(TeachEntity model) {
-        teachs.add(model);
+    public void addTeacher(FollowingEntity teacher) {
+        teachers.add(teacher);
     }
 
-    public void removeTeachedLesson(TeachEntity model) {
-        teachs.remove(model);
+    public void removeTeacher(FollowingEntity teacher) {
+        teachers.remove(teacher);
+    }
+
+    public Collection<FollowingLessonEntity> getFollowingLessons() {
+        return Collections.unmodifiableCollection(following_lessons);
+    }
+
+    public void addFollowingLesson(FollowingLessonEntity model) {
+        following_lessons.add(model);
+    }
+
+    public void removeFollowingLesson(FollowingLessonEntity model) {
+        following_lessons.remove(model);
+    }
+
+    public Collection<TeachingLessonEntity> getTeachingLessons() {
+        return Collections.unmodifiableCollection(teaching_lessons);
+    }
+
+    public void addTeachingLesson(TeachingLessonEntity model) {
+        teaching_lessons.add(model);
+    }
+
+    public void removeTeachingLesson(TeachingLessonEntity model) {
+        teaching_lessons.remove(model);
     }
 }

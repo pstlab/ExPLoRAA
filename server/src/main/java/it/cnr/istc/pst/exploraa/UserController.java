@@ -19,9 +19,11 @@ import io.javalin.http.NotFoundResponse;
 import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.App.ExplRole;
 import it.cnr.istc.pst.exploraa.api.Following;
+import it.cnr.istc.pst.exploraa.api.FollowingLesson;
 import it.cnr.istc.pst.exploraa.api.Parameter;
-import it.cnr.istc.pst.exploraa.api.Teaching;
+import it.cnr.istc.pst.exploraa.api.TeachingLesson;
 import it.cnr.istc.pst.exploraa.api.User;
+import it.cnr.istc.pst.exploraa.db.FollowingEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 public class UserController {
@@ -160,12 +162,29 @@ public class UserController {
         final boolean online = ONLINE.containsKey(entity.getId());
         final Map<String, Parameter> par_types = online ? PARAMETER_TYPES.get(entity.getId()) : null;
         final Map<String, Map<String, String>> par_vals = online ? PARAMETER_VALUES.get(entity.getId()) : null;
-        final List<Following> following = entity.getFollowedLessons().stream().map(l -> LessonController.toFollowing(l))
+        final List<Following> teachers = entity.getTeachers().stream().map(l -> toTeacher(l))
                 .collect(Collectors.toList());
-        final List<Teaching> teaching = entity.getTeachedLessons().stream().map(l -> LessonController.toTeaching(l))
+        final List<Following> students = entity.getStudents().stream().map(l -> toStudent(l))
                 .collect(Collectors.toList());
+        final List<FollowingLesson> following_lessons = entity.getFollowingLessons().stream()
+                .map(l -> LessonController.toFollowing(l)).collect(Collectors.toList());
+        final List<TeachingLesson> teaching_lessons = entity.getTeachingLessons().stream()
+                .map(l -> LessonController.toTeaching(l)).collect(Collectors.toList());
 
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), par_types,
-                par_vals, following, teaching, online);
+                par_vals, teachers, students, following_lessons, teaching_lessons, online);
+    }
+
+    static Following toTeacher(final FollowingEntity entity) {
+        return new Following(null,
+                new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
+                        entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null,
+                        null, null, ONLINE.containsKey(entity.getTeacher().getId())));
+    }
+
+    static Following toStudent(final FollowingEntity entity) {
+        return new Following(new User(entity.getStudent().getId(), entity.getStudent().getEmail(),
+                entity.getStudent().getFirstName(), entity.getStudent().getLastName(), null, null, null, null, null,
+                null, UserController.ONLINE.containsKey(entity.getStudent().getId())), null);
     }
 }

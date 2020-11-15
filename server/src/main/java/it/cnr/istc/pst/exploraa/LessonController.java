@@ -18,14 +18,15 @@ import org.slf4j.LoggerFactory;
 import io.javalin.http.Context;
 import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
-import it.cnr.istc.pst.exploraa.api.Following;
+import it.cnr.istc.pst.exploraa.api.FollowingLesson;
 import it.cnr.istc.pst.exploraa.api.Lesson;
-import it.cnr.istc.pst.exploraa.api.Teaching;
+import it.cnr.istc.pst.exploraa.api.TeachingLesson;
 import it.cnr.istc.pst.exploraa.api.User;
-import it.cnr.istc.pst.exploraa.db.FollowEntity;
+import it.cnr.istc.pst.exploraa.db.FollowingEntity;
+import it.cnr.istc.pst.exploraa.db.FollowingLessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonModelEntity;
-import it.cnr.istc.pst.exploraa.db.TeachEntity;
+import it.cnr.istc.pst.exploraa.db.TeachingLessonEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 public class LessonController {
@@ -56,7 +57,7 @@ public class LessonController {
 
         final LessonEntity lesson_entity = new LessonEntity();
         lesson_entity.setName(name);
-        lesson_entity.setTeacher(new TeachEntity(em.find(UserEntity.class, teacher_id), lesson_entity));
+        lesson_entity.setTeacher(new TeachingLessonEntity(em.find(UserEntity.class, teacher_id), lesson_entity));
         final LessonModelEntity lme = em.find(LessonModelEntity.class, model_id);
         lesson_entity.setModel(lme);
 
@@ -148,17 +149,17 @@ public class LessonController {
                 lesson_manager.getTime());
     }
 
-    static Teaching toTeaching(final TeachEntity entity) {
-        return new Teaching(new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
-                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null,
-                UserController.ONLINE.containsKey(entity.getTeacher().getId())), null);
+    static TeachingLesson toTeaching(final TeachingLessonEntity entity) {
+        return new TeachingLesson(new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
+                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null, null,
+                null, UserController.ONLINE.containsKey(entity.getTeacher().getId())), null);
     }
 
-    static Following toFollowing(final FollowEntity entity) {
-        return new Following(
+    static FollowingLesson toFollowing(final FollowingLessonEntity entity) {
+        return new FollowingLesson(
                 new User(entity.getStudent().getId(), entity.getStudent().getEmail(),
                         entity.getStudent().getFirstName(), entity.getStudent().getLastName(), null, null, null, null,
-                        UserController.ONLINE.containsKey(entity.getStudent().getId())),
+                        null, null, UserController.ONLINE.containsKey(entity.getStudent().getId())),
                 null, new HashSet<>(entity.getInterests()));
     }
 }

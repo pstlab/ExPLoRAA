@@ -6,10 +6,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 
 @Entity
-public class TeachEntity {
+public class TeachingLessonEntity {
 
     @EmbeddedId
-    private TeachId id;
+    private TeachingLessonId id;
     @ManyToOne
     @MapsId("teacher_id")
     private UserEntity teacher;
@@ -17,11 +17,11 @@ public class TeachEntity {
     @MapsId("lesson_id")
     private LessonEntity lesson;
 
-    public TeachEntity() {
+    public TeachingLessonEntity() {
     }
 
-    public TeachEntity(UserEntity teacher, LessonEntity lesson) {
-        this.id = new TeachId(teacher.getId(), lesson.getId());
+    public TeachingLessonEntity(UserEntity teacher, LessonEntity lesson) {
+        this.id = new TeachingLessonId(teacher.getId(), lesson.getId());
         this.teacher = teacher;
         this.lesson = lesson;
     }

@@ -3,13 +3,13 @@ package it.cnr.istc.pst.exploraa.api;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class Teaching {
+public class TeachingLesson {
 
     private final User user;
     private final Lesson lesson;
 
     @JsonCreator
-    public Teaching(@JsonProperty("user") User user, @JsonProperty("lesson") Lesson lesson) {
+    public TeachingLesson(@JsonProperty("user") User user, @JsonProperty("lesson") Lesson lesson) {
         this.user = user;
         this.lesson = lesson;
     }

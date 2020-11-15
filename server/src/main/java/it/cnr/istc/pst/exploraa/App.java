@@ -108,6 +108,14 @@ public class App {
                     UserController.ONLINE.put(id, ctx);
                     final EntityManager em = App.EMF.createEntityManager();
                     final UserEntity user_entity = em.find(UserEntity.class, id);
+                    // we notify the teachers that a student has just connected..
+                    user_entity.getTeachers().stream()
+                            .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId()))
+                            .forEach(teacher -> UserController.ONLINE.get(teacher.getTeacher().getId()).send("online"));
+                    // we notify the students that a teacher has just connected..
+                    user_entity.getStudents().stream()
+                            .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId()))
+                            .forEach(student -> UserController.ONLINE.get(student.getStudent().getId()).send("online"));
                 });
             });
             ws.onClose(ctx -> {
@@ -115,6 +123,16 @@ public class App {
                     final Long id = Long.valueOf(ctx.queryParam("id"));
                     LOG.info("User #{} disconnected..", id);
                     UserController.ONLINE.remove(id);
+                    final EntityManager em = App.EMF.createEntityManager();
+                    final UserEntity user_entity = em.find(UserEntity.class, id);
+                    // we notify the teachers that a student has just disconnected..
+                    user_entity.getTeachers().stream()
+                            .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId())).forEach(
+                                    teacher -> UserController.ONLINE.get(teacher.getTeacher().getId()).send("offline"));
+                    // we notify the students that a teacher has just disconnected..
+                    user_entity.getStudents().stream()
+                            .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId())).forEach(
+                                    student -> UserController.ONLINE.get(student.getStudent().getId()).send("offline"));
                 });
             });
             ws.onMessage(ctx -> EXECUTOR.execute(() -> LOG.info("Received message {}..", ctx)));

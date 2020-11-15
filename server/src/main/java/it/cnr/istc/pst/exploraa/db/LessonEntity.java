@@ -23,9 +23,9 @@ public class LessonEntity {
     @ManyToOne
     private LessonModelEntity model;
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    private TeachEntity teached_by;
+    private TeachingLessonEntity teached_by;
     @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<FollowEntity> followed_by = new ArrayList<>();
+    private final Collection<FollowingLessonEntity> followed_by = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -53,23 +53,23 @@ public class LessonEntity {
         this.model = model;
     }
 
-    public TeachEntity getTeacher() {
+    public TeachingLessonEntity getTeacher() {
         return teached_by;
     }
 
-    public void setTeacher(TeachEntity teached_by) {
+    public void setTeacher(TeachingLessonEntity teached_by) {
         this.teached_by = teached_by;
     }
 
-    public Collection<FollowEntity> getStudents() {
+    public Collection<FollowingLessonEntity> getStudents() {
         return Collections.unmodifiableCollection(followed_by);
     }
 
-    public void addStudent(FollowEntity student) {
+    public void addStudent(FollowingLessonEntity student) {
         followed_by.add(student);
     }
 
-    public void removeStudent(FollowEntity student) {
+    public void removeStudent(FollowingLessonEntity student) {
         followed_by.remove(student);
     }
 }

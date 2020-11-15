@@ -3,15 +3,15 @@ package it.cnr.istc.pst.exploraa.db;
 import javax.persistence.Embeddable;
 
 @Embeddable
-public class TeachId {
+public class TeachingLessonId {
 
     private Long teacher_id;
     private Long lesson_id;
 
-    public TeachId() {
+    public TeachingLessonId() {
     }
 
-    public TeachId(Long teacher_id, Long lesson_id) {
+    public TeachingLessonId(Long teacher_id, Long lesson_id) {
         this.teacher_id = teacher_id;
         this.lesson_id = lesson_id;
     }

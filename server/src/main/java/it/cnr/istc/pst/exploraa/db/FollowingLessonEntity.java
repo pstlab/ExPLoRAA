@@ -11,10 +11,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.MapsId;
 
 @Entity
-public class FollowEntity {
+public class FollowingLessonEntity {
 
     @EmbeddedId
-    private FollowId id;
+    private FollowingLessonId id;
     @ManyToOne
     @MapsId("student_id")
     private UserEntity student;
@@ -24,11 +24,11 @@ public class FollowEntity {
     @ElementCollection
     private final Collection<String> interests = new ArrayList<>();
 
-    public FollowEntity() {
+    public FollowingLessonEntity() {
     }
 
-    public FollowEntity(UserEntity student, LessonEntity lesson) {
-        this.id = new FollowId(student.getId(), lesson.getId());
+    public FollowingLessonEntity(UserEntity student, LessonEntity lesson) {
+        this.id = new FollowingLessonId(student.getId(), lesson.getId());
         this.student = student;
         this.lesson = lesson;
     }

@@ -17,8 +17,8 @@ public class Lesson {
     private final String name;
     private final long model_id;
     private final Set<String> topics;
-    private final Teaching teacher;
-    private final Map<Long, Following> students;
+    private final TeachingLesson teacher;
+    private final Map<Long, FollowingLesson> students;
     private final Collection<Stimulus> stimuli;
     private final Collection<Token> tokens;
     private LessonState state;
@@ -27,7 +27,7 @@ public class Lesson {
     @JsonCreator
     public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
             @JsonProperty("modelId") long model_id, @JsonProperty("topics") Set<String> topics,
-            @JsonProperty("teacher") Teaching teacher, @JsonProperty("students") Map<Long, Following> students,
+            @JsonProperty("teacher") TeachingLesson teacher, @JsonProperty("students") Map<Long, FollowingLesson> students,
             @JsonProperty("stimuli") Collection<Message.Stimulus> stimuli,
             @JsonProperty("tokens") Collection<Message.Token> tokens, @JsonProperty("state") LessonState state,
             @JsonProperty("time") long time) {
@@ -76,14 +76,14 @@ public class Lesson {
     /**
      * @return the teacher
      */
-    public Teaching getTeacher() {
+    public TeachingLesson getTeacher() {
         return teacher;
     }
 
     /**
      * @return the students
      */
-    public Map<Long, Following> getStudents() {
+    public Map<Long, FollowingLesson> getStudents() {
         if (students == null)
             return null;
         return Collections.unmodifiableMap(students);
