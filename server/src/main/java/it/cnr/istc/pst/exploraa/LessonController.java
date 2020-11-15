@@ -22,7 +22,6 @@ import it.cnr.istc.pst.exploraa.api.FollowingLesson;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.TeachingLesson;
 import it.cnr.istc.pst.exploraa.api.User;
-import it.cnr.istc.pst.exploraa.db.FollowingEntity;
 import it.cnr.istc.pst.exploraa.db.FollowingLessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonModelEntity;
