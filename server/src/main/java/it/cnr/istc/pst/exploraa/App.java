@@ -95,7 +95,7 @@ public class App {
                 post(UserController::createUser, roles(ExplRole.Guest, ExplRole.Admin));
                 path(":id", () -> {
                     get(UserController::getUser, roles(ExplRole.Admin, ExplRole.User));
-                    patch(UserController::updateUser, roles(ExplRole.Admin, ExplRole.User));
+                    post(UserController::updateUser, roles(ExplRole.Admin, ExplRole.User));
                     delete(UserController::deleteUser, roles(ExplRole.Admin, ExplRole.User));
                 });
             });

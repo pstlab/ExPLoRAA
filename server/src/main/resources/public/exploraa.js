@@ -81,13 +81,42 @@ function signin() {
     });
 }
 
+function delete_user() {
+    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+        method: 'delete',
+        headers: { 'Authorization': 'Basic ' + user.id }
+    }).then(response => {
+        if (response.ok) {
+            logout();
+        } else
+            alert(response.statusText);
+    });
+}
+
+function update_user() {
+    user.firstName = $('#profile-first-name').val();
+    user.lastName = $('#profile-last-name').val();
+    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+        method: 'post',
+        headers: { 'Authorization': 'Basic ' + user.id },
+        body: JSON.stringify(user)
+    }).then(response => {
+        if (response.ok) {
+            $('#account-menu').text(user.firstName);
+            $('#profile-modal').modal('hide');
+        } else
+            alert(response.statusText);
+    });
+}
+
 function setUser(usr) {
     user = usr;
     $('#body-guest').remove();
     $.get('body_user.html', function (data) {
         $('#exploraa-body').append(data);
-        if (user.firstName) {
-            $('#account-menu').text(user.firstName);
-        }
+        $('#account-menu').text(user.firstName);
+        $('#profile-email').val(user.email);
+        $('#profile-first-name').val(user.firstName);
+        $('#profile-last-name').val(user.lastName);
     });
 }
