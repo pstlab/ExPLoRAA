@@ -1,10 +1,8 @@
 package it.cnr.istc.pst.exploraa;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -18,6 +16,7 @@ import io.javalin.http.ConflictResponse;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
+import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.App.ExplRole;
 import it.cnr.istc.pst.exploraa.api.Following;
 import it.cnr.istc.pst.exploraa.api.Parameter;
@@ -31,7 +30,7 @@ public class UserController {
     /**
      * For each user id, a boolean indicating whether the user is online.
      */
-    static final Set<Long> ONLINE = new HashSet<>();
+    static final Map<Long, WsContext> ONLINE = new HashMap<>();
     /**
      * For each user id, a map of parameter types containing the name of the
      * parameter as key.
@@ -109,7 +108,7 @@ public class UserController {
 
     static void getUser(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
-        LOG.info("retrieving user {}..", user_id);
+        LOG.info("retrieving user #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
         if (user_entity == null)
@@ -121,7 +120,7 @@ public class UserController {
 
     static void updateUser(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
-        LOG.info("updating user {}..", user_id);
+        LOG.info("updating user #{}..", user_id);
         final User user = ctx.bodyAsClass(User.class);
 
         final EntityManager em = App.EMF.createEntityManager();
@@ -140,7 +139,7 @@ public class UserController {
 
     static void deleteUser(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
-        LOG.info("deleting user {}..", user_id);
+        LOG.info("deleting user #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
         if (user_entity == null)
@@ -158,7 +157,7 @@ public class UserController {
     }
 
     static User toUser(final UserEntity entity) {
-        final boolean online = ONLINE.contains(entity.getId());
+        final boolean online = ONLINE.containsKey(entity.getId());
         final Map<String, Parameter> par_types = online ? PARAMETER_TYPES.get(entity.getId()) : null;
         final Map<String, Map<String, String>> par_vals = online ? PARAMETER_VALUES.get(entity.getId()) : null;
         final List<Following> following = entity.getFollowedLessons().stream().map(l -> LessonController.toFollowing(l))

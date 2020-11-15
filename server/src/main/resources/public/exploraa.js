@@ -1,8 +1,9 @@
 let user;
+let ws;
 const config = {
     'host': '192.168.1.101',
-    "service_port": 7000,
-    "websocket_port": 8884
+    'service_port': 7000,
+    'websocket_port': 8884
 };
 
 $(window).on('load', function () {
@@ -118,5 +119,10 @@ function setUser(usr) {
         $('#profile-email').val(user.email);
         $('#profile-first-name').val(user.firstName);
         $('#profile-last-name').val(user.lastName);
+
+        ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
+        ws.onmessage = msg => {
+            console.log(msg);
+        };
     });
 }

@@ -2,7 +2,6 @@ package it.cnr.istc.pst.exploraa;
 
 import static io.javalin.apibuilder.ApiBuilder.delete;
 import static io.javalin.apibuilder.ApiBuilder.get;
-import static io.javalin.apibuilder.ApiBuilder.patch;
 import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.core.security.SecurityUtil.roles;
@@ -101,22 +100,49 @@ public class App {
             });
         });
 
+        app.ws("/communication", ws -> {
+            ws.onConnect(ctx -> {
+                EXECUTOR.execute(() -> {
+                    final Long id = Long.valueOf(ctx.queryParam("id"));
+                    LOG.info("User #{} connected..", id);
+                    UserController.ONLINE.put(id, ctx);
+                    final EntityManager em = App.EMF.createEntityManager();
+                    final UserEntity user_entity = em.find(UserEntity.class, id);
+                });
+            });
+            ws.onClose(ctx -> {
+                EXECUTOR.execute(() -> {
+                    final Long id = Long.valueOf(ctx.queryParam("id"));
+                    LOG.info("User #{} disconnected..", id);
+                    UserController.ONLINE.remove(id);
+                });
+            });
+            ws.onMessage(ctx -> EXECUTOR.execute(() -> LOG.info("Received message {}..", ctx)));
+        }, roles(ExplRole.Admin, ExplRole.User));
+
         app.start();
     }
 
     static Role getRole(final Context ctx) {
         final String auth_head = ctx.header("Authorization");
-        if (auth_head == null)
-            return ExplRole.Guest;
-        final EntityManager em = App.EMF.createEntityManager();
-        final UserEntity user_entity = em.find(UserEntity.class, Long.parseLong(auth_head.replace("Basic ", "")));
-        em.close();
-        if (user_entity == null)
-            return ExplRole.Guest;
-        else if (user_entity.getRoles().contains(ExplRole.Admin.name()))
-            return ExplRole.Admin;
-        else
-            return ExplRole.User;
+        Long id = null;
+        if (auth_head != null)
+            id = Long.valueOf(auth_head.replace("Basic ", ""));
+        final String ws_protocol_head = ctx.header("Sec-WebSocket-Protocol");
+        if (ws_protocol_head != null)
+            id = Long.valueOf(ctx.queryParam("id"));
+        if (id == null) {
+            final EntityManager em = App.EMF.createEntityManager();
+            final UserEntity user_entity = em.find(UserEntity.class, id);
+            em.close();
+            if (user_entity == null)
+                return ExplRole.Guest;
+            else if (user_entity.getRoles().contains(ExplRole.Admin.name()))
+                return ExplRole.Admin;
+            else
+                return ExplRole.User;
+        }
+        return ExplRole.Guest;
     }
 
     public static String generateSalt() {

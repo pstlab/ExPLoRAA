@@ -73,7 +73,7 @@ public class LessonController {
 
     static void getLesson(final Context ctx) {
         final long lesson_id = Long.parseLong(ctx.pathParam("id"));
-        LOG.info("retrieving lesson {}..", lesson_id);
+        LOG.info("retrieving lesson #{}..", lesson_id);
         final EntityManager em = App.EMF.createEntityManager();
         final LessonEntity lesson_entity = em.find(LessonEntity.class, lesson_id);
         if (lesson_entity == null)
@@ -85,7 +85,7 @@ public class LessonController {
 
     static void deleteLesson(final Context ctx) {
         final long lesson_id = Long.parseLong(ctx.pathParam("id"));
-        LOG.info("deleting lesson {}..", lesson_id);
+        LOG.info("deleting lesson #{}..", lesson_id);
         final EntityManager em = App.EMF.createEntityManager();
         final LessonEntity lesson_entity = em.find(LessonEntity.class, lesson_id);
         if (lesson_entity == null)
@@ -106,7 +106,7 @@ public class LessonController {
             final Set<String> interests = App.MAPPER.readValue(ctx.formParam("interests"),
                     new TypeReference<Set<String>>() {
                     });
-            LOG.info("user {} is following lesson {} with interests {}..", student_id, lesson_id, interests);
+            LOG.info("user #{} is following lesson #{} with interests {}..", student_id, lesson_id, interests);
             ctx.status(204);
         } catch (final JsonProcessingException e) {
             throw new InternalServerErrorResponse(e.getMessage());
@@ -116,25 +116,25 @@ public class LessonController {
     static void unfollowLesson(final Context ctx) {
         final long student_id = Long.parseLong(ctx.formParam("student_id"));
         final long lesson_id = Long.parseLong(ctx.formParam("lesson_id"));
-        LOG.info("user {} is unfollowing lesson {} ..", student_id, lesson_id);
+        LOG.info("user #{} is unfollowing lesson #{} ..", student_id, lesson_id);
         ctx.status(204);
     }
 
     static void playLesson(final Context ctx) {
         final long lesson_id = Long.parseLong(ctx.pathParam("id"));
-        LOG.info("playing lesson {}..", lesson_id);
+        LOG.info("playing lesson #{}..", lesson_id);
         ctx.status(204);
     }
 
     static void pauseLesson(final Context ctx) {
         final long lesson_id = Long.parseLong(ctx.pathParam("id"));
-        LOG.info("pausing lesson {}..", lesson_id);
+        LOG.info("pausing lesson #{}..", lesson_id);
         ctx.status(204);
     }
 
     static void stopLesson(final Context ctx) {
         final long lesson_id = Long.parseLong(ctx.pathParam("id"));
-        LOG.info("stopping lesson {}..", lesson_id);
+        LOG.info("stopping lesson #{}..", lesson_id);
         ctx.status(204);
     }
 
@@ -151,14 +151,14 @@ public class LessonController {
     static Teaching toTeaching(final TeachEntity entity) {
         return new Teaching(new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
                 entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null,
-                UserController.ONLINE.contains(entity.getTeacher().getId())), null);
+                UserController.ONLINE.containsKey(entity.getTeacher().getId())), null);
     }
 
     static Following toFollowing(final FollowEntity entity) {
         return new Following(
                 new User(entity.getStudent().getId(), entity.getStudent().getEmail(),
                         entity.getStudent().getFirstName(), entity.getStudent().getLastName(), null, null, null, null,
-                        UserController.ONLINE.contains(entity.getStudent().getId())),
+                        UserController.ONLINE.containsKey(entity.getStudent().getId())),
                 null, new HashSet<>(entity.getInterests()));
     }
 }
