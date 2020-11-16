@@ -67,7 +67,8 @@
                         </div>
                         <div class="col d-flex justify-content-end">
                             <div class="btn-group">
-                                <a role="button" class="btn btn-sm btn-secondary"><i class="fas fa-user-plus"></i></a>
+                                <a role="button" class="btn btn-sm btn-secondary" onclick="show_teachers()"><i
+                                        class="fas fa-user-plus"></i></a>
                                 <a role="button" class="btn btn-sm btn-secondary disabled"><i
                                         class="fas fa-user-minus"></i></a>
                             </div>
@@ -119,7 +120,7 @@
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="profile-modal-label">Profile</h5>
+                    <h5 class="modal-title" id="profile-modal-label">Profilo</h5>
                     <button type="button" class="close" data-dismiss="modal" aria-label="Close">
                         <span aria-hidden="true">&times;</span>
                     </button>
@@ -139,8 +140,30 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-secondary" data-dismiss="modal">Chiudi</button>
                     <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal"
-                        onclick="delete_user()">Delete</button>
+                        onclick="delete_user()">Cancella</button>
                     <button type="button" class="btn btn-sm btn-primary" onclick="update_user()">Aggiorna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="show-teachers-modal" tabindex="-1" role="dialog"
+        aria-labelledby="show-teachers-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="show-teachers-modal-label">Insegnanti</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group list-group-flush overflow-auto" id="teachers-list">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"
+                        onclick="follow_teachers()">Segui</button>
                 </div>
             </div>
         </div>

@@ -5,3 +5,11 @@ html, body {
     min-height: 100%;
     height: 100%;
 }
+#teachers-list {
+    max-height: 350px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.list-group-item {
+    min-height: fit-content;
+}

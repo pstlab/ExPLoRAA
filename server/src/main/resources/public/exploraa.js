@@ -133,3 +133,31 @@ function setUser(usr) {
         };
     });
 }
+
+function show_teachers() {
+    $('#teachers-list').empty();
+
+    fetch('http://' + config.host + ':' + config.service_port + '/users', {
+        method: 'get',
+        headers: { 'Authorization': 'Basic ' + user.id }
+    }).then(response => {
+        if (response.ok) {
+            response.json().then(data => {
+                data.filter(teacher => teacher.id != user.id).forEach(teacher => {
+                    $('#teachers-list').append(`
+                    <div class="list-group-item list-group-item-action custom-control custom-checkbox">
+                        <input id="teacher-${teacher.id}" type="checkbox">
+                        <label for="teacher-${teacher.id}">${teacher.lastName}, ${teacher.firstName}</label>
+                    </div>
+                    `);
+                });
+                $('#show-teachers-modal').modal('show');
+            });
+        } else
+            alert(response.statusText);
+    });
+}
+
+function follow_teachers() {
+    $('#show-teachers-modal').modal('show');
+}
