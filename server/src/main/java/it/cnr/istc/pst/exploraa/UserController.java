@@ -24,6 +24,7 @@ import it.cnr.istc.pst.exploraa.api.Parameter;
 import it.cnr.istc.pst.exploraa.api.TeachingLesson;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.FollowingEntity;
+import it.cnr.istc.pst.exploraa.db.FollowingId;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 public class UserController {
@@ -109,7 +110,7 @@ public class UserController {
     }
 
     static void getUser(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.pathParam("id"));
+        final long user_id = Long.valueOf(ctx.queryParam("id"));
         LOG.info("retrieving user #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
@@ -121,7 +122,7 @@ public class UserController {
     }
 
     static void updateUser(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.pathParam("id"));
+        final long user_id = Long.valueOf(ctx.queryParam("id"));
         LOG.info("updating user #{}..", user_id);
         final User user = ctx.bodyAsClass(User.class);
 
@@ -140,7 +141,7 @@ public class UserController {
     }
 
     static void deleteUser(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.pathParam("id"));
+        final long user_id = Long.valueOf(ctx.queryParam("id"));
         LOG.info("deleting user #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
@@ -153,6 +154,54 @@ public class UserController {
 
         PARAMETER_TYPES.remove(user_entity.getId());
         PARAMETER_VALUES.remove(user_entity.getId());
+
+        ctx.status(204);
+        em.close();
+    }
+
+    static void followUser(final Context ctx) {
+        final long student_id = Long.valueOf(ctx.queryParam("student_id"));
+        final long teacher_id = Long.valueOf(ctx.queryParam("teacher_id"));
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity student_entity = em.find(UserEntity.class, student_id);
+        if (student_entity == null)
+            throw new NotFoundResponse();
+        final UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+        if (teacher_entity == null)
+            throw new NotFoundResponse();
+
+        em.getTransaction().begin();
+        FollowingEntity following_entity = new FollowingEntity();
+        following_entity.setStudent(student_entity);
+        following_entity.setTeacher(teacher_entity);
+        student_entity.addTeacher(following_entity);
+        teacher_entity.addStudent(following_entity);
+        em.persist(following_entity);
+        em.getTransaction().commit();
+
+        ctx.status(204);
+        em.close();
+    }
+
+    static void unfollowUser(final Context ctx) {
+        final long student_id = Long.valueOf(ctx.queryParam("student_id"));
+        final long teacher_id = Long.valueOf(ctx.queryParam("teacher_id"));
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity student_entity = em.find(UserEntity.class, student_id);
+        if (student_entity == null)
+            throw new NotFoundResponse();
+        final UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+        if (teacher_entity == null)
+            throw new NotFoundResponse();
+        FollowingEntity following_entity = em.find(FollowingEntity.class, new FollowingId(student_id, teacher_id));
+        if (following_entity == null)
+            throw new NotFoundResponse();
+
+        em.getTransaction().begin();
+        student_entity.removeTeacher(following_entity);
+        teacher_entity.removeStudent(following_entity);
+        em.remove(following_entity);
+        em.getTransaction().commit();
 
         ctx.status(204);
         em.close();

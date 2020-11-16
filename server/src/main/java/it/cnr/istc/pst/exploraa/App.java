@@ -22,6 +22,7 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import org.slf4j.Logger;
@@ -32,6 +33,7 @@ import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.http.UnauthorizedResponse;
+import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
@@ -111,11 +113,27 @@ public class App {
                     // we notify the teachers that a student has just connected..
                     user_entity.getTeachers().stream()
                             .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId()))
-                            .forEach(teacher -> UserController.ONLINE.get(teacher.getTeacher().getId()).send("online"));
+                            .forEach(teacher -> {
+                                try {
+                                    UserController.ONLINE.get(teacher.getTeacher().getId())
+                                            .send(MAPPER.writeValueAsString(
+                                                    new Message.Online(teacher.getTeacher().getId(), true)));
+                                } catch (JsonProcessingException e) {
+                                    LOG.error(e.getMessage(), e);
+                                }
+                            });
                     // we notify the students that a teacher has just connected..
                     user_entity.getStudents().stream()
                             .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId()))
-                            .forEach(student -> UserController.ONLINE.get(student.getStudent().getId()).send("online"));
+                            .forEach(student -> {
+                                try {
+                                    UserController.ONLINE.get(student.getStudent().getId())
+                                            .send(MAPPER.writeValueAsString(
+                                                    new Message.Online(student.getStudent().getId(), true)));
+                                } catch (JsonProcessingException e) {
+                                    LOG.error(e.getMessage(), e);
+                                }
+                            });
                 });
             });
             ws.onClose(ctx -> {
@@ -127,12 +145,28 @@ public class App {
                     final UserEntity user_entity = em.find(UserEntity.class, id);
                     // we notify the teachers that a student has just disconnected..
                     user_entity.getTeachers().stream()
-                            .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId())).forEach(
-                                    teacher -> UserController.ONLINE.get(teacher.getTeacher().getId()).send("offline"));
+                            .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId()))
+                            .forEach(teacher -> {
+                                try {
+                                    UserController.ONLINE.get(teacher.getTeacher().getId())
+                                            .send(MAPPER.writeValueAsString(
+                                                    new Message.Online(teacher.getTeacher().getId(), false)));
+                                } catch (JsonProcessingException e) {
+                                    LOG.error(e.getMessage(), e);
+                                }
+                            });
                     // we notify the students that a teacher has just disconnected..
                     user_entity.getStudents().stream()
-                            .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId())).forEach(
-                                    student -> UserController.ONLINE.get(student.getStudent().getId()).send("offline"));
+                            .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId()))
+                            .forEach(student -> {
+                                try {
+                                    UserController.ONLINE.get(student.getStudent().getId())
+                                            .send(MAPPER.writeValueAsString(
+                                                    new Message.Online(student.getStudent().getId(), false)));
+                                } catch (JsonProcessingException e) {
+                                    LOG.error(e.getMessage(), e);
+                                }
+                            });
                 });
             });
             ws.onMessage(ctx -> EXECUTOR.execute(() -> LOG.info("Received message {}..", ctx)));
@@ -149,7 +183,7 @@ public class App {
         final String ws_protocol_head = ctx.header("Sec-WebSocket-Protocol");
         if (ws_protocol_head != null)
             id = Long.valueOf(ctx.queryParam("id"));
-        if (id == null) {
+        if (id != null) {
             final EntityManager em = App.EMF.createEntityManager();
             final UserEntity user_entity = em.find(UserEntity.class, id);
             em.close();

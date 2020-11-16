@@ -83,7 +83,7 @@ function signin() {
 }
 
 function delete_user() {
-    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/users/?id=' + user.id, {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
@@ -97,7 +97,7 @@ function delete_user() {
 function update_user() {
     user.firstName = $('#profile-first-name').val();
     user.lastName = $('#profile-last-name').val();
-    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/users/?id=' + user.id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + user.id },
         body: JSON.stringify(user)
@@ -122,6 +122,13 @@ function setUser(usr) {
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
         ws.onmessage = msg => {
+            const c_msg = JSON.parse(msg);
+            switch (c_msg.type) {
+                case "online":
+                    break;
+                default:
+                    break;
+            }
             console.log(msg);
         };
     });

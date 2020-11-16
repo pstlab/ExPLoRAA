@@ -14,7 +14,7 @@ public class FollowingEntity {
     @MapsId("student_id")
     private UserEntity student;
     @ManyToOne
-    @MapsId("lesson_id")
+    @MapsId("teacher_id")
     private UserEntity teacher;
 
     public FollowingEntity() {

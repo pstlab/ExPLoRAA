@@ -12,12 +12,42 @@ import com.fasterxml.jackson.annotation.JsonSubTypes;
 import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-@JsonSubTypes({ @Type(value = Message.NewParameter.class, name = "new-parameter"),
+@JsonSubTypes({ @Type(value = Message.Online.class, name = "online"),
+        @Type(value = Message.NewParameter.class, name = "new-parameter"),
         @Type(value = Message.RemoveParameter.class, name = "remove-parameter"),
         @Type(value = Message.FollowLesson.class, name = "follow-lesson"),
         @Type(value = Message.UnfollowLesson.class, name = "unfollow-lesson"),
         @Type(value = Message.RemoveLesson.class, name = "remove-lesson") })
 public class Message {
+
+    /**
+     * This message is used for communicating that a user is now online/offline.
+     */
+    public static class Online extends Message {
+
+        private final long user;
+        private final boolean online;
+
+        @JsonCreator
+        public Online(@JsonProperty("user") long user, @JsonProperty("online") boolean online) {
+            this.user = user;
+            this.online = online;
+        }
+
+        /**
+         * @return the user.
+         */
+        public long getUser() {
+            return user;
+        }
+
+        /**
+         * @return the connected state.
+         */
+        public boolean isOnline() {
+            return online;
+        }
+    }
 
     /**
      * This message is used for communicating the creation of a new parameter.
