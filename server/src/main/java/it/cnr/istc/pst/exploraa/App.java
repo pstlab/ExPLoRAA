@@ -95,9 +95,9 @@ public class App {
                     post(UserController::updateUser, roles(ExplRole.Admin, ExplRole.User));
                     delete(UserController::deleteUser, roles(ExplRole.Admin, ExplRole.User));
                 });
-                path("follow", () -> post(UserController::followUser, roles(ExplRole.Admin, ExplRole.User)));
-                path("unfollow", () -> post(UserController::unfollowUser, roles(ExplRole.Admin, ExplRole.User)));
             });
+            path("follow", () -> post(UserController::followUser, roles(ExplRole.Admin, ExplRole.User)));
+            path("unfollow", () -> post(UserController::unfollowUser, roles(ExplRole.Admin, ExplRole.User)));
             path("teachers", () -> {
                 path(":id", () -> get(UserController::getTeacher, roles(ExplRole.Admin, ExplRole.User)));
             });

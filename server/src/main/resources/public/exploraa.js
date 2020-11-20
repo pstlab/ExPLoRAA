@@ -162,7 +162,7 @@ function show_teachers() {
 
 function follow_teachers() {
     $('#teachers-list').find('input:checked').each(function () {
-        fetch('http://' + config.host + ':' + config.service_port + '/users/follow/?student_id=' + user.id + '&teacher_id=' + this.getAttribute('teacher_id'), {
+        fetch('http://' + config.host + ':' + config.service_port + '/follow/?student_id=' + user.id + '&teacher_id=' + this.getAttribute('teacher_id'), {
             method: 'post',
             headers: { 'Authorization': 'Basic ' + user.id }
         }).then(response => {
