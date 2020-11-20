@@ -13,6 +13,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @Type(value = Message.Online.class, name = "online"),
+        @Type(value = Message.Follower.class, name = "follower"),
         @Type(value = Message.NewParameter.class, name = "new-parameter"),
         @Type(value = Message.RemoveParameter.class, name = "remove-parameter"),
         @Type(value = Message.FollowLesson.class, name = "follow-lesson"),
@@ -46,6 +47,36 @@ public class Message {
          */
         public boolean isOnline() {
             return online;
+        }
+    }
+
+    /**
+     * This message is used for communicating to a teacher that a student has been
+     * added/removed.
+     */
+    public static class Follower extends Message {
+
+        private final long student;
+        private final boolean added;
+
+        @JsonCreator
+        public Follower(@JsonProperty("student") long student, @JsonProperty("added") boolean added) {
+            this.student = student;
+            this.added = added;
+        }
+
+        /**
+         * @return the student.
+         */
+        public long getStudent() {
+            return student;
+        }
+
+        /**
+         * @return the added state.
+         */
+        public boolean isAdded() {
+            return added;
         }
     }
 

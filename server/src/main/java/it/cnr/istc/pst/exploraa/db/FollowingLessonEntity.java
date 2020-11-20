@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.ElementCollection;
 import javax.persistence.EmbeddedId;
 import javax.persistence.Entity;
@@ -22,6 +23,7 @@ public class FollowingLessonEntity {
     @MapsId("lesson_id")
     private LessonEntity lesson;
     @ElementCollection
+    @CollectionTable(name = "Interests")
     private final Collection<String> interests = new ArrayList<>();
 
     public FollowingLessonEntity() {

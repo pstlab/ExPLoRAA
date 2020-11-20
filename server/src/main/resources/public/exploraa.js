@@ -83,7 +83,7 @@ function signin() {
 }
 
 function delete_user() {
-    fetch('http://' + config.host + ':' + config.service_port + '/users/?id=' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
@@ -97,7 +97,7 @@ function delete_user() {
 function update_user() {
     user.firstName = $('#profile-first-name').val();
     user.lastName = $('#profile-last-name').val();
-    fetch('http://' + config.host + ':' + config.service_port + '/users/?id=' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + user.id },
         body: JSON.stringify(user)
@@ -126,6 +126,8 @@ function setUser(usr) {
             switch (c_msg.type) {
                 case "online":
                     break;
+                case "follower":
+                    break;
                 default:
                     break;
             }
@@ -146,7 +148,7 @@ function show_teachers() {
                 data.filter(teacher => teacher.id != user.id).forEach(teacher => {
                     $('#teachers-list').append(`
                     <div class="list-group-item list-group-item-action custom-control custom-checkbox">
-                        <input id="teacher-${teacher.id}" type="checkbox">
+                        <input id="teacher-${teacher.id}" type="checkbox" teacher_id="${teacher.id}">
                         <label for="teacher-${teacher.id}">${teacher.lastName}, ${teacher.firstName}</label>
                     </div>
                     `);
@@ -159,5 +161,13 @@ function show_teachers() {
 }
 
 function follow_teachers() {
-    $('#show-teachers-modal').modal('show');
+    $('#teachers-list').find('input:checked').each(function () {
+        fetch('http://' + config.host + ':' + config.service_port + '/users/follow/?student_id=' + user.id + '&teacher_id=' + this.getAttribute('teacher_id'), {
+            method: 'post',
+            headers: { 'Authorization': 'Basic ' + user.id }
+        }).then(response => {
+            if (!response.ok)
+                alert(response.statusText);
+        });
+    });
 }
