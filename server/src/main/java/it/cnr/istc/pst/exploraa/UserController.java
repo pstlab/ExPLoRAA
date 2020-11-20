@@ -252,14 +252,17 @@ public class UserController {
         final boolean online = ONLINE.containsKey(entity.getId());
         final Map<String, Parameter> par_types = online ? PARAMETER_TYPES.get(entity.getId()) : null;
         final Map<String, Map<String, String>> par_vals = online ? PARAMETER_VALUES.get(entity.getId()) : null;
-        final List<Following> teachers = entity.getTeachers().stream()
-                .map(l -> new Following(null, toTeacher(l.getTeacher()))).collect(Collectors.toList());
-        final List<Following> students = entity.getStudents().stream()
-                .map(l -> new Following(toStudent(l.getStudent()), null)).collect(Collectors.toList());
-        final List<FollowingLesson> following_lessons = entity.getFollowingLessons().stream()
-                .map(l -> LessonController.toFollowing(l)).collect(Collectors.toList());
-        final List<TeachingLesson> teaching_lessons = entity.getTeachingLessons().stream()
-                .map(l -> LessonController.toTeaching(l)).collect(Collectors.toList());
+        final Map<Long, Following> teachers = entity.getTeachers().stream()
+                .map(t -> new Following(null, toTeacher(t.getTeacher())))
+                .collect(Collectors.toMap(f -> f.getTeacher().getId(), f -> f));
+        final Map<Long, Following> students = entity.getStudents().stream()
+                .map(s -> new Following(toStudent(s.getStudent()), null))
+                .collect(Collectors.toMap(f -> f.getStudent().getId(), f -> f));
+        final Map<Long, FollowingLesson> following_lessons = entity.getFollowingLessons().stream()
+                .map(l -> LessonController.toFollowing(l))
+                .collect(Collectors.toMap(f -> f.getLesson().getId(), f -> f));
+        final Map<Long, TeachingLesson> teaching_lessons = entity.getTeachingLessons().stream()
+                .map(l -> LessonController.toTeaching(l)).collect(Collectors.toMap(f -> f.getLesson().getId(), f -> f));
 
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), par_types,
                 par_vals, teachers, students, following_lessons, teaching_lessons, online);

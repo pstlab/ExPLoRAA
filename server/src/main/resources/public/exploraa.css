@@ -6,7 +6,12 @@ html, body {
     height: 100%;
 }
 #teachers-list {
-    max-height: 350px;
+    max-height: 80vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+}
+#f-teachers-list {
+    max-height: 80vh;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
 }

@@ -120,6 +120,16 @@ function setUser(usr) {
         $('#profile-first-name').val(user.firstName);
         $('#profile-last-name').val(user.lastName);
 
+        for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a.teacher.lastName + a.teacher.firstName).localeCompare(b.teacher.lastName + b.teacher.firstName))) {
+            console.log(value);
+            $('#f-teachers-list').append(`
+            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                <div class="col d-flex justify-content-start align-items-center"><span class="fas fa-link mr-1"></span>${value.teacher.lastName}, ${value.teacher.firstName}</div>
+                <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary"><i class="fas fa-user-minus"></i></a></div>
+            </div>
+            `);
+        }
+
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
         ws.onmessage = msg => {
             const c_msg = JSON.parse(msg);
@@ -145,7 +155,7 @@ function show_teachers() {
     }).then(response => {
         if (response.ok) {
             response.json().then(data => {
-                data.filter(teacher => teacher.id != user.id).forEach(teacher => {
+                data.filter(teacher => teacher.id != user.id && !(teacher.id in user.teachers)).forEach(teacher => {
                     $('#teachers-list').append(`
                     <div class="list-group-item list-group-item-action custom-control custom-checkbox">
                         <input id="teacher-${teacher.id}" type="checkbox" teacher_id="${teacher.id}">

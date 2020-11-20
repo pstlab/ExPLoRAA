@@ -1,6 +1,5 @@
 package it.cnr.istc.pst.exploraa.api;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -15,10 +14,10 @@ public class User {
     private final String last_name;
     private final Map<String, Parameter> par_types;
     private final Map<String, Map<String, String>> par_values;
-    private final Collection<Following> teachers;
-    private final Collection<Following> students;
-    private final Collection<FollowingLesson> following_lesson;
-    private final Collection<TeachingLesson> teaching_lesson;
+    private final Map<Long, Following> teachers;
+    private final Map<Long, Following> students;
+    private final Map<Long, FollowingLesson> following_lesson;
+    private final Map<Long, TeachingLesson> teaching_lesson;
     private final boolean online;
 
     @JsonCreator
@@ -26,10 +25,10 @@ public class User {
             @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
             @JsonProperty("parameterTypes") Map<String, Parameter> par_types,
             @JsonProperty("parameterValues") Map<String, Map<String, String>> par_values,
-            @JsonProperty("teachers") Collection<Following> teachers,
-            @JsonProperty("students") Collection<Following> students,
-            @JsonProperty("followingLessons") Collection<FollowingLesson> following_lesson,
-            @JsonProperty("teachingLessons") Collection<TeachingLesson> teaching_lesson,
+            @JsonProperty("teachers") Map<Long, Following> teachers,
+            @JsonProperty("students") Map<Long, Following> students,
+            @JsonProperty("followingLessons") Map<Long, FollowingLesson> following_lesson,
+            @JsonProperty("teachingLessons") Map<Long, TeachingLesson> teaching_lesson,
             @JsonProperty("online") boolean online) {
         this.id = id;
         this.email = email;
@@ -97,33 +96,33 @@ public class User {
         return Collections.unmodifiableMap(par_values);
     }
 
-    public Collection<Following> getTeachers() {
+    public Map<Long, Following> getTeachers() {
         if (teachers == null)
             return null;
-        return Collections.unmodifiableCollection(teachers);
+        return Collections.unmodifiableMap(teachers);
     }
 
-    public Collection<Following> getStudents() {
+    public Map<Long, Following> getStudents() {
         if (students == null)
             return null;
-        return Collections.unmodifiableCollection(students);
+        return Collections.unmodifiableMap(students);
     }
 
     /**
      * @return the following
      */
-    public Collection<FollowingLesson> getFollowingLessons() {
+    public Map<Long, FollowingLesson> getFollowingLessons() {
         if (following_lesson == null)
             return null;
-        return Collections.unmodifiableCollection(following_lesson);
+        return Collections.unmodifiableMap(following_lesson);
     }
 
     /**
      * @return the teaching
      */
-    public Collection<TeachingLesson> getTeachingLessons() {
+    public Map<Long, TeachingLesson> getTeachingLessons() {
         if (teaching_lesson == null)
             return null;
-        return Collections.unmodifiableCollection(teaching_lesson);
+        return Collections.unmodifiableMap(teaching_lesson);
     }
 }
