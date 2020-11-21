@@ -123,9 +123,9 @@ function setUser(usr) {
         for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a.teacher.lastName + a.teacher.firstName).localeCompare(b.teacher.lastName + b.teacher.firstName))) {
             console.log(value);
             $('#f-teachers-list').append(`
-            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${key}">
                 <div class="col d-flex justify-content-start align-items-center"><span class="fas fa-link mr-1"></span>${value.teacher.lastName}, ${value.teacher.firstName}</div>
-                <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary"><i class="fas fa-user-minus"></i></a></div>
+                <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${key})"><i class="fas fa-user-minus"></i></a></div>
             </div>
             `);
         }
@@ -134,9 +134,9 @@ function setUser(usr) {
         ws.onmessage = msg => {
             const c_msg = JSON.parse(msg);
             switch (c_msg.type) {
-                case "online":
+                case 'online':
                     break;
-                case "follower":
+                case 'follower':
                     break;
                 default:
                     break;
@@ -148,7 +148,6 @@ function setUser(usr) {
 
 function show_teachers() {
     $('#teachers-list').empty();
-
     fetch('http://' + config.host + ':' + config.service_port + '/users', {
         method: 'get',
         headers: { 'Authorization': 'Basic ' + user.id }
@@ -172,12 +171,44 @@ function show_teachers() {
 
 function follow_teachers() {
     $('#teachers-list').find('input:checked').each(function () {
-        fetch('http://' + config.host + ':' + config.service_port + '/follow/?student_id=' + user.id + '&teacher_id=' + this.getAttribute('teacher_id'), {
+        const teacher_id = this.getAttribute('teacher_id');
+        fetch('http://' + config.host + ':' + config.service_port + '/follow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
             method: 'post',
             headers: { 'Authorization': 'Basic ' + user.id }
         }).then(response => {
-            if (!response.ok)
+            if (response.ok) {
+                fetch('http://' + config.host + ':' + config.service_port + '/teachers/' + teacher_id, {
+                    method: 'get',
+                    headers: { 'Authorization': 'Basic ' + user.id }
+                }).then(response => {
+                    if (response.ok) {
+                        response.json().then(teacher => {
+                            user.teachers[teacher.id] = teacher;
+                            $('#f-teachers-list').append(`
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${teacher.id}">
+                                <div class="col d-flex justify-content-start align-items-center"><span class="fas fa-link mr-1"></span>${teacher.lastName}, ${teacher.firstName}</div>
+                                <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${teacher.id})"><i class="fas fa-user-minus"></i></a></div>
+                            </div>
+                            `);
+                        });
+                    } else
+                        alert(response.statusText);
+                });
+            } else
                 alert(response.statusText);
         });
+    });
+}
+
+function unfollow_teacher(teacher_id) {
+    fetch('http://' + config.host + ':' + config.service_port + '/unfollow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
+        method: 'post',
+        headers: { 'Authorization': 'Basic ' + user.id }
+    }).then(response => {
+        if (response.ok) {
+            delete user.teachers[teacher_id];
+            $('#f-teacher-' + teacher_id).remove();
+        } else
+            alert(response.statusText);
     });
 }

@@ -125,7 +125,7 @@ public class UserController {
     }
 
     static void getTeacher(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.queryParam("id"));
+        final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("retrieving teacher #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
@@ -137,7 +137,7 @@ public class UserController {
     }
 
     static void getStudent(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.queryParam("id"));
+        final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("retrieving student #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
@@ -149,7 +149,7 @@ public class UserController {
     }
 
     static void updateUser(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.queryParam("id"));
+        final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("updating user #{}..", user_id);
         final User user = ctx.bodyAsClass(User.class);
 

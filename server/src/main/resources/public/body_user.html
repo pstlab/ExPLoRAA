@@ -33,21 +33,23 @@
         <div class="tab-pane fade show active body-panel h-100 p-4" id="learn" role="tabpanel">
             <div class="row h-100">
                 <div class="col">
+                    <div class="row align-items-center">
+                        <div class="col d-flex justify-content-start">
+                            <h7>Stimoli</h7>
+                        </div>
+                    </div>
                     <div class="row h-75">
-                        <h7>Stimoli</h7>
-                        <div class="list-group list-group-flush" id="stimuli-list" role="tablist"> </div>
+                        <div class="list-group list-group-flush w-100" id="stimuli-list" role="tablist">
+                        </div>
                     </div>
                     <hr />
-                    <div class="row">
+                    <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
                             <h7>Lezioni seguite</h7>
                         </div>
                         <div class="col d-flex justify-content-end">
-                            <div class="btn-group">
-                                <a role="button" class="btn btn-sm btn-secondary"><i class="fas fa-folder-plus"></i></a>
-                                <a role="button" class="btn btn-sm btn-secondary disabled"><i
-                                        class="fas fa-folder-minus"></i></a>
-                            </div>
+                            <a role="button" class="btn btn-sm btn-secondary" onclick="show_lessons()"><i
+                                    class="fas fa-folder-plus"></i></a>
                         </div>
                     </div>
                     <div class="row h-25">
@@ -61,17 +63,13 @@
                     </div>
                 </div>
                 <div class="col">
-                    <div class="row">
+                    <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
                             <h7>Insegnanti seguiti</h7>
                         </div>
                         <div class="col d-flex justify-content-end">
-                            <div class="btn-group">
-                                <a role="button" class="btn btn-sm btn-secondary" onclick="show_teachers()"><i
-                                        class="fas fa-user-plus"></i></a>
-                                <a role="button" class="btn btn-sm btn-secondary disabled"><i
-                                        class="fas fa-user-minus"></i></a>
-                            </div>
+                            <a role="button" class="btn btn-sm btn-secondary" onclick="show_teachers()"><i
+                                    class="fas fa-user-plus"></i></a>
                         </div>
                     </div>
                     <div class="row h-100">
@@ -85,21 +83,23 @@
         <div class="tab-pane fade body-panel h-100 p-4" id="teach" role="tabpanel">
             <div class="row h-100">
                 <div class="col">
+                    <div class="row align-items-center">
+                        <div class="col d-flex justify-content-start">
+                            <h7>Lezioni insegnate</h7>
+                        </div>
+                        <div class="col d-flex justify-content-end">
+                            <a role="button" class="btn btn-sm btn-secondary" onclick="new_lesson()"><i
+                                    class="fas fa-user-plus"></i></a>
+                        </div>
+                    </div>
                     <div class="row h-75">
-                        <h7>Lezioni insegnate</h7>
-                        <div class="list-group list-group-flush t-lessons-list" id="t-lessons-list" role="tablist">
+                        <div class="list-group list-group-flush w-100" id="t-lessons-list" role="tablist">
                         </div>
                     </div>
                     <hr />
                     <div class="row">
                         <div class="col d-flex justify-content-start">
                             <h7>Studenti</h7>
-                        </div>
-                        <div class="col d-flex justify-content-end">
-                            <div class="btn-group">
-                                <a role="button" class="btn btn-sm btn-secondary disabled"><i
-                                        class="fas fa-user-minus"></i></a>
-                            </div>
                         </div>
                     </div>
                     <div class="row h-25">
