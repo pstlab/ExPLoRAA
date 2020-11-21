@@ -11,10 +11,12 @@ import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
+import java.util.stream.Collectors;
 
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
@@ -33,6 +35,7 @@ import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.http.UnauthorizedResponse;
+import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
@@ -114,30 +117,22 @@ public class App {
                     UserController.ONLINE.put(id, ctx);
                     final EntityManager em = App.EMF.createEntityManager();
                     final UserEntity user_entity = em.find(UserEntity.class, id);
-                    // we notify the teachers that a student has just connected..
-                    user_entity.getTeachers().stream()
-                            .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId()))
-                            .forEach(teacher -> {
-                                try {
-                                    UserController.ONLINE.get(teacher.getTeacher().getId())
-                                            .send(MAPPER.writeValueAsString(
-                                                    new Message.Online(teacher.getTeacher().getId(), true)));
-                                } catch (JsonProcessingException e) {
-                                    LOG.error(e.getMessage(), e);
-                                }
-                            });
-                    // we notify the students that a teacher has just connected..
-                    user_entity.getStudents().stream()
-                            .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId()))
-                            .forEach(student -> {
-                                try {
-                                    UserController.ONLINE.get(student.getStudent().getId())
-                                            .send(MAPPER.writeValueAsString(
-                                                    new Message.Online(student.getStudent().getId(), true)));
-                                } catch (JsonProcessingException e) {
-                                    LOG.error(e.getMessage(), e);
-                                }
-                            });
+
+                    Set<WsContext> ctxs = new HashSet<>();
+                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getTeacher().getId())
+                            .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
+                            .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
+                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getStudent().getId())
+                            .filter(student_id -> UserController.ONLINE.containsKey(student_id))
+                            .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
+
+                    try {
+                        for (WsContext ws_ctx : ctxs) {
+                            ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, true)));
+                        }
+                    } catch (JsonProcessingException e) {
+                        LOG.error(e.getMessage(), e);
+                    }
                 });
             });
             ws.onClose(ctx -> {
@@ -147,30 +142,22 @@ public class App {
                     UserController.ONLINE.remove(id);
                     final EntityManager em = App.EMF.createEntityManager();
                     final UserEntity user_entity = em.find(UserEntity.class, id);
-                    // we notify the teachers that a student has just disconnected..
-                    user_entity.getTeachers().stream()
-                            .filter(teacher -> UserController.ONLINE.containsKey(teacher.getTeacher().getId()))
-                            .forEach(teacher -> {
-                                try {
-                                    UserController.ONLINE.get(teacher.getTeacher().getId())
-                                            .send(MAPPER.writeValueAsString(
-                                                    new Message.Online(teacher.getTeacher().getId(), false)));
-                                } catch (JsonProcessingException e) {
-                                    LOG.error(e.getMessage(), e);
-                                }
-                            });
-                    // we notify the students that a teacher has just disconnected..
-                    user_entity.getStudents().stream()
-                            .filter(student -> UserController.ONLINE.containsKey(student.getStudent().getId()))
-                            .forEach(student -> {
-                                try {
-                                    UserController.ONLINE.get(student.getStudent().getId())
-                                            .send(MAPPER.writeValueAsString(
-                                                    new Message.Online(student.getStudent().getId(), false)));
-                                } catch (JsonProcessingException e) {
-                                    LOG.error(e.getMessage(), e);
-                                }
-                            });
+
+                    Set<WsContext> ctxs = new HashSet<>();
+                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getTeacher().getId())
+                            .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
+                            .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
+                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getStudent().getId())
+                            .filter(student_id -> UserController.ONLINE.containsKey(student_id))
+                            .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
+
+                    try {
+                        for (WsContext ws_ctx : ctxs) {
+                            ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, false)));
+                        }
+                    } catch (JsonProcessingException e) {
+                        LOG.error(e.getMessage(), e);
+                    }
                 });
             });
             ws.onMessage(ctx -> EXECUTOR.execute(() -> LOG.info("Received message {}..", ctx)));

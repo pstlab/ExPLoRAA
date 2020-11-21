@@ -121,27 +121,63 @@ function setUser(usr) {
         $('#profile-last-name').val(user.lastName);
 
         for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a.teacher.lastName + a.teacher.firstName).localeCompare(b.teacher.lastName + b.teacher.firstName))) {
-            console.log(value);
             $('#f-teachers-list').append(`
             <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${key}">
-                <div class="col d-flex justify-content-start align-items-center"><span class="fas fa-link mr-1"></span>${value.teacher.lastName}, ${value.teacher.firstName}</div>
+                <div class="col d-flex justify-content-start align-items-center"><span id="online-teacher-${key}" class="fas ${value.teacher.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.teacher.lastName}, ${value.teacher.firstName}</div>
                 <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${key})"><i class="fas fa-user-minus"></i></a></div>
+            </div>
+            `);
+        }
+
+        for (const [key, value] of Object.entries(user.students).sort((a, b) => (a.student.lastName + a.student.firstName).localeCompare(b.student.lastName + b.student.firstName))) {
+            $('#students-list').append(`
+            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="student-${key}">
+                <div class="col d-flex justify-content-start align-items-center"><span id="online-student-${key}" class="fas ${value.student.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.student.lastName}, ${value.student.firstName}</div>
             </div>
             `);
         }
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
         ws.onmessage = msg => {
-            const c_msg = JSON.parse(msg);
+            const c_msg = JSON.parse(msg.data);
             switch (c_msg.type) {
                 case 'online':
+                    if (c_msg.user in user.students) {
+                        user.students[c_msg.user].online = c_msg.online;
+                        $('#online-student-' + c_msg.user).removeClass('fa-link fa-unlink').addClass(c_msg.online ? 'fa-link' : 'fa-unlink');
+                    }
+                    if (c_msg.user in user.teachers) {
+                        user.teachers[c_msg.user].online = c_msg.online;
+                        $('#online-teacher-' + c_msg.user).removeClass('fa-link fa-unlink').addClass(c_msg.online ? 'fa-link' : 'fa-unlink');
+                    }
                     break;
                 case 'follower':
+                    if (c_msg.added) {
+                        fetch('http://' + config.host + ':' + config.service_port + '/students/' + c_msg.student, {
+                            method: 'get',
+                            headers: { 'Authorization': 'Basic ' + user.id }
+                        }).then(response => {
+                            if (response.ok) {
+                                response.json().then(student => {
+                                    user.students[student.id] = student;
+                                    $('#students-list').append(`
+                                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="student-${student.id}">
+                                        <div class="col d-flex justify-content-start align-items-center"><span id="online-student-${student.id}" class="fas ${student.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${student.lastName}, ${student.firstName}</div>
+                                    </div>
+                                    `);
+                                });
+                            } else
+                                alert(response.statusText);
+                        });
+                    } else {
+                        delete user.students[c_msg.student];
+                        $('#student-' + c_msg.student).remove();
+                    }
                     break;
                 default:
+                    console.log(msg);
                     break;
             }
-            console.log(msg);
         };
     });
 }
@@ -186,7 +222,7 @@ function follow_teachers() {
                             user.teachers[teacher.id] = teacher;
                             $('#f-teachers-list').append(`
                             <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${teacher.id}">
-                                <div class="col d-flex justify-content-start align-items-center"><span class="fas fa-link mr-1"></span>${teacher.lastName}, ${teacher.firstName}</div>
+                                <div class="col d-flex justify-content-start align-items-center"><span id="online-teacher-${teacher.id}" class="fas ${teacher.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${teacher.lastName}, ${teacher.firstName}</div>
                                 <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${teacher.id})"><i class="fas fa-user-minus"></i></a></div>
                             </div>
                             `);
