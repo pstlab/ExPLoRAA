@@ -19,7 +19,7 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
         @Type(value = Message.FollowLesson.class, name = "follow-lesson"),
         @Type(value = Message.UnfollowLesson.class, name = "unfollow-lesson"),
         @Type(value = Message.RemoveLesson.class, name = "remove-lesson") })
-public class Message {
+public abstract class Message {
 
     /**
      * This message is used for communicating that a user is now online/offline.
@@ -349,13 +349,15 @@ public class Message {
         private final long lesson_id;
         private final int id;
         private final long time;
+        private final boolean read;
 
         @JsonCreator
         public Stimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                @JsonProperty("time") long time) {
+                @JsonProperty("time") long time, @JsonProperty("read") boolean read) {
             this.lesson_id = lesson_id;
             this.id = id;
             this.time = time;
+            this.read = read;
         }
 
         /**
@@ -380,6 +382,13 @@ public class Message {
         }
 
         /**
+         * @return the read state
+         */
+        public boolean isRead() {
+            return read;
+        }
+
+        /**
          * This message is used for communicating the creation of a new text stimulus.
          */
         public static class TextStimulus extends Stimulus {
@@ -388,8 +397,9 @@ public class Message {
 
             @JsonCreator
             public TextStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                    @JsonProperty("time") long time, @JsonProperty("content") String content) {
-                super(lesson_id, id, time);
+                    @JsonProperty("time") long time, @JsonProperty("read") boolean read,
+                    @JsonProperty("content") String content) {
+                super(lesson_id, id, time, read);
                 this.content = content;
             }
 
@@ -413,9 +423,10 @@ public class Message {
 
             @JsonCreator
             public QuestionStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                    @JsonProperty("time") long time, @JsonProperty("question") String question,
-                    @JsonProperty("answers") List<String> answers, @JsonProperty("answer") Integer answer) {
-                super(lesson_id, id, time);
+                    @JsonProperty("time") long time, @JsonProperty("read") boolean read,
+                    @JsonProperty("question") String question, @JsonProperty("answers") List<String> answers,
+                    @JsonProperty("answer") Integer answer) {
+                super(lesson_id, id, time, read);
                 this.question = question;
                 this.answers = answers;
                 this.answer = answer;
@@ -489,9 +500,9 @@ public class Message {
 
             @JsonCreator
             public URLStimulus(@JsonProperty("lessonId") long lesson_id, @JsonProperty("id") int id,
-                    @JsonProperty("time") long time, @JsonProperty("content") String content,
-                    @JsonProperty("url") String url) {
-                super(lesson_id, id, time);
+                    @JsonProperty("time") long time, @JsonProperty("read") boolean read,
+                    @JsonProperty("content") String content, @JsonProperty("url") String url) {
+                super(lesson_id, id, time, read);
                 this.content = content;
                 this.url = url;
             }
