@@ -90,22 +90,35 @@ public class App {
         // we create the routes..
         app.routes(() -> {
             post("login", UserController::login, roles(ExplRole.Guest, ExplRole.Admin));
-            path("users", () -> {
-                get(UserController::getAllUsers, roles(ExplRole.Admin, ExplRole.User));
+            path("user", () -> {
                 post(UserController::createUser, roles(ExplRole.Guest, ExplRole.Admin));
+                path("follow", () -> post(UserController::followUser, roles(ExplRole.Admin, ExplRole.User)));
+                path("unfollow", () -> post(UserController::unfollowUser, roles(ExplRole.Admin, ExplRole.User)));
                 path(":id", () -> {
                     get(UserController::getUser, roles(ExplRole.Admin, ExplRole.User));
                     post(UserController::updateUser, roles(ExplRole.Admin, ExplRole.User));
                     delete(UserController::deleteUser, roles(ExplRole.Admin, ExplRole.User));
                 });
             });
-            path("follow", () -> post(UserController::followUser, roles(ExplRole.Admin, ExplRole.User)));
-            path("unfollow", () -> post(UserController::unfollowUser, roles(ExplRole.Admin, ExplRole.User)));
-            path("teachers", () -> {
-                path(":id", () -> get(UserController::getTeacher, roles(ExplRole.Admin, ExplRole.User)));
+            path("users", () -> get(UserController::getAllUsers, roles(ExplRole.Admin)));
+            path("teacher/:id", () -> get(UserController::getTeacher, roles(ExplRole.Admin, ExplRole.User)));
+            path("teachers/:id", () -> get(UserController::getTeachers, roles(ExplRole.Admin, ExplRole.User)));
+            path("student/:id", () -> get(UserController::getStudent, roles(ExplRole.Admin, ExplRole.User)));
+            path("lesson", () -> {
+                post(LessonController::createLesson, roles(ExplRole.Admin, ExplRole.User));
+                path("follow", () -> post(LessonController::followLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("unfollow", () -> post(LessonController::unfollowLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("play/:id", () -> post(LessonController::playLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("pause/:id", () -> post(LessonController::pauseLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path("stop/:id", () -> post(LessonController::stopLesson, roles(ExplRole.Admin, ExplRole.User)));
+                path(":id", () -> {
+                    get(LessonController::getLesson, roles(ExplRole.Admin, ExplRole.User));
+                    delete(LessonController::deleteLesson, roles(ExplRole.Admin, ExplRole.User));
+                });
             });
-            path("students", () -> {
-                path(":id", () -> get(UserController::getStudent, roles(ExplRole.Admin, ExplRole.User)));
+            path("lessons", () -> {
+                get(LessonController::getAllLessons, roles(ExplRole.Admin));
+                path(":id", () -> get(LessonController::getFollowableLessons, roles(ExplRole.Admin, ExplRole.User)));
             });
         });
 

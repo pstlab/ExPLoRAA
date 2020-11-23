@@ -69,7 +69,7 @@ function signin() {
     form.append('password', password);
     form.append('first_name', first_name);
     form.append('last_name', last_name);
-    fetch('http://' + config.host + ':' + config.service_port + '/users', {
+    fetch('http://' + config.host + ':' + config.service_port + '/user', {
         method: 'post',
         body: form
     }).then(response => {
@@ -83,7 +83,7 @@ function signin() {
 }
 
 function delete_user() {
-    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/user/' + user.id, {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
@@ -97,7 +97,7 @@ function delete_user() {
 function update_user() {
     user.firstName = $('#profile-first-name').val();
     user.lastName = $('#profile-last-name').val();
-    fetch('http://' + config.host + ':' + config.service_port + '/users/' + user.id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/user/' + user.id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + user.id },
         body: JSON.stringify(user)
@@ -153,7 +153,7 @@ function setUser(usr) {
                     break;
                 case 'follower':
                     if (c_msg.added) {
-                        fetch('http://' + config.host + ':' + config.service_port + '/students/' + c_msg.student, {
+                        fetch('http://' + config.host + ':' + config.service_port + '/student/' + c_msg.student, {
                             method: 'get',
                             headers: { 'Authorization': 'Basic ' + user.id }
                         }).then(response => {
@@ -184,13 +184,13 @@ function setUser(usr) {
 
 function show_teachers() {
     $('#teachers-list').empty();
-    fetch('http://' + config.host + ':' + config.service_port + '/users', {
+    fetch('http://' + config.host + ':' + config.service_port + '/teachers/' + user.id, {
         method: 'get',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
         if (response.ok) {
             response.json().then(data => {
-                data.filter(teacher => teacher.id != user.id && !(teacher.id in user.teachers)).forEach(teacher => {
+                data.forEach(teacher => {
                     $('#teachers-list').append(`
                     <div class="list-group-item list-group-item-action custom-control custom-checkbox">
                         <input id="teacher-${teacher.id}" type="checkbox" teacher_id="${teacher.id}">
@@ -208,12 +208,12 @@ function show_teachers() {
 function follow_teachers() {
     $('#teachers-list').find('input:checked').each(function () {
         const teacher_id = this.getAttribute('teacher_id');
-        fetch('http://' + config.host + ':' + config.service_port + '/follow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
+        fetch('http://' + config.host + ':' + config.service_port + '/user/follow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
             method: 'post',
             headers: { 'Authorization': 'Basic ' + user.id }
         }).then(response => {
             if (response.ok) {
-                fetch('http://' + config.host + ':' + config.service_port + '/teachers/' + teacher_id, {
+                fetch('http://' + config.host + ':' + config.service_port + '/teacher/' + teacher_id, {
                     method: 'get',
                     headers: { 'Authorization': 'Basic ' + user.id }
                 }).then(response => {
@@ -237,13 +237,36 @@ function follow_teachers() {
 }
 
 function unfollow_teacher(teacher_id) {
-    fetch('http://' + config.host + ':' + config.service_port + '/unfollow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/user/unfollow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
         if (response.ok) {
             delete user.teachers[teacher_id];
             $('#f-teacher-' + teacher_id).remove();
+        } else
+            alert(response.statusText);
+    });
+}
+
+function show_lessons() {
+    $('#lessons-list').empty();
+    fetch('http://' + config.host + ':' + config.service_port + '/lessons/' + user.id, {
+        method: 'get',
+        headers: { 'Authorization': 'Basic ' + user.id }
+    }).then(response => {
+        if (response.ok) {
+            response.json().then(data => {
+                data.forEach(lesson => {
+                    $('#lessons-list').append(`
+                    <div class="list-group-item list-group-item-action custom-control custom-checkbox">
+                        <input id="lesson-${lesson.id}" type="checkbox" lesson="${lesson.id}">
+                        <label for="lesson-${lesson.id}">${lesson.name}</label>
+                    </div>
+                    `);
+                });
+                $('#show-lessons-modal').modal('show');
+            });
         } else
             alert(response.statusText);
     });

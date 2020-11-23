@@ -93,7 +93,7 @@
                         </div>
                         <div class="col d-flex justify-content-end">
                             <a role="button" class="btn btn-sm btn-secondary" onclick="new_lesson()"><i
-                                    class="fas fa-user-plus"></i></a>
+                                    class="fas fa-folder-plus"></i></a>
                         </div>
                     </div>
                     <div class="row h-75">
@@ -157,6 +157,28 @@
                     <button type="button" class="btn btn-sm btn-danger" data-dismiss="modal"
                         onclick="delete_user()">Cancella</button>
                     <button type="button" class="btn btn-sm btn-primary" onclick="update_user()">Aggiorna</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="show-lessons-modal" tabindex="-1" role="dialog"
+        aria-labelledby="show-lessons-modal-label" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="show-lessons-modal-label">Lezioni</h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div class="list-group list-group-flush overflow-auto" id="lessons-list">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"
+                        onclick="follow_lessons()">Segui</button>
                 </div>
             </div>
         </div>

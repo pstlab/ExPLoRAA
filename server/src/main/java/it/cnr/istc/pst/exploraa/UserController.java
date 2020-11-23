@@ -136,6 +136,20 @@ public class UserController {
         em.close();
     }
 
+    static void getTeachers(final Context ctx) {
+        final long user_id = Long.valueOf(ctx.pathParam("id"));
+        LOG.info("retrieving available teachers for user #{}..", user_id);
+        final EntityManager em = App.EMF.createEntityManager();
+        TypedQuery<UserEntity> teachers_query = em.createQuery(
+                "SELECT ue FROM UserEntity ue WHERE ue.id != :id AND ue.id NOT IN (SELECT fllw.teacher.id FROM FollowingEntity fllw WHERE fllw.student.id = :id)",
+                UserEntity.class);
+        teachers_query.setParameter("id", user_id);
+        List<UserEntity> teachers = teachers_query.getResultList();
+
+        ctx.json(teachers.stream().map(user -> toTeacher(user)).collect(Collectors.toList()));
+        em.close();
+    }
+
     static void getStudent(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("retrieving student #{}..", user_id);

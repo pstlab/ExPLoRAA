@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -43,6 +44,24 @@ public class LessonController {
                 .getResultList();
 
         ctx.json(lesson_entities.stream().map(lesson -> toLesson(lesson)).collect(Collectors.toList()));
+        em.close();
+    }
+
+    static void getFollowableLessons(final Context ctx) {
+        final long user_id = Long.valueOf(ctx.pathParam("id"));
+        LOG.info("retrieving followable lessons for user #{}..", user_id);
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity user_entity = em.find(UserEntity.class, user_id);
+        if (user_entity == null)
+            throw new NotFoundResponse();
+
+        Map<Long, LessonEntity> lessons = user_entity.getTeachers().stream().map(fllw -> fllw.getTeacher())
+                .flatMap(tchr -> tchr.getTeachingLessons().stream().map(tchng -> tchng.getLesson()))
+                .collect(Collectors.toMap(LessonEntity::getId, Function.identity()));
+        user_entity.getFollowingLessons().stream().map(fllw -> fllw.getLesson().getId())
+                .forEach(id -> lessons.remove(id));
+
+        ctx.json(lessons.values().stream().map(lesson -> toLesson(lesson)).collect(Collectors.toList()));
         em.close();
     }
 
