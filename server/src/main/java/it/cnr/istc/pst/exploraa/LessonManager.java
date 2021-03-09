@@ -1,6 +1,5 @@
 package it.cnr.istc.pst.exploraa;
 
-import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -9,33 +8,24 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Set;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.stream.JsonReader;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import it.cnr.istc.pst.exploraa.api.Lesson.LessonState;
 import it.cnr.istc.pst.exploraa.api.Message.Stimulus;
 import it.cnr.istc.pst.exploraa.api.Message.Token;
+import it.cnr.istc.pst.oratio.Atom;
+import it.cnr.istc.pst.oratio.Item;
+import it.cnr.istc.pst.oratio.Predicate;
 import it.cnr.istc.pst.oratio.Solver;
-import it.cnr.istc.pst.oratio.riddle.Atom;
-import it.cnr.istc.pst.oratio.riddle.Core;
-import it.cnr.istc.pst.oratio.riddle.CoreDeserializer;
-import it.cnr.istc.pst.oratio.riddle.Item;
-import it.cnr.istc.pst.oratio.riddle.Predicate;
-import it.cnr.istc.pst.oratio.riddle.Type;
+import it.cnr.istc.pst.oratio.Type;
 
 public class LessonManager {
 
     static final Logger LOG = LoggerFactory.getLogger(LessonManager.class);
-    private final CoreDeserializer deserializer = new CoreDeserializer();
-    private final Gson gson = new GsonBuilder().registerTypeAdapter(Core.class, deserializer).create();
     private final long lesson_id;
     private final String model;
     private final Solver solver = new Solver();
-    private Core core;
     private final Set<String> topics = new HashSet<>();
     private final Collection<Stimulus> stimuli = new ArrayList<>();
     private final Collection<Token> tokens = new ArrayList<>();
@@ -51,17 +41,10 @@ public class LessonManager {
     public void solve() {
         solver.read(model); // we load the planning problem..
         solver.solve(); // we solve the planning problem..
-        final String state = solver.getState(); // we get the current state of the solver (i.e., the planning problem
-                                                // solution)..
-
-        core = new Core();
-        core.read(model);
-        deserializer.setCore(core);
-        gson.fromJson(new JsonReader(new StringReader(state)), Core.class);
 
         // we collect the atoms from the solution..
         final Map<Item, Collection<Atom>> atoms = new IdentityHashMap<>();
-        for (final Type t : core.getTypes().values()) {
+        for (final Type t : solver.getTypes().values()) {
             if (t.getName().equals("Lesson")) {
                 t.getInstances().forEach(i -> atoms.put(i, new ArrayList<>()));
                 for (final Predicate p : t.getPredicates().values())
@@ -79,13 +62,16 @@ public class LessonManager {
 
         // we extract the tokens from the solution..
         for (final Map.Entry<Item, Collection<Atom>> i_atoms : atoms.entrySet())
-            for (final Atom atom : i_atoms.getValue()) {
-                final Token token = new Token(lesson_id, ((Item.ArithItem) atom.getExpr("id")).getValue().intValue(),
-                        ((Item.ArithItem) atom.getExpr("start")).getValue().longValue());
-                tokens.add(token);
-                for (final LessonManagerListener listener : listeners)
-                    listener.newToken(token);
-            }
+            for (final Atom atom : i_atoms.getValue())
+                try {
+                    Token token = new Token(lesson_id, ((Item.ArithItem) atom.get("id")).getValue().intValue(),
+                            ((Item.ArithItem) atom.get("start")).getValue().longValue());
+                    tokens.add(token);
+                    for (final LessonManagerListener listener : listeners)
+                        listener.newToken(token);
+                } catch (NoSuchFieldException e) {
+                    LOG.error("Cannot find field", e);
+                }
     }
 
     public void play() {
