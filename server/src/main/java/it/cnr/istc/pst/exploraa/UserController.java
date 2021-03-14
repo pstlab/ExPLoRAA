@@ -59,16 +59,15 @@ public class UserController {
         final TypedQuery<UserEntity> query = em.createQuery("SELECT u FROM UserEntity u WHERE u.email = :email",
                 UserEntity.class);
         query.setParameter("email", email);
-        UserEntity user_entity = null;
         try {
-            user_entity = query.getSingleResult();
+            final UserEntity user_entity = query.getSingleResult();
+            if (!App.hashPassword(password, user_entity.getSalt()).equals(user_entity.getPassword()))
+                throw new ForbiddenResponse();
+
+            ctx.json(toUser(user_entity));
         } catch (final NoResultException e) {
             throw new NotFoundResponse();
         }
-        if (!App.hashPassword(password, user_entity.getSalt()).equals(user_entity.getPassword()))
-            throw new ForbiddenResponse();
-
-        ctx.json(toUser(user_entity));
         em.close();
     }
 
@@ -159,21 +158,24 @@ public class UserController {
     }
 
     /**
-     * Returns all the following teachers of the user having the given id.
+     * Returns all the teachers which can be followed by the user having the given
+     * id.
      * 
      * @param ctx
      */
-    static void getTeachers(final Context ctx) {
+    static void getFollowableTeachers(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("retrieving available teachers for user #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
-        TypedQuery<UserEntity> teachers_query = em.createQuery(
-                "SELECT ue FROM UserEntity ue WHERE ue.id != :id AND ue.id NOT IN (SELECT fllw.teacher.id FROM FollowingEntity fllw WHERE fllw.student.id = :id)",
-                UserEntity.class);
-        teachers_query.setParameter("id", user_id);
-        List<UserEntity> teachers = teachers_query.getResultList();
+        final UserEntity user_entity = em.find(UserEntity.class, user_id);
+        if (user_entity == null)
+            throw new NotFoundResponse();
+        final List<UserEntity> user_entities = em.createQuery("SELECT ue FROM UserEntity ue", UserEntity.class)
+                .getResultList();
+        user_entities.remove(user_entity);
+        user_entities.removeAll(user_entity.getTeachers());
 
-        ctx.json(teachers.stream().map(user -> toTeacher(user)).collect(Collectors.toList()));
+        ctx.json(user_entities.stream().map(user -> toTeacher(user)).collect(Collectors.toList()));
         em.close();
     }
 
@@ -230,6 +232,7 @@ public class UserController {
     static void followUser(final Context ctx) {
         final long student_id = Long.valueOf(ctx.queryParam("student_id"));
         final long teacher_id = Long.valueOf(ctx.queryParam("teacher_id"));
+        LOG.info("student #{} is following teacher #{}..", student_id, teacher_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity student_entity = em.find(UserEntity.class, student_id);
         if (student_entity == null)
@@ -245,6 +248,7 @@ public class UserController {
 
         if (ONLINE.containsKey(teacher_id))
             try {
+                LOG.info("communicating the following to teacher #{}..", teacher_id);
                 ONLINE.get(teacher_id).send(App.MAPPER.writeValueAsString(new Message.Follower(student_id, true)));
             } catch (JsonProcessingException e) {
                 LOG.error(e.getMessage(), e);
@@ -257,6 +261,7 @@ public class UserController {
     static void unfollowUser(final Context ctx) {
         final long student_id = Long.valueOf(ctx.queryParam("student_id"));
         final long teacher_id = Long.valueOf(ctx.queryParam("teacher_id"));
+        LOG.info("student #{} is unfollowing teacher #{}..", student_id, teacher_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity student_entity = em.find(UserEntity.class, student_id);
         if (student_entity == null)
@@ -272,6 +277,7 @@ public class UserController {
 
         if (ONLINE.containsKey(teacher_id))
             try {
+                LOG.info("communicating the unfollowing to teacher #{}..", teacher_id);
                 ONLINE.get(teacher_id).send(App.MAPPER.writeValueAsString(new Message.Follower(student_id, false)));
             } catch (JsonProcessingException e) {
                 LOG.error(e.getMessage(), e);

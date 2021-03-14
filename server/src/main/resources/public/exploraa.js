@@ -123,7 +123,7 @@ function setUser(usr) {
         for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a.teacher.lastName + a.teacher.firstName).localeCompare(b.teacher.lastName + b.teacher.firstName))) {
             $('#f-teachers-list').append(`
             <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${key}">
-                <div class="col d-flex justify-content-start align-items-center"><span id="online-teacher-${key}" class="fas ${value.teacher.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.teacher.lastName}, ${value.teacher.firstName}</div>
+                <div class="col d-flex justify-content-start align-items-center"><span id="online-teacher-${key}" class="fas ${value.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.lastName}, ${value.firstName}</div>
                 <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${key})"><i class="fas fa-user-minus"></i></a></div>
             </div>
             `);
@@ -132,7 +132,7 @@ function setUser(usr) {
         for (const [key, value] of Object.entries(user.students).sort((a, b) => (a.student.lastName + a.student.firstName).localeCompare(b.student.lastName + b.student.firstName))) {
             $('#students-list').append(`
             <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="student-${key}">
-                <div class="col d-flex justify-content-start align-items-center"><span id="online-student-${key}" class="fas ${value.student.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.student.lastName}, ${value.student.firstName}</div>
+                <div class="col d-flex justify-content-start align-items-center"><span id="online-student-${key}" class="fas ${value.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.lastName}, ${value.firstName}</div>
             </div>
             `);
         }

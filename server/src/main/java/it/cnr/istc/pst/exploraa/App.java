@@ -101,7 +101,8 @@ public class App {
             });
             path("users", () -> get(UserController::getAllUsers, roles(ExplRole.Admin)));
             path("teacher/:id", () -> get(UserController::getTeacher, roles(ExplRole.Admin, ExplRole.User)));
-            path("teachers/:id", () -> get(UserController::getTeachers, roles(ExplRole.Admin, ExplRole.User)));
+            path("teachers/:id",
+                    () -> get(UserController::getFollowableTeachers, roles(ExplRole.Admin, ExplRole.User)));
             path("student/:id", () -> get(UserController::getStudent, roles(ExplRole.Admin, ExplRole.User)));
             path("lesson", () -> {
                 post(LessonController::createLesson, roles(ExplRole.Admin, ExplRole.User));
@@ -176,6 +177,10 @@ public class App {
         }, roles(ExplRole.Admin, ExplRole.User));
 
         app.start();
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            app.stop();
+        }));
     }
 
     static Role getRole(final Context ctx) {
