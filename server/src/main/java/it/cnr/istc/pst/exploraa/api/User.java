@@ -14,10 +14,10 @@ public class User {
     private final String last_name;
     private final Map<String, Parameter> par_types;
     private final Map<String, Map<String, String>> par_values;
-    private final Map<Long, Following> teachers;
-    private final Map<Long, Following> students;
-    private final Map<Long, FollowingLesson> following_lesson;
-    private final Map<Long, TeachingLesson> teaching_lesson;
+    private final Map<Long, User> teachers;
+    private final Map<Long, User> students;
+    private final Map<Long, Lesson> following_lesson;
+    private final Map<Long, Lesson> teaching_lesson;
     private final boolean online;
 
     @JsonCreator
@@ -25,10 +25,9 @@ public class User {
             @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
             @JsonProperty("parameterTypes") Map<String, Parameter> par_types,
             @JsonProperty("parameterValues") Map<String, Map<String, String>> par_values,
-            @JsonProperty("teachers") Map<Long, Following> teachers,
-            @JsonProperty("students") Map<Long, Following> students,
-            @JsonProperty("followingLessons") Map<Long, FollowingLesson> following_lesson,
-            @JsonProperty("teachingLessons") Map<Long, TeachingLesson> teaching_lesson,
+            @JsonProperty("teachers") Map<Long, User> teachers, @JsonProperty("students") Map<Long, User> students,
+            @JsonProperty("followingLessons") Map<Long, Lesson> following_lesson,
+            @JsonProperty("teachingLessons") Map<Long, Lesson> teaching_lesson,
             @JsonProperty("online") boolean online) {
         this.id = id;
         this.email = email;
@@ -96,13 +95,13 @@ public class User {
         return Collections.unmodifiableMap(par_values);
     }
 
-    public Map<Long, Following> getTeachers() {
+    public Map<Long, User> getTeachers() {
         if (teachers == null)
             return null;
         return Collections.unmodifiableMap(teachers);
     }
 
-    public Map<Long, Following> getStudents() {
+    public Map<Long, User> getStudents() {
         if (students == null)
             return null;
         return Collections.unmodifiableMap(students);
@@ -111,7 +110,7 @@ public class User {
     /**
      * @return the following
      */
-    public Map<Long, FollowingLesson> getFollowingLessons() {
+    public Map<Long, Lesson> getFollowingLessons() {
         if (following_lesson == null)
             return null;
         return Collections.unmodifiableMap(following_lesson);
@@ -120,7 +119,7 @@ public class User {
     /**
      * @return the teaching
      */
-    public Map<Long, TeachingLesson> getTeachingLessons() {
+    public Map<Long, Lesson> getTeachingLessons() {
         if (teaching_lesson == null)
             return null;
         return Collections.unmodifiableMap(teaching_lesson);

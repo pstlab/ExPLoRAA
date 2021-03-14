@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import it.cnr.istc.pst.exploraa.api.Lesson.LessonState;
 import it.cnr.istc.pst.exploraa.api.Message.Stimulus;
 import it.cnr.istc.pst.exploraa.api.Message.Token;
+import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.oratio.Atom;
 import it.cnr.istc.pst.oratio.Item;
 import it.cnr.istc.pst.oratio.Predicate;
@@ -23,8 +24,7 @@ import it.cnr.istc.pst.oratio.Type;
 public class LessonManager {
 
     static final Logger LOG = LoggerFactory.getLogger(LessonManager.class);
-    private final long lesson_id;
-    private final String model;
+    private final LessonEntity lesson;
     private final Solver solver = new Solver();
     private final Set<String> topics = new HashSet<>();
     private final Collection<Stimulus> stimuli = new ArrayList<>();
@@ -33,13 +33,12 @@ public class LessonManager {
     private long time = 0;
     private final Collection<LessonManagerListener> listeners = new ArrayList<>();
 
-    public LessonManager(final long lesson_id, final String model) {
-        this.lesson_id = lesson_id;
-        this.model = model;
+    public LessonManager(final LessonEntity lesson) {
+        this.lesson = lesson;
     }
 
     public void solve() {
-        solver.read(model); // we load the planning problem..
+        solver.read(new String()); // we load the planning problem..
         solver.solve(); // we solve the planning problem..
 
         // we collect the atoms from the solution..
@@ -64,7 +63,7 @@ public class LessonManager {
         for (final Map.Entry<Item, Collection<Atom>> i_atoms : atoms.entrySet())
             for (final Atom atom : i_atoms.getValue())
                 try {
-                    Token token = new Token(lesson_id, ((Item.ArithItem) atom.get("id")).getValue().intValue(),
+                    Token token = new Token(lesson.getId(), ((Item.ArithItem) atom.get("id")).getValue().intValue(),
                             ((Item.ArithItem) atom.get("start")).getValue().longValue());
                     tokens.add(token);
                     for (final LessonManagerListener listener : listeners)

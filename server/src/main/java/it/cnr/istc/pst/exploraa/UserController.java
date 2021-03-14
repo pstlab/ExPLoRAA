@@ -20,14 +20,10 @@ import io.javalin.http.ForbiddenResponse;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.App.ExplRole;
-import it.cnr.istc.pst.exploraa.api.Following;
-import it.cnr.istc.pst.exploraa.api.FollowingLesson;
+import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.Parameter;
-import it.cnr.istc.pst.exploraa.api.TeachingLesson;
 import it.cnr.istc.pst.exploraa.api.User;
-import it.cnr.istc.pst.exploraa.db.FollowingEntity;
-import it.cnr.istc.pst.exploraa.db.FollowingId;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 public class UserController {
@@ -48,6 +44,12 @@ public class UserController {
      */
     static final Map<Long, Map<String, Map<String, String>>> PARAMETER_VALUES = new HashMap<>();
 
+    /**
+     * Given an email and a password, returns the user corresponding to the email if
+     * the password corresponds to the stored one.
+     * 
+     * @param ctx
+     */
     static void login(final Context ctx) {
         final String email = ctx.formParam("email");
         final String password = ctx.formParam("password");
@@ -61,7 +63,7 @@ public class UserController {
         try {
             user_entity = query.getSingleResult();
         } catch (final NoResultException e) {
-            throw new ForbiddenResponse();
+            throw new NotFoundResponse();
         }
         if (!App.hashPassword(password, user_entity.getSalt()).equals(user_entity.getPassword()))
             throw new ForbiddenResponse();
@@ -70,6 +72,11 @@ public class UserController {
         em.close();
     }
 
+    /**
+     * Returns all the stored users.
+     * 
+     * @param ctx
+     */
     static void getAllUsers(final Context ctx) {
         LOG.info("retrieving all users..");
         final EntityManager em = App.EMF.createEntityManager();
@@ -80,6 +87,11 @@ public class UserController {
         em.close();
     }
 
+    /**
+     * Creates a new user and stores it into the database.
+     * 
+     * @param ctx
+     */
     static void createUser(final Context ctx) {
         final String email = ctx.formParam("email");
         final String salt = App.generateSalt();
@@ -112,6 +124,11 @@ public class UserController {
         em.close();
     }
 
+    /**
+     * Returns, if exists, a stored user having the given id.
+     * 
+     * @param ctx
+     */
     static void getUser(final Context ctx) {
         final long user_id = Long.valueOf(ctx.queryParam("id"));
         LOG.info("retrieving user #{}..", user_id);
@@ -124,6 +141,11 @@ public class UserController {
         em.close();
     }
 
+    /**
+     * Returns, if exists, a stored teacher having the given id.
+     * 
+     * @param ctx
+     */
     static void getTeacher(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("retrieving teacher #{}..", user_id);
@@ -136,6 +158,11 @@ public class UserController {
         em.close();
     }
 
+    /**
+     * Returns all the following teachers of the user having the given id.
+     * 
+     * @param ctx
+     */
     static void getTeachers(final Context ctx) {
         final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("retrieving available teachers for user #{}..", user_id);
@@ -212,12 +239,8 @@ public class UserController {
             throw new NotFoundResponse();
 
         em.getTransaction().begin();
-        FollowingEntity following_entity = new FollowingEntity();
-        following_entity.setStudent(student_entity);
-        following_entity.setTeacher(teacher_entity);
-        student_entity.addTeacher(following_entity);
-        teacher_entity.addStudent(following_entity);
-        em.persist(following_entity);
+        student_entity.addTeacher(teacher_entity);
+        teacher_entity.addStudent(student_entity);
         em.getTransaction().commit();
 
         if (ONLINE.containsKey(teacher_id))
@@ -241,14 +264,10 @@ public class UserController {
         final UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
         if (teacher_entity == null)
             throw new NotFoundResponse();
-        FollowingEntity following_entity = em.find(FollowingEntity.class, new FollowingId(student_id, teacher_id));
-        if (following_entity == null)
-            throw new NotFoundResponse();
 
         em.getTransaction().begin();
-        student_entity.removeTeacher(following_entity);
-        teacher_entity.removeStudent(following_entity);
-        em.remove(following_entity);
+        student_entity.removeTeacher(teacher_entity);
+        teacher_entity.removeStudent(student_entity);
         em.getTransaction().commit();
 
         if (ONLINE.containsKey(teacher_id))
@@ -266,17 +285,15 @@ public class UserController {
         final boolean online = ONLINE.containsKey(entity.getId());
         final Map<String, Parameter> par_types = online ? PARAMETER_TYPES.get(entity.getId()) : null;
         final Map<String, Map<String, String>> par_vals = online ? PARAMETER_VALUES.get(entity.getId()) : null;
-        final Map<Long, Following> teachers = entity.getTeachers().stream()
-                .map(t -> new Following(null, toTeacher(t.getTeacher())))
-                .collect(Collectors.toMap(f -> f.getTeacher().getId(), f -> f));
-        final Map<Long, Following> students = entity.getStudents().stream()
-                .map(s -> new Following(toStudent(s.getStudent()), null))
-                .collect(Collectors.toMap(f -> f.getStudent().getId(), f -> f));
-        final Map<Long, FollowingLesson> following_lessons = entity.getFollowingLessons().stream()
-                .map(l -> LessonController.toFollowing(l))
-                .collect(Collectors.toMap(f -> f.getLesson().getId(), f -> f));
-        final Map<Long, TeachingLesson> teaching_lessons = entity.getTeachingLessons().stream()
-                .map(l -> LessonController.toTeaching(l)).collect(Collectors.toMap(f -> f.getLesson().getId(), f -> f));
+
+        final Map<Long, User> teachers = entity.getTeachers().stream().map(t -> toTeacher(t))
+                .collect(Collectors.toMap(t -> t.getId(), t -> t));
+        final Map<Long, User> students = entity.getStudents().stream().map(s -> toStudent(s))
+                .collect(Collectors.toMap(s -> s.getId(), s -> s));
+        final Map<Long, Lesson> following_lessons = entity.getFollowingLessons().stream()
+                .map(l -> LessonController.toFollowing(l)).collect(Collectors.toMap(l -> l.getId(), l -> l));
+        final Map<Long, Lesson> teaching_lessons = entity.getTeachingLessons().stream()
+                .map(l -> LessonController.toTeaching(l)).collect(Collectors.toMap(l -> l.getId(), l -> l));
 
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), par_types,
                 par_vals, teachers, students, following_lessons, teaching_lessons, online);

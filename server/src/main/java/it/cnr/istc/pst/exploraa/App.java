@@ -42,7 +42,7 @@ import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 public class App {
 
-    static final Logger LOG = LoggerFactory.getLogger(UserController.class);
+    static final Logger LOG = LoggerFactory.getLogger(App.class);
     static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
     static final ObjectMapper MAPPER = new ObjectMapper();
@@ -82,8 +82,7 @@ public class App {
                 // warning! we do not store the current time of the lesson, nor its state
                 // if the service is restarted, the lesson is not lost, yet its state is!
                 for (final LessonEntity l_entity : lessons)
-                    LessonController.LESSONS.put(l_entity.getId(),
-                            new LessonManager(l_entity.getId(), l_entity.getModel().getModel()));
+                    LessonController.LESSONS.put(l_entity.getId(), new LessonManager(l_entity));
             });
         });
 
@@ -132,10 +131,10 @@ public class App {
                     final UserEntity user_entity = em.find(UserEntity.class, id);
 
                     Set<WsContext> ctxs = new HashSet<>();
-                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getTeacher().getId())
+                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
                             .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
                             .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
-                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getStudent().getId())
+                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getId())
                             .filter(student_id -> UserController.ONLINE.containsKey(student_id))
                             .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
 
@@ -157,10 +156,10 @@ public class App {
                     final UserEntity user_entity = em.find(UserEntity.class, id);
 
                     Set<WsContext> ctxs = new HashSet<>();
-                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getTeacher().getId())
+                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
                             .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
                             .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
-                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getStudent().getId())
+                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getId())
                             .filter(student_id -> UserController.ONLINE.containsKey(student_id))
                             .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
 

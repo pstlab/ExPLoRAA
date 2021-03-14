@@ -9,9 +9,9 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 
 @Entity
 public class LessonEntity {
@@ -20,12 +20,14 @@ public class LessonEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
-    @ManyToOne
+    @ManyToOne(cascade = CascadeType.ALL)
     private LessonModelEntity model;
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
-    private TeachingLessonEntity teached_by;
-    @OneToMany(mappedBy = "lesson", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<FollowingLessonEntity> followed_by = new ArrayList<>();
+    @ManyToOne(cascade = CascadeType.ALL)
+    private UserEntity teacher;
+    @ManyToMany(cascade = CascadeType.ALL)
+    private final Collection<UserEntity> followed_by = new ArrayList<>();
+    @OneToMany
+    private final Collection<StimulusEntity> goals = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -53,23 +55,35 @@ public class LessonEntity {
         this.model = model;
     }
 
-    public TeachingLessonEntity getTeacher() {
-        return teached_by;
+    public UserEntity getTeacher() {
+        return teacher;
     }
 
-    public void setTeacher(TeachingLessonEntity teached_by) {
-        this.teached_by = teached_by;
+    public void setTeacher(UserEntity teacher) {
+        this.teacher = teacher;
     }
 
-    public Collection<FollowingLessonEntity> getStudents() {
+    public Collection<UserEntity> getStudents() {
         return Collections.unmodifiableCollection(followed_by);
     }
 
-    public void addStudent(FollowingLessonEntity student) {
+    public void addStudent(UserEntity student) {
         followed_by.add(student);
     }
 
-    public void removeStudent(FollowingLessonEntity student) {
+    public void removeStudent(UserEntity student) {
         followed_by.remove(student);
+    }
+
+    public Collection<StimulusEntity> getGoals() {
+        return Collections.unmodifiableCollection(goals);
+    }
+
+    public void addGoal(StimulusEntity goal) {
+        goals.add(goal);
+    }
+
+    public void removeGoal(StimulusEntity goal) {
+        goals.remove(goal);
     }
 }

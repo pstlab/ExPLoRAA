@@ -1,7 +1,6 @@
 package it.cnr.istc.pst.exploraa;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -19,14 +18,11 @@ import org.slf4j.LoggerFactory;
 import io.javalin.http.Context;
 import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
-import it.cnr.istc.pst.exploraa.api.FollowingLesson;
 import it.cnr.istc.pst.exploraa.api.Lesson;
-import it.cnr.istc.pst.exploraa.api.TeachingLesson;
 import it.cnr.istc.pst.exploraa.api.User;
-import it.cnr.istc.pst.exploraa.db.FollowingLessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonModelEntity;
-import it.cnr.istc.pst.exploraa.db.TeachingLessonEntity;
+import it.cnr.istc.pst.exploraa.db.StimulusEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
 public class LessonController {
@@ -55,11 +51,10 @@ public class LessonController {
         if (user_entity == null)
             throw new NotFoundResponse();
 
-        Map<Long, LessonEntity> lessons = user_entity.getTeachers().stream().map(fllw -> fllw.getTeacher())
-                .flatMap(tchr -> tchr.getTeachingLessons().stream().map(tchng -> tchng.getLesson()))
+        Map<Long, LessonEntity> lessons = user_entity.getTeachers().stream()
+                .flatMap(tchr -> tchr.getTeachingLessons().stream())
                 .collect(Collectors.toMap(LessonEntity::getId, Function.identity()));
-        user_entity.getFollowingLessons().stream().map(fllw -> fllw.getLesson().getId())
-                .forEach(id -> lessons.remove(id));
+        user_entity.getFollowingLessons().stream().map(fllw -> fllw.getId()).forEach(id -> lessons.remove(id));
 
         ctx.json(lessons.values().stream().map(lesson -> toLesson(lesson)).collect(Collectors.toList()));
         em.close();
@@ -69,21 +64,36 @@ public class LessonController {
         final String name = ctx.formParam("name");
         final long teacher_id = Long.parseLong(ctx.formParam("teacher_id"));
         final long model_id = Long.parseLong(ctx.formParam("model_id"));
+        final String[] students_ids = ctx.formParam("students_ids").split(";");
+        final String[] goals_ids = ctx.formParam("goals_ids").split(";");
 
         LOG.info("creating new lesson {}..", name);
-        final EntityManager em = App.EMF.createEntityManager();
-
         final LessonEntity lesson_entity = new LessonEntity();
         lesson_entity.setName(name);
-        lesson_entity.setTeacher(new TeachingLessonEntity(em.find(UserEntity.class, teacher_id), lesson_entity));
+
+        final EntityManager em = App.EMF.createEntityManager();
+
         final LessonModelEntity lme = em.find(LessonModelEntity.class, model_id);
         lesson_entity.setModel(lme);
+
+        UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+        lesson_entity.setTeacher(teacher_entity);
+        teacher_entity.addTeachingLesson(lesson_entity);
+
+        for (int i = 0; i < students_ids.length; i++) {
+            UserEntity student_entity = em.find(UserEntity.class, Long.parseLong(students_ids[i]));
+            lesson_entity.addStudent(student_entity);
+            student_entity.addFollowingLesson(lesson_entity);
+        }
+
+        for (int i = 0; i < goals_ids.length; i++)
+            lesson_entity.addGoal(em.find(StimulusEntity.class, Long.parseLong(goals_ids[i])));
 
         em.getTransaction().begin();
         em.persist(lesson_entity);
         em.getTransaction().commit();
 
-        final LessonManager lesson_manager = new LessonManager(lesson_entity.getId(), lme.getModel());
+        final LessonManager lesson_manager = new LessonManager(lesson_entity);
         LESSONS.put(lesson_entity.getId(), lesson_manager);
 
         ctx.status(201);
@@ -159,25 +169,38 @@ public class LessonController {
 
     static Lesson toLesson(final LessonEntity entity) {
         final LessonManager lesson_manager = LESSONS.get(entity.getId());
+        User teacher = new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
+                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null, null,
+                null, UserController.ONLINE.containsKey(entity.getTeacher().getId()));
+        Map<Long, User> students = entity.getStudents().stream()
+                .map(student -> new User(student.getId(), student.getEmail(), student.getFirstName(),
+                        student.getLastName(), null, null, null, null, null, null,
+                        UserController.ONLINE.containsKey(student.getId())))
+                .collect(Collectors.toMap(student -> student.getId(), student -> student));
         return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(),
-                toTeaching(entity.getTeacher()),
-                entity.getStudents().stream().map(student -> toFollowing(student))
-                        .collect(Collectors.toMap(following -> following.getUser().getId(), following -> following)),
-                lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
+                teacher, students, lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
                 lesson_manager.getTime());
     }
 
-    static TeachingLesson toTeaching(final TeachingLessonEntity entity) {
-        return new TeachingLesson(new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
-                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null, null,
-                null, UserController.ONLINE.containsKey(entity.getTeacher().getId())), null);
+    static Lesson toTeaching(final LessonEntity entity) {
+        final LessonManager lesson_manager = LESSONS.get(entity.getId());
+        Map<Long, User> students = entity.getStudents().stream()
+                .map(student -> new User(student.getId(), student.getEmail(), student.getFirstName(),
+                        student.getLastName(), null, null, null, null, null, null,
+                        UserController.ONLINE.containsKey(student.getId())))
+                .collect(Collectors.toMap(student -> student.getId(), student -> student));
+        return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(), null,
+                students, lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
+                lesson_manager.getTime());
     }
 
-    static FollowingLesson toFollowing(final FollowingLessonEntity entity) {
-        return new FollowingLesson(
-                new User(entity.getStudent().getId(), entity.getStudent().getEmail(),
-                        entity.getStudent().getFirstName(), entity.getStudent().getLastName(), null, null, null, null,
-                        null, null, UserController.ONLINE.containsKey(entity.getStudent().getId())),
-                null, new HashSet<>(entity.getInterests()));
+    static Lesson toFollowing(final LessonEntity entity) {
+        final LessonManager lesson_manager = LESSONS.get(entity.getId());
+        User teacher = new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
+                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null, null,
+                null, UserController.ONLINE.containsKey(entity.getTeacher().getId()));
+        return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(),
+                teacher, null, lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
+                lesson_manager.getTime());
     }
 }

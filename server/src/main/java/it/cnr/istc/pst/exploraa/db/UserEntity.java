@@ -3,6 +3,8 @@ package it.cnr.istc.pst.exploraa.db;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
@@ -12,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
@@ -31,17 +34,19 @@ public class UserEntity {
     private String first_name;
     private String last_name;
     @ElementCollection
-    private final Collection<String> roles = new ArrayList<>();
+    private final Set<String> roles = new HashSet<>();
+    @ElementCollection
+    private final Set<String> interests = new HashSet<>();
     @OneToMany
     private final Collection<LessonModelEntity> models = new ArrayList<>();
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<FollowingEntity> teachers = new ArrayList<>();
+    @ManyToMany(mappedBy = "students", cascade = CascadeType.ALL)
+    private final Collection<UserEntity> teachers = new ArrayList<>();
+    @ManyToMany(cascade = CascadeType.ALL)
+    private final Collection<UserEntity> students = new ArrayList<>();
+    @ManyToMany(mappedBy = "followed_by", cascade = CascadeType.ALL)
+    private final Collection<LessonEntity> following_lessons = new ArrayList<>();
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<FollowingEntity> students = new ArrayList<>();
-    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<FollowingLessonEntity> following_lessons = new ArrayList<>();
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
-    private final Collection<TeachingLessonEntity> teaching_lessons = new ArrayList<>();
+    private final Collection<LessonEntity> teaching_lessons = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -90,8 +95,8 @@ public class UserEntity {
     /**
      * @return the roles.
      */
-    public Collection<String> getRoles() {
-        return Collections.unmodifiableCollection(roles);
+    public Set<String> getRoles() {
+        return Collections.unmodifiableSet(roles);
     }
 
     public void addRole(String role) {
@@ -100,6 +105,21 @@ public class UserEntity {
 
     public void removeRole(String role) {
         roles.remove(role);
+    }
+
+    /**
+     * @return the interests.
+     */
+    public Set<String> getInterests() {
+        return Collections.unmodifiableSet(interests);
+    }
+
+    public void addInterest(String interest) {
+        roles.add(interest);
+    }
+
+    public void removeInterest(String interest) {
+        roles.remove(interest);
     }
 
     public Collection<LessonModelEntity> getModels() {
@@ -114,51 +134,51 @@ public class UserEntity {
         models.remove(model);
     }
 
-    public Collection<FollowingEntity> getStudents() {
+    public Collection<UserEntity> getStudents() {
         return Collections.unmodifiableCollection(students);
     }
 
-    public void addStudent(FollowingEntity student) {
+    public void addStudent(UserEntity student) {
         students.add(student);
     }
 
-    public void removeStudent(FollowingEntity student) {
+    public void removeStudent(UserEntity student) {
         students.remove(student);
     }
 
-    public Collection<FollowingEntity> getTeachers() {
+    public Collection<UserEntity> getTeachers() {
         return Collections.unmodifiableCollection(teachers);
     }
 
-    public void addTeacher(FollowingEntity teacher) {
+    public void addTeacher(UserEntity teacher) {
         teachers.add(teacher);
     }
 
-    public void removeTeacher(FollowingEntity teacher) {
+    public void removeTeacher(UserEntity teacher) {
         teachers.remove(teacher);
     }
 
-    public Collection<FollowingLessonEntity> getFollowingLessons() {
+    public Collection<LessonEntity> getFollowingLessons() {
         return Collections.unmodifiableCollection(following_lessons);
     }
 
-    public void addFollowingLesson(FollowingLessonEntity model) {
+    public void addFollowingLesson(LessonEntity model) {
         following_lessons.add(model);
     }
 
-    public void removeFollowingLesson(FollowingLessonEntity model) {
+    public void removeFollowingLesson(LessonEntity model) {
         following_lessons.remove(model);
     }
 
-    public Collection<TeachingLessonEntity> getTeachingLessons() {
+    public Collection<LessonEntity> getTeachingLessons() {
         return Collections.unmodifiableCollection(teaching_lessons);
     }
 
-    public void addTeachingLesson(TeachingLessonEntity model) {
+    public void addTeachingLesson(LessonEntity model) {
         teaching_lessons.add(model);
     }
 
-    public void removeTeachingLesson(TeachingLessonEntity model) {
+    public void removeTeachingLesson(LessonEntity model) {
         teaching_lessons.remove(model);
     }
 }
