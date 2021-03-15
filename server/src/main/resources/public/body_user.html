@@ -131,13 +131,74 @@
                         </div>
                     </div>
                     <div class="row h-100">
-                        <div class="list-group list-group-flush w-100" id="f-teachers-list" role="tablist">
+                        <div class="list-group list-group-flush w-100" id="f-templates-list" role="tablist">
+
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                id="f-template-${key}">
+                                <div class="col d-flex justify-content-start align-items-center">Matera</div>
+                            </div>
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                id="f-template-${key}">
+                                <div class="col d-flex justify-content-start align-items-center">Fontana di Trevi</div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
                 <div class="col-7">
                     <div class="row h-100">
-                        <div class="tab-content" id="rule"> </div>
+                        <div class="tab-content" id="rule">
+
+                            <div>ID: Palombaro Lungo</div>
+                            <div>
+                                Tipo di stimolo:
+                                <select class="form-select" aria-label="Tipo di stimolo">
+                                    <option selected>Tipo</option>
+                                    <option value="1">Testo</option>
+                                    <option value="2">Pagina web</option>
+                                </select>
+                            </div>
+                            <div>
+                                Argomenti trattati:
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Storia
+                                    </li>
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Arte
+                                    </li>
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Architettura
+                                    </li>
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Matematica
+                                    </li>
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Religione
+                                    </li>
+                                </ul>
+                            </div>
+                            <div>Lunghezza: 156</div>
+                            <div>URL: https://it.wikipedia.org/wiki/Palombaro_lungo</div>
+                            <div>
+                                Precondizioni:
+                                <ul class="list-group">
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Matera (0.7)
+                                    </li>
+                                    <li class="list-group-item">
+                                        <input class="form-check-input me-1" type="checkbox" value="" aria-label="...">
+                                        Sassi di Matera (0.6)
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="col">
@@ -152,6 +213,12 @@
                     </div>
                     <div class="row h-75">
                         <div class="list-group list-group-flush w-100" id="rules-list" role="tablist">
+
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                id="f-rule-${key}">
+                                <div class="col d-flex justify-content-start align-items-center">Palombaro Lungo</div>
+                            </div>
+
                         </div>
                     </div>
                     <hr />
@@ -162,6 +229,16 @@
                     </div>
                     <div class="row h-25">
                         <div class="list-group list-group-flush" id="f-suggestions-list" role="tablist">
+
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                id="f-rule-${key}">
+                                <div class="col d-flex justify-content-start align-items-center">Matera</div>
+                            </div>
+                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+                                id="f-rule-${key}">
+                                <div class="col d-flex justify-content-start align-items-center">Sassi di Matera</div>
+                            </div>
+
                         </div>
                     </div>
                 </div>
