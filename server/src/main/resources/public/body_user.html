@@ -121,10 +121,49 @@
         <div class="tab-pane fade body-panel h-100 p-4" id="create" role="tabpanel">
             <div class="row h-100">
                 <div class="col">
+                    <div class="row align-items-center">
+                        <div class="col d-flex justify-content-start">
+                            <h7>Lezioni</h7>
+                        </div>
+                        <div class="col d-flex justify-content-end">
+                            <a role="button" class="btn btn-sm btn-secondary" onclick="new_lesson_template()"><i
+                                    class="fas fa-folder-plus"></i></a>
+                        </div>
+                    </div>
+                    <div class="row h-100">
+                        <div class="list-group list-group-flush w-100" id="f-teachers-list" role="tablist">
+                        </div>
+                    </div>
                 </div>
                 <div class="col-7">
+                    <div class="row h-100">
+                        <div class="tab-content" id="rule"> </div>
+                    </div>
                 </div>
                 <div class="col">
+                    <div class="row align-items-center">
+                        <div class="col d-flex justify-content-start">
+                            <h7>Regole</h7>
+                        </div>
+                        <div class="col d-flex justify-content-end">
+                            <a role="button" class="btn btn-sm btn-secondary" onclick="new_rule()"><i
+                                    class="fas fa-folder-plus"></i></a>
+                        </div>
+                    </div>
+                    <div class="row h-75">
+                        <div class="list-group list-group-flush w-100" id="rules-list" role="tablist">
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="row align-items-center">
+                        <div class="col d-flex justify-content-start">
+                            <h7>Suggerimenti</h7>
+                        </div>
+                    </div>
+                    <div class="row h-25">
+                        <div class="list-group list-group-flush" id="f-suggestions-list" role="tablist">
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
