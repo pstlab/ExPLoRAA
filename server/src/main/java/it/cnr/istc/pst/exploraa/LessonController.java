@@ -81,7 +81,7 @@ public class LessonController {
         teacher_entity.addTeachingLesson(lesson_entity);
 
         for (int i = 0; i < students_ids.length; i++) {
-            UserEntity student_entity = em.find(UserEntity.class, Long.parseLong(students_ids[i]));
+            final UserEntity student_entity = em.find(UserEntity.class, Long.parseLong(students_ids[i]));
             lesson_entity.addStudent(student_entity);
             student_entity.addFollowingLesson(lesson_entity);
         }

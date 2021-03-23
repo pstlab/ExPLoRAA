@@ -25,12 +25,12 @@ public class Lesson {
     private long time;
 
     @JsonCreator
-    public Lesson(@JsonProperty("id") long id, @JsonProperty("name") String name,
-            @JsonProperty("modelId") long model_id, @JsonProperty("topics") Set<String> topics,
-            @JsonProperty("teacher") User teacher, @JsonProperty("students") Map<Long, User> students,
-            @JsonProperty("stimuli") Collection<Message.Stimulus> stimuli,
-            @JsonProperty("tokens") Collection<Message.Token> tokens, @JsonProperty("state") LessonState state,
-            @JsonProperty("time") long time) {
+    public Lesson(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
+            @JsonProperty("modelId") final long model_id, @JsonProperty("topics") final Set<String> topics,
+            @JsonProperty("teacher") final User teacher, @JsonProperty("students") final Map<Long, User> students,
+            @JsonProperty("stimuli") final Collection<Message.Stimulus> stimuli,
+            @JsonProperty("tokens") final Collection<Message.Token> tokens,
+            @JsonProperty("state") final LessonState state, @JsonProperty("time") final long time) {
         this.id = id;
         this.name = name;
         this.model_id = model_id;
@@ -117,7 +117,7 @@ public class Lesson {
     /**
      * @param state the state to set
      */
-    public void setState(LessonState state) {
+    public void setState(final LessonState state) {
         this.state = state;
     }
 
@@ -131,7 +131,7 @@ public class Lesson {
     /**
      * @param time the time to set
      */
-    public void setTime(long time) {
+    public void setTime(final long time) {
         this.time = time;
     }
 

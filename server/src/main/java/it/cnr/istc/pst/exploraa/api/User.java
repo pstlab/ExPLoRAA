@@ -20,13 +20,13 @@ public class User {
     private final boolean online;
 
     @JsonCreator
-    public User(@JsonProperty("id") long id, @JsonProperty("email") String email,
-            @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
-            @JsonProperty("profile") String profile, @JsonProperty("teachers") Map<Long, User> teachers,
-            @JsonProperty("students") Map<Long, User> students,
-            @JsonProperty("followingLessons") Map<Long, Lesson> following_lesson,
-            @JsonProperty("teachingLessons") Map<Long, Lesson> teaching_lesson,
-            @JsonProperty("online") boolean online) {
+    public User(@JsonProperty("id") final long id, @JsonProperty("email") final String email,
+            @JsonProperty("firstName") final String first_name, @JsonProperty("lastName") final String last_name,
+            @JsonProperty("profile") final String profile, @JsonProperty("teachers") final Map<Long, User> teachers,
+            @JsonProperty("students") final Map<Long, User> students,
+            @JsonProperty("followingLessons") final Map<Long, Lesson> following_lesson,
+            @JsonProperty("teachingLessons") final Map<Long, Lesson> teaching_lesson,
+            @JsonProperty("online") final boolean online) {
         this.id = id;
         this.email = email;
         this.first_name = first_name;

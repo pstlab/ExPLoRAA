@@ -37,7 +37,7 @@ public class LessonEntity {
         return name;
     }
 
-    public void setName(String name) {
+    public void setName(final String name) {
         this.name = name;
     }
 
@@ -51,7 +51,7 @@ public class LessonEntity {
     /**
      * @param model the model to set
      */
-    public void setModel(LessonModelEntity model) {
+    public void setModel(final LessonModelEntity model) {
         this.model = model;
     }
 
@@ -59,7 +59,7 @@ public class LessonEntity {
         return teacher;
     }
 
-    public void setTeacher(UserEntity teacher) {
+    public void setTeacher(final UserEntity teacher) {
         this.teacher = teacher;
     }
 
@@ -67,11 +67,11 @@ public class LessonEntity {
         return Collections.unmodifiableCollection(followed_by);
     }
 
-    public void addStudent(UserEntity student) {
+    public void addStudent(final UserEntity student) {
         followed_by.add(student);
     }
 
-    public void removeStudent(UserEntity student) {
+    public void removeStudent(final UserEntity student) {
         followed_by.remove(student);
     }
 
@@ -79,11 +79,11 @@ public class LessonEntity {
         return Collections.unmodifiableCollection(goals);
     }
 
-    public void addGoal(StimulusEntity goal) {
+    public void addGoal(final StimulusEntity goal) {
         goals.add(goal);
     }
 
-    public void removeGoal(StimulusEntity goal) {
+    public void removeGoal(final StimulusEntity goal) {
         goals.remove(goal);
     }
 }

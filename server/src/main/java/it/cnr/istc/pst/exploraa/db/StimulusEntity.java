@@ -22,12 +22,12 @@ public class StimulusEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     @ElementCollection
-    private Set<String> topics = new HashSet<>();
+    private final Set<String> topics = new HashSet<>();
     private Long length;
     @ManyToMany(mappedBy = "effects", cascade = CascadeType.ALL)
-    private Set<StimulusEntity> preconditions = new HashSet<>();
+    private final Set<StimulusEntity> preconditions = new HashSet<>();
     @ManyToMany(cascade = CascadeType.ALL)
-    private Set<StimulusEntity> effects = new HashSet<>();
+    private final Set<StimulusEntity> effects = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -37,11 +37,11 @@ public class StimulusEntity {
         return Collections.unmodifiableSet(topics);
     }
 
-    public void addTopic(String topic) {
+    public void addTopic(final String topic) {
         topics.add(topic);
     }
 
-    public void removeTopic(String topic) {
+    public void removeTopic(final String topic) {
         topics.remove(topic);
     }
 
@@ -49,7 +49,7 @@ public class StimulusEntity {
         return length;
     }
 
-    public void setLength(Long length) {
+    public void setLength(final Long length) {
         this.length = length;
     }
 
@@ -57,11 +57,11 @@ public class StimulusEntity {
         return Collections.unmodifiableSet(preconditions);
     }
 
-    public void addPrecondition(StimulusEntity precondition) {
+    public void addPrecondition(final StimulusEntity precondition) {
         preconditions.add(precondition);
     }
 
-    public void removePrecondition(StimulusEntity precondition) {
+    public void removePrecondition(final StimulusEntity precondition) {
         preconditions.remove(precondition);
     }
 
@@ -69,11 +69,11 @@ public class StimulusEntity {
         return Collections.unmodifiableSet(effects);
     }
 
-    public void addEffect(StimulusEntity effect) {
+    public void addEffect(final StimulusEntity effect) {
         effects.add(effect);
     }
 
-    public void removeEffect(StimulusEntity effect) {
+    public void removeEffect(final StimulusEntity effect) {
         effects.remove(effect);
     }
 }

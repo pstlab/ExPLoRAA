@@ -57,7 +57,7 @@ public class UserEntity {
         return email;
     }
 
-    public void setEmail(String email) {
+    public void setEmail(final String email) {
         this.email = email;
     }
 
@@ -65,7 +65,7 @@ public class UserEntity {
         return salt;
     }
 
-    public void setSalt(String salt) {
+    public void setSalt(final String salt) {
         this.salt = salt;
     }
 
@@ -73,7 +73,7 @@ public class UserEntity {
         return password;
     }
 
-    public void setPassword(String password) {
+    public void setPassword(final String password) {
         this.password = password;
     }
 
@@ -81,7 +81,7 @@ public class UserEntity {
         return first_name;
     }
 
-    public void setFirstName(String first_name) {
+    public void setFirstName(final String first_name) {
         this.first_name = first_name;
     }
 
@@ -89,7 +89,7 @@ public class UserEntity {
         return last_name;
     }
 
-    public void setLastName(String last_name) {
+    public void setLastName(final String last_name) {
         this.last_name = last_name;
     }
 
@@ -100,11 +100,11 @@ public class UserEntity {
         return Collections.unmodifiableSet(roles);
     }
 
-    public void addRole(String role) {
+    public void addRole(final String role) {
         roles.add(role);
     }
 
-    public void removeRole(String role) {
+    public void removeRole(final String role) {
         roles.remove(role);
     }
 
@@ -115,7 +115,7 @@ public class UserEntity {
         return profile;
     }
 
-    public void setProfile(String profile) {
+    public void setProfile(final String profile) {
         this.profile = profile;
     }
 
@@ -123,11 +123,11 @@ public class UserEntity {
         return Collections.unmodifiableCollection(models);
     }
 
-    public void addModel(LessonModelEntity model) {
+    public void addModel(final LessonModelEntity model) {
         models.add(model);
     }
 
-    public void removeModel(LessonModelEntity model) {
+    public void removeModel(final LessonModelEntity model) {
         models.remove(model);
     }
 
@@ -135,11 +135,11 @@ public class UserEntity {
         return Collections.unmodifiableCollection(students);
     }
 
-    public void addStudent(UserEntity student) {
+    public void addStudent(final UserEntity student) {
         students.add(student);
     }
 
-    public void removeStudent(UserEntity student) {
+    public void removeStudent(final UserEntity student) {
         students.remove(student);
     }
 
@@ -147,11 +147,11 @@ public class UserEntity {
         return Collections.unmodifiableCollection(teachers);
     }
 
-    public void addTeacher(UserEntity teacher) {
+    public void addTeacher(final UserEntity teacher) {
         teachers.add(teacher);
     }
 
-    public void removeTeacher(UserEntity teacher) {
+    public void removeTeacher(final UserEntity teacher) {
         teachers.remove(teacher);
     }
 
@@ -159,11 +159,11 @@ public class UserEntity {
         return Collections.unmodifiableCollection(following_lessons);
     }
 
-    public void addFollowingLesson(LessonEntity model) {
+    public void addFollowingLesson(final LessonEntity model) {
         following_lessons.add(model);
     }
 
-    public void removeFollowingLesson(LessonEntity model) {
+    public void removeFollowingLesson(final LessonEntity model) {
         following_lessons.remove(model);
     }
 
@@ -171,11 +171,11 @@ public class UserEntity {
         return Collections.unmodifiableCollection(teaching_lessons);
     }
 
-    public void addTeachingLesson(LessonEntity model) {
+    public void addTeachingLesson(final LessonEntity model) {
         teaching_lessons.add(model);
     }
 
-    public void removeTeachingLesson(LessonEntity model) {
+    public void removeTeachingLesson(final LessonEntity model) {
         teaching_lessons.remove(model);
     }
 }

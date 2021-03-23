@@ -193,6 +193,18 @@ public class UserController {
         user_entity.setProfile(user.getProfile());
         em.getTransaction().commit();
 
+        try {
+            for (UserEntity teacher : user_entity.getTeachers()) {
+                if (ONLINE.containsKey(teacher.getId())) {
+                    LOG.info("communicating the unfollowing to teacher #{}..", teacher.getId());
+                    ONLINE.get(teacher.getId())
+                            .send(App.MAPPER.writeValueAsString(new Message.ProfileUpdate(user_id, user.getProfile())));
+                }
+            }
+        } catch (final JsonProcessingException e) {
+            LOG.error(e.getMessage(), e);
+        }
+
         ctx.status(204);
         em.close();
     }
@@ -208,6 +220,18 @@ public class UserController {
         em.getTransaction().begin();
         em.remove(user_entity);
         em.getTransaction().commit();
+
+        try {
+            for (UserEntity teacher : user_entity.getTeachers()) {
+                if (ONLINE.containsKey(teacher.getId())) {
+                    LOG.info("communicating the unfollowing to teacher #{}..", teacher.getId());
+                    ONLINE.get(teacher.getId())
+                            .send(App.MAPPER.writeValueAsString(new Message.Follower(user_id, false)));
+                }
+            }
+        } catch (final JsonProcessingException e) {
+            LOG.error(e.getMessage(), e);
+        }
 
         ctx.status(204);
         em.close();
@@ -234,7 +258,7 @@ public class UserController {
             try {
                 LOG.info("communicating the following to teacher #{}..", teacher_id);
                 ONLINE.get(teacher_id).send(App.MAPPER.writeValueAsString(new Message.Follower(student_id, true)));
-            } catch (JsonProcessingException e) {
+            } catch (final JsonProcessingException e) {
                 LOG.error(e.getMessage(), e);
             }
 
@@ -263,7 +287,7 @@ public class UserController {
             try {
                 LOG.info("communicating the unfollowing to teacher #{}..", teacher_id);
                 ONLINE.get(teacher_id).send(App.MAPPER.writeValueAsString(new Message.Follower(student_id, false)));
-            } catch (JsonProcessingException e) {
+            } catch (final JsonProcessingException e) {
                 LOG.error(e.getMessage(), e);
             }
 

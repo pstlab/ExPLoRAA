@@ -63,12 +63,12 @@ public class LessonManager {
         for (final Map.Entry<Item, Collection<Atom>> i_atoms : atoms.entrySet())
             for (final Atom atom : i_atoms.getValue())
                 try {
-                    Token token = new Token(lesson.getId(), ((Item.ArithItem) atom.get("id")).getValue().intValue(),
+                    final Token token = new Token(lesson.getId(), ((Item.ArithItem) atom.get("id")).getValue().intValue(),
                             ((Item.ArithItem) atom.get("start")).getValue().longValue());
                     tokens.add(token);
                     for (final LessonManagerListener listener : listeners)
                         listener.newToken(token);
-                } catch (NoSuchFieldException e) {
+                } catch (final NoSuchFieldException e) {
                     LOG.error("Cannot find field", e);
                 }
     }

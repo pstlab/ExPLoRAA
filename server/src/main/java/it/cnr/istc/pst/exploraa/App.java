@@ -49,7 +49,7 @@ public class App {
     private static final int KEY_LENGTH = 512;
     private static final String ALGORITHM = "PBKDF2WithHmacSHA512";
 
-    public static void main(String[] args) {
+    public static void main(final String[] args) {
         final Javalin app = Javalin.create(config -> {
             config.addStaticFiles("/public");
             config.accessManager((final Handler handler, final Context ctx, final Set<Role> permittedRoles) -> {
@@ -139,7 +139,7 @@ public class App {
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, id);
 
-        Set<WsContext> ctxs = new HashSet<>();
+        final Set<WsContext> ctxs = new HashSet<>();
         ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
                 .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
                 .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
@@ -148,10 +148,10 @@ public class App {
                 .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
 
         try {
-            for (WsContext ws_ctx : ctxs) {
+            for (final WsContext ws_ctx : ctxs) {
                 ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, true)));
             }
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             LOG.error(e.getMessage(), e);
         }
     }
@@ -163,7 +163,7 @@ public class App {
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, id);
 
-        Set<WsContext> ctxs = new HashSet<>();
+        final Set<WsContext> ctxs = new HashSet<>();
         ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
                 .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
                 .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
@@ -172,10 +172,10 @@ public class App {
                 .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
 
         try {
-            for (WsContext ws_ctx : ctxs) {
+            for (final WsContext ws_ctx : ctxs) {
                 ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, false)));
             }
-        } catch (JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             LOG.error(e.getMessage(), e);
         }
     }
@@ -207,22 +207,22 @@ public class App {
     }
 
     public static String generateSalt() {
-        byte[] salt = new byte[KEY_LENGTH];
+        final byte[] salt = new byte[KEY_LENGTH];
         RAND.nextBytes(salt);
         return Base64.getEncoder().encodeToString(salt);
     }
 
-    public static String hashPassword(String password, String salt) {
-        char[] chars = password.toCharArray();
-        byte[] bytes = salt.getBytes();
+    public static String hashPassword(final String password, final String salt) {
+        final char[] chars = password.toCharArray();
+        final byte[] bytes = salt.getBytes();
 
-        PBEKeySpec spec = new PBEKeySpec(chars, bytes, ITERATIONS, KEY_LENGTH);
+        final PBEKeySpec spec = new PBEKeySpec(chars, bytes, ITERATIONS, KEY_LENGTH);
 
         Arrays.fill(chars, Character.MIN_VALUE);
 
         try {
-            SecretKeyFactory fac = SecretKeyFactory.getInstance(ALGORITHM);
-            byte[] securePassword = fac.generateSecret(spec).getEncoded();
+            final SecretKeyFactory fac = SecretKeyFactory.getInstance(ALGORITHM);
+            final byte[] securePassword = fac.generateSecret(spec).getEncoded();
             return Base64.getEncoder().encodeToString(securePassword);
         } catch (NoSuchAlgorithmException | InvalidKeySpecException ex) {
             return null;

@@ -17,7 +17,7 @@ public class LessonModelEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<StimulusEntity> stimuli = new HashSet<>();
+    private final Set<StimulusEntity> stimuli = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -27,11 +27,11 @@ public class LessonModelEntity {
         return stimuli;
     }
 
-    public void addStimulus(StimulusEntity stimulus) {
+    public void addStimulus(final StimulusEntity stimulus) {
         stimuli.add(stimulus);
     }
 
-    public void removeStimulus(StimulusEntity stimulus) {
+    public void removeStimulus(final StimulusEntity stimulus) {
         stimuli.remove(stimulus);
     }
 }
