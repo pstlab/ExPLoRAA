@@ -22,7 +22,6 @@ import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.App.ExplRole;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.Message;
-import it.cnr.istc.pst.exploraa.api.Parameter;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 
@@ -33,16 +32,6 @@ public class UserController {
      * For each user id, a boolean indicating whether the user is online.
      */
     static final Map<Long, WsContext> ONLINE = new HashMap<>();
-    /**
-     * For each user id, a map of parameter types containing the name of the
-     * parameter as key.
-     */
-    static final Map<Long, Map<String, Parameter>> PARAMETER_TYPES = new HashMap<>();
-    /**
-     * For each user id, a map of parameter values containing the name of the
-     * parameter as key. Notice that parameter values are represented through a map.
-     */
-    static final Map<Long, Map<String, Map<String, String>>> PARAMETER_VALUES = new HashMap<>();
 
     /**
      * Given an email and a password, returns the user corresponding to the email if
@@ -115,9 +104,6 @@ public class UserController {
         } catch (final Exception ex) {
             throw new ConflictResponse();
         }
-
-        PARAMETER_TYPES.put(user_entity.getId(), new HashMap<>());
-        PARAMETER_VALUES.put(user_entity.getId(), new HashMap<>());
 
         ctx.status(201);
         em.close();
@@ -204,6 +190,7 @@ public class UserController {
         em.getTransaction().begin();
         user_entity.setFirstName(user.getFirstName());
         user_entity.setLastName(user.getLastName());
+        user_entity.setProfile(user.getProfile());
         em.getTransaction().commit();
 
         ctx.status(204);
@@ -211,7 +198,7 @@ public class UserController {
     }
 
     static void deleteUser(final Context ctx) {
-        final long user_id = Long.valueOf(ctx.queryParam("id"));
+        final long user_id = Long.valueOf(ctx.pathParam("id"));
         LOG.info("deleting user #{}..", user_id);
         final EntityManager em = App.EMF.createEntityManager();
         final UserEntity user_entity = em.find(UserEntity.class, user_id);
@@ -221,9 +208,6 @@ public class UserController {
         em.getTransaction().begin();
         em.remove(user_entity);
         em.getTransaction().commit();
-
-        PARAMETER_TYPES.remove(user_entity.getId());
-        PARAMETER_VALUES.remove(user_entity.getId());
 
         ctx.status(204);
         em.close();
@@ -289,8 +273,6 @@ public class UserController {
 
     static User toUser(final UserEntity entity) {
         final boolean online = ONLINE.containsKey(entity.getId());
-        final Map<String, Parameter> par_types = online ? PARAMETER_TYPES.get(entity.getId()) : null;
-        final Map<String, Map<String, String>> par_vals = online ? PARAMETER_VALUES.get(entity.getId()) : null;
 
         final Map<Long, User> teachers = entity.getTeachers().stream().map(t -> toTeacher(t))
                 .collect(Collectors.toMap(t -> t.getId(), t -> t));
@@ -301,17 +283,17 @@ public class UserController {
         final Map<Long, Lesson> teaching_lessons = entity.getTeachingLessons().stream()
                 .map(l -> LessonController.toTeaching(l)).collect(Collectors.toMap(l -> l.getId(), l -> l));
 
-        return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), par_types,
-                par_vals, teachers, students, following_lessons, teaching_lessons, online);
+        return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(),
+                entity.getProfile(), teachers, students, following_lessons, teaching_lessons, online);
     }
 
     static User toTeacher(final UserEntity entity) {
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), null, null,
-                null, null, null, null, ONLINE.containsKey(entity.getId()));
+                null, null, null, ONLINE.containsKey(entity.getId()));
     }
 
     static User toStudent(final UserEntity entity) {
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), null, null,
-                null, null, null, null, ONLINE.containsKey(entity.getId()));
+                null, null, null, ONLINE.containsKey(entity.getId()));
     }
 }

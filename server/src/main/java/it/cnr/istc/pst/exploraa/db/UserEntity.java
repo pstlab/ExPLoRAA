@@ -14,6 +14,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Index;
+import javax.persistence.Lob;
 import javax.persistence.ManyToMany;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
@@ -35,8 +36,8 @@ public class UserEntity {
     private String last_name;
     @ElementCollection
     private final Set<String> roles = new HashSet<>();
-    @ElementCollection
-    private final Set<String> interests = new HashSet<>();
+    @Lob
+    private String profile;
     @OneToMany
     private final Collection<LessonModelEntity> models = new ArrayList<>();
     @ManyToMany(mappedBy = "students", cascade = CascadeType.ALL)
@@ -108,18 +109,14 @@ public class UserEntity {
     }
 
     /**
-     * @return the interests.
+     * @return a JSON string representing the profile of the user.
      */
-    public Set<String> getInterests() {
-        return Collections.unmodifiableSet(interests);
+    public String getProfile() {
+        return profile;
     }
 
-    public void addInterest(String interest) {
-        roles.add(interest);
-    }
-
-    public void removeInterest(String interest) {
-        roles.remove(interest);
+    public void setProfile(String profile) {
+        this.profile = profile;
     }
 
     public Collection<LessonModelEntity> getModels() {

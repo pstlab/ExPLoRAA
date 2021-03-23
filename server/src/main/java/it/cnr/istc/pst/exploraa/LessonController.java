@@ -169,25 +169,16 @@ public class LessonController {
 
     static Lesson toLesson(final LessonEntity entity) {
         final LessonManager lesson_manager = LESSONS.get(entity.getId());
-        final User teacher = new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
-                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null, null,
-                null, UserController.ONLINE.containsKey(entity.getTeacher().getId()));
-        final Map<Long, User> students = entity.getStudents().stream()
-                .map(student -> new User(student.getId(), student.getEmail(), student.getFirstName(),
-                        student.getLastName(), null, null, null, null, null, null,
-                        UserController.ONLINE.containsKey(student.getId())))
+        final Map<Long, User> students = entity.getStudents().stream().map(student -> UserController.toStudent(student))
                 .collect(Collectors.toMap(student -> student.getId(), student -> student));
         return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(),
-                teacher, students, lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
-                lesson_manager.getTime());
+                UserController.toTeacher(entity.getTeacher()), students, lesson_manager.getStimuli(),
+                lesson_manager.getTokens(), lesson_manager.getState(), lesson_manager.getTime());
     }
 
     static Lesson toTeaching(final LessonEntity entity) {
         final LessonManager lesson_manager = LESSONS.get(entity.getId());
-        final Map<Long, User> students = entity.getStudents().stream()
-                .map(student -> new User(student.getId(), student.getEmail(), student.getFirstName(),
-                        student.getLastName(), null, null, null, null, null, null,
-                        UserController.ONLINE.containsKey(student.getId())))
+        final Map<Long, User> students = entity.getStudents().stream().map(student -> UserController.toStudent(student))
                 .collect(Collectors.toMap(student -> student.getId(), student -> student));
         return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(), null,
                 students, lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
@@ -196,11 +187,8 @@ public class LessonController {
 
     static Lesson toFollowing(final LessonEntity entity) {
         final LessonManager lesson_manager = LESSONS.get(entity.getId());
-        final User teacher = new User(entity.getTeacher().getId(), entity.getTeacher().getEmail(),
-                entity.getTeacher().getFirstName(), entity.getTeacher().getLastName(), null, null, null, null, null,
-                null, UserController.ONLINE.containsKey(entity.getTeacher().getId()));
         return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(),
-                teacher, null, lesson_manager.getStimuli(), lesson_manager.getTokens(), lesson_manager.getState(),
-                lesson_manager.getTime());
+                UserController.toTeacher(entity.getTeacher()), null, lesson_manager.getStimuli(),
+                lesson_manager.getTokens(), lesson_manager.getState(), lesson_manager.getTime());
     }
 }

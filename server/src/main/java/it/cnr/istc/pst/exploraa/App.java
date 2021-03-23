@@ -14,8 +14,6 @@ import java.util.Base64;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 import javax.crypto.SecretKeyFactory;
@@ -43,7 +41,6 @@ import it.cnr.istc.pst.exploraa.db.UserEntity;
 public class App {
 
     static final Logger LOG = LoggerFactory.getLogger(App.class);
-    static final Executor EXECUTOR = Executors.newSingleThreadExecutor();
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
     static final ObjectMapper MAPPER = new ObjectMapper();
     private static final SecureRandom RAND = new SecureRandom();
@@ -123,57 +120,9 @@ public class App {
         });
 
         app.ws("/communication", ws -> {
-            ws.onConnect(ctx -> {
-                EXECUTOR.execute(() -> {
-                    final Long id = Long.valueOf(ctx.queryParam("id"));
-                    LOG.info("User #{} connected..", id);
-                    UserController.ONLINE.put(id, ctx);
-                    final EntityManager em = App.EMF.createEntityManager();
-                    final UserEntity user_entity = em.find(UserEntity.class, id);
-
-                    Set<WsContext> ctxs = new HashSet<>();
-                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
-                            .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
-                            .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
-                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getId())
-                            .filter(student_id -> UserController.ONLINE.containsKey(student_id))
-                            .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
-
-                    try {
-                        for (WsContext ws_ctx : ctxs) {
-                            ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, true)));
-                        }
-                    } catch (JsonProcessingException e) {
-                        LOG.error(e.getMessage(), e);
-                    }
-                });
-            });
-            ws.onClose(ctx -> {
-                EXECUTOR.execute(() -> {
-                    final Long id = Long.valueOf(ctx.queryParam("id"));
-                    LOG.info("User #{} disconnected..", id);
-                    UserController.ONLINE.remove(id);
-                    final EntityManager em = App.EMF.createEntityManager();
-                    final UserEntity user_entity = em.find(UserEntity.class, id);
-
-                    Set<WsContext> ctxs = new HashSet<>();
-                    ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
-                            .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
-                            .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
-                    ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getId())
-                            .filter(student_id -> UserController.ONLINE.containsKey(student_id))
-                            .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
-
-                    try {
-                        for (WsContext ws_ctx : ctxs) {
-                            ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, false)));
-                        }
-                    } catch (JsonProcessingException e) {
-                        LOG.error(e.getMessage(), e);
-                    }
-                });
-            });
-            ws.onMessage(ctx -> EXECUTOR.execute(() -> LOG.info("Received message {}..", ctx)));
+            ws.onConnect(ctx -> new_connection(ctx));
+            ws.onClose(ctx -> lost_connection(ctx));
+            ws.onMessage(ctx -> new_message(ctx));
         }, roles(ExplRole.Admin, ExplRole.User));
 
         app.start();
@@ -181,6 +130,58 @@ public class App {
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             app.stop();
         }));
+    }
+
+    private static synchronized void new_connection(final WsContext ctx) {
+        final Long id = Long.valueOf(ctx.queryParam("id"));
+        LOG.info("User #{} connected..", id);
+        UserController.ONLINE.put(id, ctx);
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity user_entity = em.find(UserEntity.class, id);
+
+        Set<WsContext> ctxs = new HashSet<>();
+        ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
+                .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
+                .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
+        ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getId())
+                .filter(student_id -> UserController.ONLINE.containsKey(student_id))
+                .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
+
+        try {
+            for (WsContext ws_ctx : ctxs) {
+                ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, true)));
+            }
+        } catch (JsonProcessingException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
+
+    private static synchronized void lost_connection(final WsContext ctx) {
+        final Long id = Long.valueOf(ctx.queryParam("id"));
+        LOG.info("User #{} disconnected..", id);
+        UserController.ONLINE.remove(id);
+        final EntityManager em = App.EMF.createEntityManager();
+        final UserEntity user_entity = em.find(UserEntity.class, id);
+
+        Set<WsContext> ctxs = new HashSet<>();
+        ctxs.addAll(user_entity.getTeachers().stream().map(teacher -> teacher.getId())
+                .filter(teacher_id -> UserController.ONLINE.containsKey(teacher_id))
+                .map(teacher_id -> UserController.ONLINE.get(teacher_id)).collect(Collectors.toSet()));
+        ctxs.addAll(user_entity.getStudents().stream().map(student -> student.getId())
+                .filter(student_id -> UserController.ONLINE.containsKey(student_id))
+                .map(student_id -> UserController.ONLINE.get(student_id)).collect(Collectors.toSet()));
+
+        try {
+            for (WsContext ws_ctx : ctxs) {
+                ws_ctx.send(MAPPER.writeValueAsString(new Message.Online(id, false)));
+            }
+        } catch (JsonProcessingException e) {
+            LOG.error(e.getMessage(), e);
+        }
+    }
+
+    private static synchronized void new_message(final WsContext ctx) {
+        LOG.info("Received message {}..", ctx);
     }
 
     static Role getRole(final Context ctx) {

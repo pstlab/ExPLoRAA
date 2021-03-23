@@ -97,6 +97,19 @@ function delete_user() {
 function update_user() {
     user.firstName = $('#profile-first-name').val();
     user.lastName = $('#profile-last-name').val();
+    const profile = {};
+    profile.antro = $('#profile-antro').prop('checked');
+    profile.art = $('#profile-art').prop('checked');
+    profile.biog = $('#profile-biog').prop('checked');
+    profile.biol = $('#profile-biol').prop('checked');
+    profile.phil = $('#profile-phil').prop('checked');
+    profile.geo = $('#profile-geo').prop('checked');
+    profile.math = $('#profile-math').prop('checked');
+    profile.sci = $('#profile-sci').prop('checked');
+    profile.soc = $('#profile-soc').prop('checked');
+    profile.hist = $('#profile-hist').prop('checked');
+    profile.tech = $('#profile-tech').prop('checked');
+    user.profile = JSON.stringify(profile);
     fetch('http://' + config.host + ':' + config.service_port + '/user/' + user.id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + user.id },
@@ -119,6 +132,18 @@ function setUser(usr) {
         $('#profile-email').val(user.email);
         $('#profile-first-name').val(user.firstName);
         $('#profile-last-name').val(user.lastName);
+        const profile = JSON.parse(user.profile);
+        $('#profile-antro').prop('checked', profile.antro);
+        $('#profile-art').prop('checked', profile.art);
+        $('#profile-biog').prop('checked', profile.biog);
+        $('#profile-biol').prop('checked', profile.biol);
+        $('#profile-phil').prop('checked', profile.phil);
+        $('#profile-geo').prop('checked', profile.geo);
+        $('#profile-math').prop('checked', profile.math);
+        $('#profile-sci').prop('checked', profile.sci);
+        $('#profile-soc').prop('checked', profile.soc);
+        $('#profile-hist').prop('checked', profile.hist);
+        $('#profile-tech').prop('checked', profile.tech);
 
         for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName))) {
             $('#f-teachers-list').append(`

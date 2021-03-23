@@ -14,8 +14,6 @@ import com.fasterxml.jackson.annotation.JsonSubTypes.Type;
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
 @JsonSubTypes({ @Type(value = Message.Online.class, name = "online"),
         @Type(value = Message.Follower.class, name = "follower"),
-        @Type(value = Message.NewParameter.class, name = "new-parameter"),
-        @Type(value = Message.RemoveParameter.class, name = "remove-parameter"),
         @Type(value = Message.FollowLesson.class, name = "follow-lesson"),
         @Type(value = Message.UnfollowLesson.class, name = "unfollow-lesson"),
         @Type(value = Message.RemoveLesson.class, name = "remove-lesson") })
@@ -77,46 +75,6 @@ public abstract class Message {
          */
         public boolean isAdded() {
             return added;
-        }
-    }
-
-    /**
-     * This message is used for communicating the creation of a new parameter.
-     */
-    public static class NewParameter extends Message {
-
-        private final Parameter parameter;
-
-        @JsonCreator
-        public NewParameter(@JsonProperty("parameter") Parameter parameter) {
-            this.parameter = parameter;
-        }
-
-        /**
-         * @return the created parameter.
-         */
-        public Parameter getParameter() {
-            return parameter;
-        }
-    }
-
-    /**
-     * This message is used for communicating the removal of an existing parameter.
-     */
-    public static class RemoveParameter extends Message {
-
-        private final String parameter;
-
-        @JsonCreator
-        public RemoveParameter(@JsonProperty("parameter") String parameter) {
-            this.parameter = parameter;
-        }
-
-        /**
-         * @return the name of the removed parameter.
-         */
-        public String getParameter() {
-            return parameter;
         }
     }
 

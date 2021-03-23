@@ -12,8 +12,7 @@ public class User {
     private final String email;
     private final String first_name;
     private final String last_name;
-    private final Map<String, Parameter> par_types;
-    private final Map<String, Map<String, String>> par_values;
+    private final String profile;
     private final Map<Long, User> teachers;
     private final Map<Long, User> students;
     private final Map<Long, Lesson> following_lesson;
@@ -23,9 +22,8 @@ public class User {
     @JsonCreator
     public User(@JsonProperty("id") long id, @JsonProperty("email") String email,
             @JsonProperty("firstName") String first_name, @JsonProperty("lastName") String last_name,
-            @JsonProperty("parameterTypes") Map<String, Parameter> par_types,
-            @JsonProperty("parameterValues") Map<String, Map<String, String>> par_values,
-            @JsonProperty("teachers") Map<Long, User> teachers, @JsonProperty("students") Map<Long, User> students,
+            @JsonProperty("profile") String profile, @JsonProperty("teachers") Map<Long, User> teachers,
+            @JsonProperty("students") Map<Long, User> students,
             @JsonProperty("followingLessons") Map<Long, Lesson> following_lesson,
             @JsonProperty("teachingLessons") Map<Long, Lesson> teaching_lesson,
             @JsonProperty("online") boolean online) {
@@ -33,8 +31,7 @@ public class User {
         this.email = email;
         this.first_name = first_name;
         this.last_name = last_name;
-        this.par_types = par_types;
-        this.par_values = par_values;
+        this.profile = profile;
         this.teachers = teachers;
         this.students = students;
         this.following_lesson = following_lesson;
@@ -71,28 +68,10 @@ public class User {
     }
 
     /**
-     * @return the online
+     * @return the profile
      */
-    public boolean isOnline() {
-        return online;
-    }
-
-    /**
-     * @return the par_types
-     */
-    public Map<String, Parameter> getParameterTypes() {
-        if (par_types == null)
-            return null;
-        return Collections.unmodifiableMap(par_types);
-    }
-
-    /**
-     * @return the par_values
-     */
-    public Map<String, Map<String, String>> getParameterValues() {
-        if (par_values == null)
-            return null;
-        return Collections.unmodifiableMap(par_values);
+    public String getProfile() {
+        return profile;
     }
 
     public Map<Long, User> getTeachers() {
@@ -123,5 +102,12 @@ public class User {
         if (teaching_lesson == null)
             return null;
         return Collections.unmodifiableMap(teaching_lesson);
+    }
+
+    /**
+     * @return the online
+     */
+    public boolean isOnline() {
+        return online;
     }
 }
