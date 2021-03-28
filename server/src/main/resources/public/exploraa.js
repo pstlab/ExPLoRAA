@@ -145,21 +145,18 @@ function setUser(usr) {
         $('#profile-hist').prop('checked', profile.hist);
         $('#profile-tech').prop('checked', profile.tech);
 
+        // we set the teachers..
+        const teachers_list = $('#f-teachers-list');
+        const teacher_row_template = $('#teacher-row');
         for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName))) {
-            $('#f-teachers-list').append(`
-            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${key}">
-                <div class="col d-flex justify-content-start align-items-center"><span id="online-teacher-${key}" class="fas ${value.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.lastName}, ${value.firstName}</div>
-                <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${key})"><i class="fas fa-user-minus"></i></a></div>
-            </div>
-            `);
+            teachers_list.append(create_teacher_row(teacher_row_template, key, value));
         }
 
+        // we set the students..
+        const students_list = $('#students-list');
+        const student_row_template = $('#student-row');
         for (const [key, value] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName))) {
-            $('#students-list').append(`
-            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="student-${key}">
-                <div class="col d-flex justify-content-start align-items-center"><span id="online-student-${key}" class="fas ${value.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${value.lastName}, ${value.firstName}</div>
-            </div>
-            `);
+            students_list.append(create_student_row(student_row_template, key, value));
         }
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
@@ -185,11 +182,7 @@ function setUser(usr) {
                             if (response.ok) {
                                 response.json().then(student => {
                                     user.students[student.id] = student;
-                                    $('#students-list').append(`
-                                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="student-${student.id}">
-                                        <div class="col d-flex justify-content-start align-items-center"><span id="online-student-${student.id}" class="fas ${student.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${student.lastName}, ${student.firstName}</div>
-                                    </div>
-                                    `);
+                                    $('#students-list').append(create_student_row($('#student-row'), student.id, student));
                                 });
                             } else
                                 alert(response.statusText);
@@ -245,12 +238,7 @@ function follow_teachers() {
                     if (response.ok) {
                         response.json().then(teacher => {
                             user.teachers[teacher.id] = teacher;
-                            $('#f-teachers-list').append(`
-                            <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="f-teacher-${teacher.id}">
-                                <div class="col d-flex justify-content-start align-items-center"><span id="online-teacher-${teacher.id}" class="fas ${teacher.online ? 'fa-link' : 'fa-unlink'} mr-1"></span>${teacher.lastName}, ${teacher.firstName}</div>
-                                <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary" onclick="unfollow_teacher(${teacher.id})"><i class="fas fa-user-minus"></i></a></div>
-                            </div>
-                            `);
+                            $('#f-teachers-list').append(create_teacher_row($('#teacher-row'), teacher.id, teacher));
                         });
                     } else
                         alert(response.statusText);
@@ -295,4 +283,35 @@ function show_lessons() {
         } else
             alert(response.statusText);
     });
+}
+
+function create_teacher_row(template, id, teacher) {
+    const teacher_row = template[0].content.cloneNode(true);
+    const row_content = teacher_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    var online_span = divs[0].childNodes[0];
+    online_span.id += id;
+    if (teacher.online)
+        online_span.className = 'fas fa-link mr-1';
+    else
+        online_span.className = 'fas fa-unlink mr-1';
+    divs[0].append(teacher.lastName + ', ' + teacher.firstName);
+    divs[1].childNodes[0].onclick = function () { unfollow_teacher(id); };
+    return teacher_row;
+}
+
+function create_student_row(template, id, student) {
+    const student_row = template[0].content.cloneNode(true);
+    const row_content = student_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    var online_span = divs[0].childNodes[0];
+    online_span.id += id;
+    if (student.online)
+        online_span.className = 'fas fa-link mr-1';
+    else
+        online_span.className = 'fas fa-unlink mr-1';
+    divs[0].append(student.lastName + ', ' + student.firstName);
+    return student_row;
 }

@@ -95,6 +95,7 @@ public class UserController {
         user_entity.setPassword(password);
         user_entity.setFirstName(first_name);
         user_entity.setLastName(last_name);
+        user_entity.setProfile("{}");
         user_entity.addRole(ExplRole.User.name());
 
         try {
