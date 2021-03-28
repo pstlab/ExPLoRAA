@@ -148,16 +148,14 @@ function setUser(usr) {
         // we set the teachers..
         const teachers_list = $('#f-teachers-list');
         const teacher_row_template = $('#teacher-row');
-        for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName))) {
+        for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
             teachers_list.append(create_teacher_row(teacher_row_template, key, value));
-        }
 
         // we set the students..
         const students_list = $('#students-list');
         const student_row_template = $('#student-row');
-        for (const [key, value] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName))) {
+        for (const [key, value] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
             students_list.append(create_student_row(student_row_template, key, value));
-        }
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
         ws.onmessage = msg => {
@@ -182,7 +180,7 @@ function setUser(usr) {
                             if (response.ok) {
                                 response.json().then(student => {
                                     user.students[student.id] = student;
-                                    $('#students-list').append(create_student_row($('#student-row'), student.id, student));
+                                    students_list.append(create_student_row(student_row_template, student.id, student));
                                 });
                             } else
                                 alert(response.statusText);
@@ -200,22 +198,35 @@ function setUser(usr) {
     });
 }
 
+function show_lessons() {
+    const lessons_list = $('#lessons-list');
+    const lesson_row_template = $('#follow-lesson-row');
+    lessons_list.empty();
+    fetch('http://' + config.host + ':' + config.service_port + '/lessons/' + user.id, {
+        method: 'get',
+        headers: { 'Authorization': 'Basic ' + user.id }
+    }).then(response => {
+        if (response.ok) {
+            response.json().then(data => {
+                data.forEach(lesson => lessons_list.append(create_follow_teacher_row(lesson_row_template, lesson.id, lesson)));
+                $('#show-lessons-modal').modal('show');
+            });
+        } else
+            alert(response.statusText);
+    });
+}
+
 function show_teachers() {
-    $('#teachers-list').empty();
+    const teachers_list = $('#teachers-list');
+    const teacher_row_template = $('#follow-teacher-row');
+    teachers_list.empty();
     fetch('http://' + config.host + ':' + config.service_port + '/teachers/' + user.id, {
         method: 'get',
         headers: { 'Authorization': 'Basic ' + user.id }
     }).then(response => {
         if (response.ok) {
             response.json().then(data => {
-                data.forEach(teacher => {
-                    $('#teachers-list').append(`
-                    <div class="list-group-item list-group-item-action custom-control custom-checkbox">
-                        <input id="teacher-${teacher.id}" type="checkbox" teacher_id="${teacher.id}">
-                        <label for="teacher-${teacher.id}">${teacher.lastName}, ${teacher.firstName}</label>
-                    </div>
-                    `);
-                });
+                data.forEach(teacher => teachers_list.append(create_follow_teacher_row(teacher_row_template, teacher.id, teacher)));
                 $('#show-teachers-modal').modal('show');
             });
         } else
@@ -262,27 +273,24 @@ function unfollow_teacher(teacher_id) {
     });
 }
 
-function show_lessons() {
-    $('#lessons-list').empty();
-    fetch('http://' + config.host + ':' + config.service_port + '/lessons/' + user.id, {
-        method: 'get',
-        headers: { 'Authorization': 'Basic ' + user.id }
-    }).then(response => {
-        if (response.ok) {
-            response.json().then(data => {
-                data.forEach(lesson => {
-                    $('#lessons-list').append(`
-                    <div class="list-group-item list-group-item-action custom-control custom-checkbox">
-                        <input id="lesson-${lesson.id}" type="checkbox" lesson="${lesson.id}">
-                        <label for="lesson-${lesson.id}">${lesson.name}</label>
-                    </div>
-                    `);
-                });
-                $('#show-lessons-modal').modal('show');
-            });
-        } else
-            alert(response.statusText);
-    });
+function create_follow_lesson_row(template, id, lesson) {
+    const lesson_row = template[0].content.cloneNode(true);
+    const row_content = lesson_row.querySelector('.list-group-item');
+    row_content.childNodes[0].id += id;
+    row_content.childNodes[0].setAttribute('lesson_id', id);
+    row_content.childNodes[1].htmlFor += id;
+    row_content.childNodes[1].append(lesson.name);
+    return lesson_row;
+}
+
+function create_follow_teacher_row(template, id, teacher) {
+    const teacher_row = template[0].content.cloneNode(true);
+    const row_content = teacher_row.querySelector('.list-group-item');
+    row_content.childNodes[0].id += id;
+    row_content.childNodes[0].setAttribute('teacher_id', id);
+    row_content.childNodes[1].htmlFor += id;
+    row_content.childNodes[1].append(teacher.lastName + ', ' + teacher.firstName);
+    return teacher_row;
 }
 
 function create_teacher_row(template, id, teacher) {
