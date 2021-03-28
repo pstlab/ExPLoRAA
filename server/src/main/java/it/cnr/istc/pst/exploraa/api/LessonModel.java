@@ -13,16 +13,23 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 public class LessonModel {
 
     private final long id;
+    private final String name;
     private final Map<Long, Stimulus> stimuli;
 
     @JsonCreator
-    public LessonModel(@JsonProperty("id") long id, @JsonProperty("id") Map<Long, Stimulus> stimuli) {
+    public LessonModel(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
+            @JsonProperty("id") final Map<Long, Stimulus> stimuli) {
         this.id = id;
+        this.name = name;
         this.stimuli = stimuli;
     }
 
     public long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
     }
 
     public Map<Long, Stimulus> getStimuli() {

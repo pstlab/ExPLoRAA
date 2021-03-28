@@ -15,8 +15,9 @@ public class User {
     private final String profile;
     private final Map<Long, User> teachers;
     private final Map<Long, User> students;
-    private final Map<Long, Lesson> following_lesson;
-    private final Map<Long, Lesson> teaching_lesson;
+    private final Map<Long, Lesson> following_lessons;
+    private final Map<Long, Lesson> teaching_lessons;
+    private final Map<Long, LessonModel> models;
     private final boolean online;
 
     @JsonCreator
@@ -24,9 +25,9 @@ public class User {
             @JsonProperty("firstName") final String first_name, @JsonProperty("lastName") final String last_name,
             @JsonProperty("profile") final String profile, @JsonProperty("teachers") final Map<Long, User> teachers,
             @JsonProperty("students") final Map<Long, User> students,
-            @JsonProperty("followingLessons") final Map<Long, Lesson> following_lesson,
-            @JsonProperty("teachingLessons") final Map<Long, Lesson> teaching_lesson,
-            @JsonProperty("online") final boolean online) {
+            @JsonProperty("followingLessons") final Map<Long, Lesson> following_lessons,
+            @JsonProperty("teachingLessons") final Map<Long, Lesson> teaching_lessons,
+            @JsonProperty("models") final Map<Long, LessonModel> models, @JsonProperty("online") final boolean online) {
         this.id = id;
         this.email = email;
         this.first_name = first_name;
@@ -34,8 +35,9 @@ public class User {
         this.profile = profile;
         this.teachers = teachers;
         this.students = students;
-        this.following_lesson = following_lesson;
-        this.teaching_lesson = teaching_lesson;
+        this.following_lessons = following_lessons;
+        this.teaching_lessons = teaching_lessons;
+        this.models = models;
         this.online = online;
     }
 
@@ -90,18 +92,24 @@ public class User {
      * @return the following
      */
     public Map<Long, Lesson> getFollowingLessons() {
-        if (following_lesson == null)
+        if (following_lessons == null)
             return null;
-        return Collections.unmodifiableMap(following_lesson);
+        return Collections.unmodifiableMap(following_lessons);
     }
 
     /**
      * @return the teaching
      */
     public Map<Long, Lesson> getTeachingLessons() {
-        if (teaching_lesson == null)
+        if (teaching_lessons == null)
             return null;
-        return Collections.unmodifiableMap(teaching_lesson);
+        return Collections.unmodifiableMap(teaching_lessons);
+    }
+
+    public Map<Long, LessonModel> getModels() {
+        if (models == null)
+            return null;
+        return Collections.unmodifiableMap(models);
     }
 
     /**

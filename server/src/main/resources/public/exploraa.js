@@ -145,17 +145,47 @@ function setUser(usr) {
         $('#profile-hist').prop('checked', profile.hist);
         $('#profile-tech').prop('checked', profile.tech);
 
+        // we set the stimuli..
+        user.stimuli = [];
+
         // we set the teachers..
         const teachers_list = $('#f-teachers-list');
         const teacher_row_template = $('#teacher-row');
-        for (const [key, value] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
-            teachers_list.append(create_teacher_row(teacher_row_template, key, value));
+        for (const [id, teacher] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
+            teachers_list.append(create_teacher_row(teacher_row_template, id, teacher));
+
+        // we set the following lessons..
+        const f_lessons_list = $('#f-lessons-list');
+        const f_lesson_row_template = $('#f-lesson-row');
+        for (const [id, lesson] of Object.entries(user.followingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name))) {
+            f_lessons_list.append(create_following_lesson_row(f_lesson_row_template, id, lesson));
+            for (const stimulus of lesson.stimuli)
+                user.stimuli.push(stimulus);
+        }
+
+        // we set the stimuli..
+        const stimuli_list = $('#stimuli-list');
+        const stimulus_row_template = $('#stimulus-row');
+        for (const stimulus of user.stimuli.sort((a, b) => a[1].time > b[1].time))
+            stimuli_list.append(create_stimulus_row(stimulus_row_template, stimulus));
+
+        // we set the teaching lessons..
+        const t_lessons_list = $('#t-lessons-list');
+        const t_lesson_row_template = $('#t-lesson-row');
+        for (const [id, lesson] of Object.entries(user.teachingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+            t_lessons_list.append(create_teaching_lesson_row(t_lesson_row_template, id, lesson));
 
         // we set the students..
         const students_list = $('#students-list');
         const student_row_template = $('#student-row');
-        for (const [key, value] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
-            students_list.append(create_student_row(student_row_template, key, value));
+        for (const [id, student] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
+            students_list.append(create_student_row(student_row_template, id, student));
+
+        // we set the lesson templates..
+        const lesson_models_list = $('#lesson-models-list');
+        const lesson_model_row_template = $('#lesson-model-row');
+        for (const [id, model] of Object.entries(user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+            lesson_models_list.append(create_lesson_model_row(lesson_model_row_template, id, model));
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
         ws.onmessage = msg => {
@@ -273,6 +303,15 @@ function unfollow_teacher(teacher_id) {
     });
 }
 
+function create_stimulus_row(template, stimulus) {
+    const stimulus_row = template[0].content.cloneNode(true);
+    const row_content = stimulus_row.querySelector('.list-group-item');
+    row_content.id += stimulus.id;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(row_content.id);
+    return stimulus_row;
+}
+
 function create_follow_lesson_row(template, id, lesson) {
     const lesson_row = template[0].content.cloneNode(true);
     const row_content = lesson_row.querySelector('.list-group-item');
@@ -280,6 +319,24 @@ function create_follow_lesson_row(template, id, lesson) {
     row_content.childNodes[0].setAttribute('lesson_id', id);
     row_content.childNodes[1].htmlFor += id;
     row_content.childNodes[1].append(lesson.name);
+    return lesson_row;
+}
+
+function create_following_lesson_row(template, id, lesson) {
+    const lesson_row = template[0].content.cloneNode(true);
+    const row_content = lesson_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(lesson.name);
+    return lesson_row;
+}
+
+function create_teaching_lesson_row(template, id, lesson) {
+    const lesson_row = template[0].content.cloneNode(true);
+    const row_content = lesson_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(lesson.name);
     return lesson_row;
 }
 
@@ -322,4 +379,40 @@ function create_student_row(template, id, student) {
         online_span.className = 'fas fa-unlink mr-1';
     divs[0].append(student.lastName + ', ' + student.firstName);
     return student_row;
+}
+
+function create_lesson_model_row(template, id, lesson_model) {
+    const lesson_row = template[0].content.cloneNode(true);
+    const row_content = lesson_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(lesson_model.name);
+    return lesson_row;
+}
+
+function create_stimulus_template(template, id, stimulus) {
+    const c_template = template[0].content.cloneNode(true);
+    const stimulus_id = rule_row.querySelector('.stimulus-id');
+    stimulus_id.append(id);
+    const stimulus_name = rule_row.querySelector('.stimulus-name');
+    stimulus_name.append(stimulus.name);
+    return c_template;
+}
+
+function create_rule_row(template, id, rule) {
+    const rule_row = template[0].content.cloneNode(true);
+    const row_content = rule_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(rule.name);
+    return rule_row;
+}
+
+function create_suggestion_row(template, id, suggestion) {
+    const suggestion_row = template[0].content.cloneNode(true);
+    const row_content = suggestion_row.querySelector('.list-group-item');
+    row_content.id += id;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(suggestion.name);
+    return suggestion_row;
 }

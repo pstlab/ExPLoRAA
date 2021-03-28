@@ -16,11 +16,20 @@ public class LessonModelEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    private String name;
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     private final Set<StimulusEntity> stimuli = new HashSet<>();
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(final String name) {
+        this.name = name;
     }
 
     public Set<StimulusEntity> getStimuli() {

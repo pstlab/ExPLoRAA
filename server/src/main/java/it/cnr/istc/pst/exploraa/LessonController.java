@@ -19,11 +19,13 @@ import io.javalin.http.Context;
 import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
 import it.cnr.istc.pst.exploraa.api.Lesson;
+import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.LessonModelEntity;
 import it.cnr.istc.pst.exploraa.db.StimulusEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
+import it.cnr.istc.pst.exploraa.db.WebPageEntity;
 
 public class LessonController {
 
@@ -190,5 +192,21 @@ public class LessonController {
         return new Lesson(entity.getId(), entity.getName(), entity.getModel().getId(), lesson_manager.getTopics(),
                 UserController.toTeacher(entity.getTeacher()), null, lesson_manager.getStimuli(),
                 lesson_manager.getTokens(), lesson_manager.getState(), lesson_manager.getTime());
+    }
+
+    static LessonModel toModel(final LessonModelEntity entity) {
+        return new LessonModel(entity.getId(), entity.getName(),
+                entity.getStimuli().stream().map(stimulus -> toStimulus(stimulus))
+                        .collect(Collectors.toMap(stimulus -> stimulus.getId(), stimulus -> stimulus)));
+    }
+
+    static LessonModel.Stimulus toStimulus(StimulusEntity entity) {
+        if (entity instanceof WebPageEntity) {
+            WebPageEntity web_entity = (WebPageEntity) entity;
+            return new LessonModel.Stimulus.WebStimulus(entity.getId(), entity.getTopics(), entity.getLength(),
+                    entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
+                    web_entity.getUrl());
+        }
+        return null;
     }
 }

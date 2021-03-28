@@ -21,6 +21,7 @@ import io.javalin.http.NotFoundResponse;
 import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.App.ExplRole;
 import it.cnr.istc.pst.exploraa.api.Lesson;
+import it.cnr.istc.pst.exploraa.api.LessonModel;
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
@@ -307,18 +308,20 @@ public class UserController {
                 .map(l -> LessonController.toFollowing(l)).collect(Collectors.toMap(l -> l.getId(), l -> l));
         final Map<Long, Lesson> teaching_lessons = entity.getTeachingLessons().stream()
                 .map(l -> LessonController.toTeaching(l)).collect(Collectors.toMap(l -> l.getId(), l -> l));
+        final Map<Long, LessonModel> models = entity.getModels().stream().map(m -> LessonController.toModel(m))
+                .collect(Collectors.toMap(m -> m.getId(), m -> m));
 
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(),
-                entity.getProfile(), teachers, students, following_lessons, teaching_lessons, online);
+                entity.getProfile(), teachers, students, following_lessons, teaching_lessons, models, online);
     }
 
     static User toTeacher(final UserEntity entity) {
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), null, null,
-                null, null, null, ONLINE.containsKey(entity.getId()));
+                null, null, null, null, ONLINE.containsKey(entity.getId()));
     }
 
     static User toStudent(final UserEntity entity) {
         return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), null, null,
-                null, null, null, ONLINE.containsKey(entity.getId()));
+                null, null, null, null, ONLINE.containsKey(entity.getId()));
     }
 }
