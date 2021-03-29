@@ -18,7 +18,7 @@ public class LessonModel {
 
     @JsonCreator
     public LessonModel(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
-            @JsonProperty("id") final Map<Long, Stimulus> stimuli) {
+            @JsonProperty("stimuli") final Map<Long, Stimulus> stimuli) {
         this.id = id;
         this.name = name;
         this.stimuli = stimuli;

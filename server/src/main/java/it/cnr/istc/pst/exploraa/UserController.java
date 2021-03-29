@@ -87,6 +87,7 @@ public class UserController {
         final String password = App.hashPassword(ctx.formParam("password"), salt);
         final String first_name = ctx.formParam("first_name");
         final String last_name = ctx.formParam("last_name");
+        final String profile = ctx.formParam("profile");
         LOG.info("creating new user {}..", email);
         final EntityManager em = App.EMF.createEntityManager();
 
@@ -96,7 +97,7 @@ public class UserController {
         user_entity.setPassword(password);
         user_entity.setFirstName(first_name);
         user_entity.setLastName(last_name);
-        user_entity.setProfile("{}");
+        user_entity.setProfile(profile);
         user_entity.addRole(ExplRole.User.name());
 
         try {
@@ -364,7 +365,7 @@ public class UserController {
     }
 
     static User toStudent(final UserEntity entity) {
-        return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(), null, null,
-                null, null, null, null, ONLINE.containsKey(entity.getId()));
+        return new User(entity.getId(), entity.getEmail(), entity.getFirstName(), entity.getLastName(),
+                entity.getProfile(), null, null, null, null, null, ONLINE.containsKey(entity.getId()));
     }
 }
