@@ -220,6 +220,49 @@ public class UserController {
             throw new NotFoundResponse();
 
         em.getTransaction().begin();
+        user_entity.getFollowingLessons().stream().forEach(l -> {
+            l.removeStudent(user_entity);
+            if (ONLINE.containsKey(l.getTeacher().getId())) {
+                // we notify the teacher that a student is not following a lesson anymore..
+                try {
+                    ONLINE.get(l.getTeacher().getId()).send(
+                            App.MAPPER.writeValueAsString(new Message.UnfollowLesson(user_entity.getId(), l.getId())));
+                } catch (JsonProcessingException e) {
+                    LOG.error(e.getMessage(), e);
+                }
+            }
+        });
+        user_entity.getTeachingLessons().stream().forEach(l -> {
+            l.getStudents().stream().forEach(s -> {
+                s.removeFollowingLesson(l);
+                if (ONLINE.containsKey(s.getId())) {
+                    // we notify the student that a lesson cannot be followed anymore..
+                    try {
+                        ONLINE.get(s.getId()).send(App.MAPPER.writeValueAsString(new Message.RemoveLesson(l.getId())));
+                    } catch (JsonProcessingException e) {
+                        LOG.error(e.getMessage(), e);
+                    }
+                }
+            });
+            em.remove(l);
+        });
+        user_entity.getStudents().stream().forEach(s -> {
+            s.removeTeacher(user_entity);
+            if (ONLINE.containsKey(s.getId())) {
+                // TODO: notify the student that a teacher cannot be followed anymore..
+            }
+        });
+        user_entity.getTeachers().stream().forEach(t -> {
+            t.removeStudent(user_entity);
+            if (ONLINE.containsKey(t.getId())) {
+                // we notify the teacher that a student is not following anymore..
+                try {
+                    ONLINE.get(t.getId()).send(App.MAPPER.writeValueAsString(new Message.Follower(user_id, false)));
+                } catch (JsonProcessingException e) {
+                    LOG.error(e.getMessage(), e);
+                }
+            }
+        });
         em.remove(user_entity);
         em.getTransaction().commit();
 

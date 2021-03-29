@@ -20,9 +20,10 @@ import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
 import it.cnr.istc.pst.exploraa.api.Lesson;
 import it.cnr.istc.pst.exploraa.api.LessonModel;
+import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
-import it.cnr.istc.pst.exploraa.db.LessonModelEntity;
+import it.cnr.istc.pst.exploraa.db.ModelEntity;
 import it.cnr.istc.pst.exploraa.db.StimulusEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 import it.cnr.istc.pst.exploraa.db.WebPageEntity;
@@ -62,6 +63,57 @@ public class LessonController {
         em.close();
     }
 
+    static void createModel(final Context ctx) {
+        final String name = ctx.formParam("name");
+        final long teacher_id = Long.parseLong(ctx.formParam("teacher_id"));
+
+        LOG.info("creating new model {}..", name);
+        final ModelEntity model = new ModelEntity();
+        model.setName(name);
+
+        final EntityManager em = App.EMF.createEntityManager();
+
+        final UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+
+        em.getTransaction().begin();
+        teacher_entity.addModel(model);
+        model.addTeacher(teacher_entity);
+        em.persist(model);
+        em.getTransaction().commit();
+
+        ctx.json(toModel(model));
+        em.close();
+    }
+
+    static void getModel(final Context ctx) {
+        final long model_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("retrieving lesson #{}..", model_id);
+        final EntityManager em = App.EMF.createEntityManager();
+        final ModelEntity model_entity = em.find(ModelEntity.class, model_id);
+        if (model_entity == null)
+            throw new NotFoundResponse();
+
+        ctx.json(toModel(model_entity));
+        em.close();
+    }
+
+    static void deleteModel(final Context ctx) {
+        final long model_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("deleting model #{}..", model_id);
+        final EntityManager em = App.EMF.createEntityManager();
+        final ModelEntity model_entity = em.find(ModelEntity.class, model_id);
+        if (model_entity == null)
+            throw new NotFoundResponse();
+
+        em.getTransaction().begin();
+        model_entity.getTeachers().stream().forEach(t -> t.removeModel(model_entity));
+        em.remove(model_entity);
+        em.getTransaction().commit();
+
+        ctx.status(204);
+        em.close();
+    }
+
     static void createLesson(final Context ctx) {
         final String name = ctx.formParam("name");
         final long teacher_id = Long.parseLong(ctx.formParam("teacher_id"));
@@ -75,10 +127,12 @@ public class LessonController {
 
         final EntityManager em = App.EMF.createEntityManager();
 
-        final LessonModelEntity lme = em.find(LessonModelEntity.class, model_id);
+        final ModelEntity lme = em.find(ModelEntity.class, model_id);
+        final UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
+
+        em.getTransaction().begin();
         lesson_entity.setModel(lme);
 
-        final UserEntity teacher_entity = em.find(UserEntity.class, teacher_id);
         lesson_entity.setTeacher(teacher_entity);
         teacher_entity.addTeachingLesson(lesson_entity);
 
@@ -91,7 +145,6 @@ public class LessonController {
         for (int i = 0; i < goals_ids.length; i++)
             lesson_entity.addGoal(em.find(StimulusEntity.class, Long.parseLong(goals_ids[i])));
 
-        em.getTransaction().begin();
         em.persist(lesson_entity);
         em.getTransaction().commit();
 
@@ -123,6 +176,18 @@ public class LessonController {
             throw new NotFoundResponse();
 
         em.getTransaction().begin();
+        lesson_entity.getStudents().stream().forEach(s -> {
+            s.removeFollowingLesson(lesson_entity);
+            if (UserController.ONLINE.containsKey(s.getId())) {
+                // we notify the student that a lesson cannot be followed anymore..
+                try {
+                    UserController.ONLINE.get(s.getId())
+                            .send(App.MAPPER.writeValueAsString(new Message.RemoveLesson(lesson_id)));
+                } catch (JsonProcessingException e) {
+                    LOG.error(e.getMessage(), e);
+                }
+            }
+        });
         em.remove(lesson_entity);
         em.getTransaction().commit();
 
@@ -194,15 +259,15 @@ public class LessonController {
                 lesson_manager.getTokens(), lesson_manager.getState(), lesson_manager.getTime());
     }
 
-    static LessonModel toModel(final LessonModelEntity entity) {
+    static LessonModel toModel(final ModelEntity entity) {
         return new LessonModel(entity.getId(), entity.getName(),
                 entity.getStimuli().stream().map(stimulus -> toStimulus(stimulus))
                         .collect(Collectors.toMap(stimulus -> stimulus.getId(), stimulus -> stimulus)));
     }
 
-    static LessonModel.Stimulus toStimulus(StimulusEntity entity) {
+    static LessonModel.Stimulus toStimulus(final StimulusEntity entity) {
         if (entity instanceof WebPageEntity) {
-            WebPageEntity web_entity = (WebPageEntity) entity;
+            final WebPageEntity web_entity = (WebPageEntity) entity;
             return new LessonModel.Stimulus.WebStimulus(entity.getId(), entity.getTopics(), entity.getLength(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
                     web_entity.getUrl());

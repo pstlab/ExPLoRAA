@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
@@ -20,11 +19,11 @@ public class LessonEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
-    @ManyToOne(cascade = CascadeType.ALL)
-    private LessonModelEntity model;
-    @ManyToOne(cascade = CascadeType.ALL)
+    @ManyToOne
+    private ModelEntity model;
+    @ManyToOne
     private UserEntity teacher;
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     private final Collection<UserEntity> followed_by = new ArrayList<>();
     @OneToMany
     private final Collection<StimulusEntity> goals = new ArrayList<>();
@@ -44,14 +43,14 @@ public class LessonEntity {
     /**
      * @return the model
      */
-    public LessonModelEntity getModel() {
+    public ModelEntity getModel() {
         return model;
     }
 
     /**
      * @param model the model to set
      */
-    public void setModel(final LessonModelEntity model) {
+    public void setModel(final ModelEntity model) {
         this.model = model;
     }
 

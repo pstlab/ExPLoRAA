@@ -150,13 +150,13 @@ function setUser(usr) {
 
         // we set the teachers..
         const teachers_list = $('#f-teachers-list');
-        const teacher_row_template = $('#teacher-row');
+        const teacher_row_template = $('#following-teacher-row');
         for (const [id, teacher] of Object.entries(user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
             teachers_list.append(create_teacher_row(teacher_row_template, id, teacher));
 
         // we set the following lessons..
         const f_lessons_list = $('#f-lessons-list');
-        const f_lesson_row_template = $('#f-lesson-row');
+        const f_lesson_row_template = $('#following-lesson-row');
         for (const [id, lesson] of Object.entries(user.followingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name))) {
             f_lessons_list.append(create_following_lesson_row(f_lesson_row_template, id, lesson));
             for (const stimulus of lesson.stimuli)
@@ -171,7 +171,7 @@ function setUser(usr) {
 
         // we set the teaching lessons..
         const t_lessons_list = $('#t-lessons-list');
-        const t_lesson_row_template = $('#t-lesson-row');
+        const t_lesson_row_template = $('#teaching-lesson-row');
         for (const [id, lesson] of Object.entries(user.teachingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name)))
             t_lessons_list.append(create_teaching_lesson_row(t_lesson_row_template, id, lesson));
 
@@ -181,11 +181,11 @@ function setUser(usr) {
         for (const [id, student] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
             students_list.append(create_student_row(student_row_template, id, student));
 
-        // we set the lesson templates..
-        const lesson_models_list = $('#lesson-models-list');
-        const lesson_model_row_template = $('#lesson-model-row');
+        // we set the models..
+        const models_list = $('#lesson-models-list');
+        const model_row_template = $('#lesson-model-row');
         for (const [id, model] of Object.entries(user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
-            lesson_models_list.append(create_lesson_model_row(lesson_model_row_template, id, model));
+            models_list.append(create_model_row(model_row_template, id, model));
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + user.id, 'exploraa-ws');
         ws.onmessage = msg => {
@@ -230,7 +230,7 @@ function setUser(usr) {
 
 function show_lessons() {
     const lessons_list = $('#lessons-list');
-    const lesson_row_template = $('#follow-lesson-row');
+    const lesson_row_template = $('#follow-new-lesson-row');
     lessons_list.empty();
     fetch('http://' + config.host + ':' + config.service_port + '/lessons/' + user.id, {
         method: 'get',
@@ -248,7 +248,7 @@ function show_lessons() {
 
 function show_teachers() {
     const teachers_list = $('#teachers-list');
-    const teacher_row_template = $('#follow-teacher-row');
+    const teacher_row_template = $('#follow-new-teacher-row');
     teachers_list.empty();
     fetch('http://' + config.host + ':' + config.service_port + '/teachers/' + user.id, {
         method: 'get',
@@ -279,7 +279,7 @@ function follow_teachers() {
                     if (response.ok) {
                         response.json().then(teacher => {
                             user.teachers[teacher.id] = teacher;
-                            $('#f-teachers-list').append(create_teacher_row($('#teacher-row'), teacher.id, teacher));
+                            $('#f-teachers-list').append(create_teacher_row($('#following-teacher-row'), teacher.id, teacher));
                         });
                     } else
                         alert(response.statusText);
@@ -298,6 +298,39 @@ function unfollow_teacher(teacher_id) {
         if (response.ok) {
             delete user.teachers[teacher_id];
             $('#f-teacher-' + teacher_id).remove();
+        } else
+            alert(response.statusText);
+    });
+}
+
+function new_model() {
+    const form = new FormData();
+    form.append('name', $('#new-template-name').val());
+    form.append('teacher_id', user.id);
+    fetch('http://' + config.host + ':' + config.service_port + '/model', {
+        method: 'post',
+        headers: { 'Authorization': 'Basic ' + user.id },
+        body: form
+    }).then(response => {
+        if (response.ok) {
+            $('#new-template-name').val('');
+            response.json().then(model => {
+                user.models[model.id] = model;
+                $('#lesson-models-list').append(create_model_row($('#lesson-model-row'), model.id, model));
+            });
+        } else
+            alert(response.statusText);
+    });
+}
+
+function delete_model(model_id) {
+    fetch('http://' + config.host + ':' + config.service_port + '/model/' + model_id, {
+        method: 'delete',
+        headers: { 'Authorization': 'Basic ' + user.id }
+    }).then(response => {
+        if (response.ok) {
+            delete user.models[model_id];
+            $('#model-' + model_id).remove();
         } else
             alert(response.statusText);
     });
@@ -381,22 +414,23 @@ function create_student_row(template, id, student) {
     return student_row;
 }
 
-function create_lesson_model_row(template, id, lesson_model) {
+function create_model_row(template, id, lesson_model) {
     const lesson_row = template[0].content.cloneNode(true);
     const row_content = lesson_row.querySelector('.list-group-item');
     row_content.id += id;
     const divs = row_content.querySelectorAll('div');
     divs[0].append(lesson_model.name);
+    divs[1].childNodes[0].onclick = function () { delete_model(id); };
     return lesson_row;
 }
 
-function create_stimulus_template(template, id, stimulus) {
-    const c_template = template[0].content.cloneNode(true);
+function create_stimulus_model(template, id, stimulus) {
+    const model = template[0].content.cloneNode(true);
     const stimulus_id = rule_row.querySelector('.stimulus-id');
     stimulus_id.append(id);
     const stimulus_name = rule_row.querySelector('.stimulus-name');
     stimulus_name.append(stimulus.name);
-    return c_template;
+    return model;
 }
 
 function create_rule_row(template, id, rule) {

@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
@@ -24,9 +23,9 @@ public class StimulusEntity {
     @ElementCollection
     private final Set<String> topics = new HashSet<>();
     private Long length;
-    @ManyToMany(mappedBy = "effects", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "effects")
     private final Set<StimulusEntity> preconditions = new HashSet<>();
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     private final Set<StimulusEntity> effects = new HashSet<>();
 
     public Long getId() {

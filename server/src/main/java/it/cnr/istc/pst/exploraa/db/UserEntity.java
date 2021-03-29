@@ -6,7 +6,6 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -38,15 +37,15 @@ public class UserEntity {
     private final Set<String> roles = new HashSet<>();
     @Lob
     private String profile;
-    @OneToMany
-    private final Collection<LessonModelEntity> models = new ArrayList<>();
-    @ManyToMany(mappedBy = "students", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "teachers")
+    private final Collection<ModelEntity> models = new ArrayList<>();
+    @ManyToMany(mappedBy = "students")
     private final Collection<UserEntity> teachers = new ArrayList<>();
-    @ManyToMany(cascade = CascadeType.ALL)
+    @ManyToMany
     private final Collection<UserEntity> students = new ArrayList<>();
-    @ManyToMany(mappedBy = "followed_by", cascade = CascadeType.ALL)
+    @ManyToMany(mappedBy = "followed_by")
     private final Collection<LessonEntity> following_lessons = new ArrayList<>();
-    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "teacher", orphanRemoval = true)
     private final Collection<LessonEntity> teaching_lessons = new ArrayList<>();
 
     public Long getId() {
@@ -119,15 +118,15 @@ public class UserEntity {
         this.profile = profile;
     }
 
-    public Collection<LessonModelEntity> getModels() {
+    public Collection<ModelEntity> getModels() {
         return Collections.unmodifiableCollection(models);
     }
 
-    public void addModel(final LessonModelEntity model) {
+    public void addModel(final ModelEntity model) {
         models.add(model);
     }
 
-    public void removeModel(final LessonModelEntity model) {
+    public void removeModel(final ModelEntity model) {
         models.remove(model);
     }
 
