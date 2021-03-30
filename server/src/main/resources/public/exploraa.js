@@ -9,6 +9,7 @@ let user;
 let ws;
 const stimuli = [];
 let current_student;
+let current_model;
 
 $(window).on('load', function () {
     const email = localStorage.getItem('email');
@@ -197,8 +198,8 @@ function setUser(usr) {
             create_student_row(students_list, student_row_template, id, student);
 
         // we set the models..
-        const models_list = $('#lesson-models-list');
-        const model_row_template = $('#lesson-model-row');
+        const models_list = $('#models-list');
+        const model_row_template = $('#model-row');
         for (const [id, model] of Object.entries(user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
             create_model_row(models_list, model_row_template, id, model);
 
@@ -348,7 +349,7 @@ function new_model() {
             $('#new-template-name').val('');
             response.json().then(model => {
                 user.models[model.id] = model;
-                create_model_row($('#lesson-models-list'), $('#lesson-model-row'), model.id, model);
+                create_model_row($('#models-list'), $('#model-row'), model.id, model);
             });
         } else
             alert(response.statusText);
@@ -443,9 +444,9 @@ function create_student_row(students_list, template, id, student) {
 
     $('#student-' + id).on('show.bs.tab', function (event) {
         current_student = id;
-        $('#student-profile-email').val(student.email);
-        $('#student-profile-first-name').val(student.firstName);
-        $('#student-profile-last-name').val(student.lastName);
+        $('#student-email').val(student.email);
+        $('#student-first-name').val(student.firstName);
+        $('#student-last-name').val(student.lastName);
         const profile = JSON.parse(student.profile);
         $('#student-profile-antro').prop('checked', profile.antro);
         $('#student-profile-art').prop('checked', profile.art);
@@ -461,14 +462,18 @@ function create_student_row(students_list, template, id, student) {
     });
 }
 
-function create_model_row(models_list, template, id, lesson_model) {
-    const lesson_row = template[0].content.cloneNode(true);
-    const row_content = lesson_row.querySelector('.list-group-item');
+function create_model_row(models_list, template, id, model) {
+    const model_row = template[0].content.cloneNode(true);
+    const row_content = model_row.querySelector('.list-group-item');
     row_content.id += id;
     const divs = row_content.querySelectorAll('div');
-    divs[0].append(lesson_model.name);
+    divs[0].append(model.name);
     divs[1].childNodes[0].onclick = function () { delete_model(id); };
-    models_list.append(lesson_row);
+    models_list.append(model_row);
+
+    $('#model-' + id).on('show.bs.tab', function (event) {
+        current_model = id;
+    });
 }
 
 function create_stimulus_model(template, id, stimulus) {
