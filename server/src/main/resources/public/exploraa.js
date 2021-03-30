@@ -234,6 +234,8 @@ function setUser(usr) {
                     } else {
                         delete user.students[c_msg.student];
                         $('#student-' + c_msg.student).remove();
+                        if (current_student == c_msg.student)
+                            $('#student').removeClass('active');
                     }
                     break;
                 case 'profile-update':
@@ -312,7 +314,7 @@ function follow_teachers() {
                     if (response.ok) {
                         response.json().then(teacher => {
                             user.teachers[teacher.id] = teacher;
-                            $('#f-teachers-list').append(create_following_teacher_row($('#following-teacher-row'), teacher.id, teacher));
+                            create_following_teacher_row($('#f-teachers-list'), $('#following-teacher-row'), teacher.id, teacher);
                         });
                     } else
                         alert(response.statusText);
