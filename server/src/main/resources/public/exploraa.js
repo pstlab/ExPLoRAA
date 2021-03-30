@@ -364,6 +364,8 @@ function delete_model(model_id) {
         if (response.ok) {
             delete user.models[model_id];
             $('#model-' + model_id).remove();
+            if (current_model == model_id)
+                $('#model').removeClass('active');
         } else
             alert(response.statusText);
     });

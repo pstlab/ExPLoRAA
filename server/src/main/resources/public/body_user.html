@@ -42,7 +42,7 @@
                 <div class="col-sm-3">
                     <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
-                            <h7>Stimoli</h7>
+                            <h6>Stimoli</h6>
                         </div>
                     </div>
                     <div class="row h-75">
@@ -52,7 +52,7 @@
                     <hr />
                     <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
-                            <h7>Lezioni seguite</h7>
+                            <h6>Lezioni seguite</h6>
                         </div>
                         <div class="col d-flex justify-content-end">
                             <a role="button" class="btn btn-sm btn-secondary" onclick="show_lessons()"><i
@@ -72,7 +72,7 @@
                 <div class="col-sm-3">
                     <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
-                            <h7>Insegnanti seguiti</h7>
+                            <h6>Insegnanti seguiti</h6>
                         </div>
                         <div class="col d-flex justify-content-end">
                             <a role="button" class="btn btn-sm btn-secondary" onclick="show_teachers()"><i
@@ -92,7 +92,7 @@
                 <div class="col-sm-3">
                     <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
-                            <h7>Lezioni insegnate</h7>
+                            <h6>Lezioni insegnate</h6>
                         </div>
                         <div class="col d-flex justify-content-end">
                             <a role="button" class="btn btn-sm btn-secondary" onclick="new_lesson()"><i
@@ -106,7 +106,7 @@
                     <hr />
                     <div class="row">
                         <div class="col d-flex justify-content-start">
-                            <h7>Studenti</h7>
+                            <h6>Studenti</h6>
                         </div>
                     </div>
                     <div class="row h-25">
@@ -211,11 +211,11 @@
                 <div class="col-sm-3">
                     <div class="row align-items-center">
                         <div class="col d-flex justify-content-start">
-                            <h7>Modelli</h7>
+                            <h6>Modelli</h6>
                         </div>
                         <div class="col d-flex justify-content-end">
                             <a role="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal"
-                                data-bs-target="#new-lesson-template-modal"><i class="bi bi-folder-plus"></i></a>
+                                data-bs-target="#new-model-modal"><i class="bi bi-folder-plus"></i></a>
                         </div>
                     </div>
                     <div class="row h-100">
@@ -314,8 +314,18 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <div class="row align-items-center">
+                                            <div class="col d-flex justify-content-start">
+                                                <h6>Precondizioni:</h6>
+                                            </div>
+                                            <div class="col d-flex justify-content-end">
+                                                <a role="button" class="btn btn-sm btn-secondary"
+                                                    onclick="new_precondition()"><i class="bi bi-folder-plus"></i></a>
+                                            </div>
+                                        </div>
                                         <div class="row h-25">
-                                            <div class="list-group list-group-flush overflow-auto" id="preconditions-list">
+                                            <div class="list-group list-group-flush overflow-auto"
+                                                id="preconditions-list">
                                             </div>
                                         </div>
                                     </form>
@@ -323,7 +333,7 @@
                                 <div class="col-sm-3">
                                     <div class="row align-items-center">
                                         <div class="col d-flex justify-content-start">
-                                            <h7>Regole</h7>
+                                            <h6>Regole</h6>
                                         </div>
                                         <div class="col d-flex justify-content-end">
                                             <a role="button" class="btn btn-sm btn-secondary" onclick="new_rule()"><i
@@ -331,17 +341,19 @@
                                         </div>
                                     </div>
                                     <div class="row h-75">
-                                        <div class="list-group list-group-flush overflow-auto" id="rules-list" role="tablist">
+                                        <div class="list-group list-group-flush overflow-auto" id="rules-list"
+                                            role="tablist">
                                         </div>
                                     </div>
                                     <hr />
                                     <div class="row align-items-center">
                                         <div class="col d-flex justify-content-start">
-                                            <h7>Suggerimenti</h7>
+                                            <h6>Suggerimenti</h6>
                                         </div>
                                     </div>
                                     <div class="row h-25">
-                                        <div class="list-group list-group-flush overflow-auto" id="suggestions-list" role="tablist">
+                                        <div class="list-group list-group-flush overflow-auto" id="suggestions-list"
+                                            role="tablist">
                                         </div>
                                     </div>
                                 </div>
@@ -445,7 +457,7 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
                         onclick="follow_lessons()">Segui</button>
                 </div>
             </div>
@@ -465,26 +477,26 @@
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
                         onclick="follow_teachers()">Segui</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="modal fade" id="new-lesson-template-modal" tabindex="-1"
-        aria-labelledby="new-lesson-template-modal-label" aria-hidden="true">
+    <div class="modal fade" id="new-model-modal" tabindex="-1" aria-labelledby="new-model-modal-label"
+        aria-hidden="true">
         <div class="modal-dialog" role="document">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title" id="new-lesson-template-modal-label">Nuovo modello</h5>
+                    <h5 class="modal-title" id="new-model-modal-label">Nuovo modello</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
                     <input class="form-control" type="text" placeholder="Nome modello" id="new-template-name">
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-sm btn-primary" data-dismiss="modal"
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
                         onclick="new_model()">Crea</button>
                 </div>
             </div>
