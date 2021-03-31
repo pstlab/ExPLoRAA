@@ -485,6 +485,8 @@ function create_model_row(models_list, template, id, model) {
         const rule_row_template = $('#rule-row');
         for (const [id, rule] of Object.entries(model.rules).sort((a, b) => a[1].name.localeCompare(b[1].name)))
             create_rule_row(rules_list, rule_row_template, id, rule);
+
+        $('#rule').removeClass('active');
     });
 }
 
