@@ -26,7 +26,7 @@ public class LessonEntity {
     @ManyToMany
     private final Collection<UserEntity> followed_by = new ArrayList<>();
     @OneToMany
-    private final Collection<StimulusEntity> goals = new ArrayList<>();
+    private final Collection<RuleEntity> goals = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -74,15 +74,15 @@ public class LessonEntity {
         followed_by.remove(student);
     }
 
-    public Collection<StimulusEntity> getGoals() {
+    public Collection<RuleEntity> getGoals() {
         return Collections.unmodifiableCollection(goals);
     }
 
-    public void addGoal(final StimulusEntity goal) {
+    public void addGoal(final RuleEntity goal) {
         goals.add(goal);
     }
 
-    public void removeGoal(final StimulusEntity goal) {
+    public void removeGoal(final RuleEntity goal) {
         goals.remove(goal);
     }
 }

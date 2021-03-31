@@ -10,6 +10,7 @@ let ws;
 const stimuli = [];
 let current_student;
 let current_model;
+let current_rule;
 
 $(window).on('load', function () {
     const email = localStorage.getItem('email');
@@ -477,25 +478,58 @@ function create_model_row(models_list, template, id, model) {
 
     $('#model-' + id).on('show.bs.tab', function (event) {
         current_model = id;
+
+        // we set the rules..
+        const rules_list = $('#rules-list');
+        rules_list.empty();
+        const rule_row_template = $('#rule-row');
+        for (const [id, rule] of Object.entries(model.rules).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+            create_rule_row(rules_list, rule_row_template, id, rule);
     });
 }
 
-function create_stimulus_model(template, id, stimulus) {
-    const model = template[0].content.cloneNode(true);
-    const stimulus_id = rule_row.querySelector('.stimulus-id');
-    stimulus_id.append(id);
-    const stimulus_name = rule_row.querySelector('.stimulus-name');
-    stimulus_name.append(stimulus.name);
-    return model;
-}
-
-function create_rule_row(template, id, rule) {
+function create_rule_row(rules_list, template, id, rule) {
     const rule_row = template[0].content.cloneNode(true);
     const row_content = rule_row.querySelector('.list-group-item');
     row_content.id += id;
     const divs = row_content.querySelectorAll('div');
     divs[0].append(rule.name);
-    return rule_row;
+    rules_list.append(rule_row);
+
+    $('#rule-' + id).on('show.bs.tab', function (event) {
+        current_rule = id;
+
+        $('#rule-id').val(id);
+        $('#rule-name').val(rule.name);
+
+        $('#rule-type').on('change', function (e) {
+            switch (this.value) {
+                case '1':
+                    $('#rule-url-div').addClass('d-none');
+                    break;
+                case '2':
+                    $('#rule-url-div').removeClass('d-none');
+                    break;
+                default:
+                    break;
+            }
+        });
+
+        switch (rule.type) {
+            case 'text':
+                $('#rule-type').val(1);
+                $('#rule-url-div').addClass('d-none');
+                break;
+            case 'web':
+                $('#rule-type').val(2);
+                $('#rule-url-div').removeClass('d-none');
+                $('#rule-url').val(rule.url);
+                break;
+            default:
+                break;
+        }
+        $('#rule-length').val(rule.length);
+    });
 }
 
 function create_suggestion_row(template, id, suggestion) {

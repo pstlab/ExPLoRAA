@@ -3,7 +3,7 @@ package it.cnr.istc.pst.exploraa.db;
 import javax.persistence.Entity;
 
 @Entity
-public class WebPageEntity extends StimulusEntity {
+public class WebRuleEntity extends RuleEntity {
 
     private String url;
 

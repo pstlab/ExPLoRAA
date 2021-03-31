@@ -14,14 +14,14 @@ public class LessonModel {
 
     private final long id;
     private final String name;
-    private final Map<Long, Stimulus> stimuli;
+    private final Map<Long, Rule> rules;
 
     @JsonCreator
     public LessonModel(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
-            @JsonProperty("stimuli") final Map<Long, Stimulus> stimuli) {
+            @JsonProperty("rules") final Map<Long, Rule> rules) {
         this.id = id;
         this.name = name;
-        this.stimuli = stimuli;
+        this.rules = rules;
     }
 
     public long getId() {
@@ -32,26 +32,28 @@ public class LessonModel {
         return name;
     }
 
-    public Map<Long, Stimulus> getStimuli() {
-        if (stimuli == null)
+    public Map<Long, Rule> getRules() {
+        if (rules == null)
             return null;
-        return Collections.unmodifiableMap(stimuli);
+        return Collections.unmodifiableMap(rules);
     }
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-    @JsonSubTypes({ @Type(value = Stimulus.WebStimulus.class, name = "web") })
-    public static abstract class Stimulus {
+    @JsonSubTypes({ @Type(value = Rule.WebRule.class, name = "web") })
+    public static abstract class Rule {
 
         private final long id;
+        private final String name;
         private final Set<String> topics;
-        private final long length;
+        private final Long length;
         private final Set<Long> preconditions;
 
         @JsonCreator
-        public Stimulus(@JsonProperty("id") final long id, @JsonProperty("topics") final Set<String> topics,
-                @JsonProperty("length") final long length,
+        public Rule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
+                @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
                 @JsonProperty("preconditions") final Set<Long> preconditions) {
             this.id = id;
+            this.name = name;
             this.topics = topics;
             this.length = length;
             this.preconditions = preconditions;
@@ -61,13 +63,17 @@ public class LessonModel {
             return id;
         }
 
+        public String getName() {
+            return name;
+        }
+
         public Set<String> getTopics() {
             if (topics == null)
                 return null;
             return Collections.unmodifiableSet(topics);
         }
 
-        public long getLength() {
+        public Long getLength() {
             return length;
         }
 
@@ -77,15 +83,15 @@ public class LessonModel {
             return Collections.unmodifiableSet(preconditions);
         }
 
-        public static class WebStimulus extends Stimulus {
+        public static class WebRule extends Rule {
 
             private final String url;
 
-            public WebStimulus(@JsonProperty("id") final long id, @JsonProperty("topics") final Set<String> topics,
-                    @JsonProperty("length") final long length,
+            public WebRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
+                    @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
                     @JsonProperty("preconditions") final Set<Long> preconditions,
                     @JsonProperty("url") final String url) {
-                super(id, topics, length, preconditions);
+                super(id, name, topics, length, preconditions);
                 this.url = url;
             }
 

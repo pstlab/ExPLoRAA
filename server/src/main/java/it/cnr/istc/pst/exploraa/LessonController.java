@@ -24,9 +24,9 @@ import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.ModelEntity;
-import it.cnr.istc.pst.exploraa.db.StimulusEntity;
+import it.cnr.istc.pst.exploraa.db.RuleEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
-import it.cnr.istc.pst.exploraa.db.WebPageEntity;
+import it.cnr.istc.pst.exploraa.db.WebRuleEntity;
 
 public class LessonController {
 
@@ -79,6 +79,12 @@ public class LessonController {
         teacher_entity.addModel(model);
         model.addTeacher(teacher_entity);
         em.persist(model);
+
+        WebRuleEntity stimulus = new WebRuleEntity();
+        stimulus.setName(name);
+        em.persist(stimulus);
+        model.addStimulus(stimulus);
+
         em.getTransaction().commit();
 
         ctx.json(toModel(model));
@@ -143,7 +149,7 @@ public class LessonController {
         }
 
         for (int i = 0; i < goals_ids.length; i++)
-            lesson_entity.addGoal(em.find(StimulusEntity.class, Long.parseLong(goals_ids[i])));
+            lesson_entity.addGoal(em.find(RuleEntity.class, Long.parseLong(goals_ids[i])));
 
         em.persist(lesson_entity);
         em.getTransaction().commit();
@@ -261,16 +267,17 @@ public class LessonController {
 
     static LessonModel toModel(final ModelEntity entity) {
         return new LessonModel(entity.getId(), entity.getName(),
-                entity.getStimuli().stream().map(stimulus -> toStimulus(stimulus))
+                entity.getStimuli().stream().map(stimulus -> toRule(stimulus))
                         .collect(Collectors.toMap(stimulus -> stimulus.getId(), stimulus -> stimulus)));
     }
 
-    static LessonModel.Stimulus toStimulus(final StimulusEntity entity) {
-        if (entity instanceof WebPageEntity) {
-            final WebPageEntity web_entity = (WebPageEntity) entity;
-            return new LessonModel.Stimulus.WebStimulus(entity.getId(), entity.getTopics(), entity.getLength(),
+    static LessonModel.Rule toRule(final RuleEntity entity) {
+        if (entity instanceof WebRuleEntity) {
+            final WebRuleEntity web_rule_entity = (WebRuleEntity) entity;
+            return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
+                    entity.getLength(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
-                    web_entity.getUrl());
+                    web_rule_entity.getUrl());
         }
         return null;
     }

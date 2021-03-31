@@ -15,21 +15,30 @@ import javax.persistence.ManyToMany;
 
 @Entity
 @Inheritance(strategy = InheritanceType.SINGLE_TABLE)
-public class StimulusEntity {
+public class RuleEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
+    private String name;
     @ElementCollection
     private final Set<String> topics = new HashSet<>();
     private Long length;
     @ManyToMany(mappedBy = "effects")
-    private final Set<StimulusEntity> preconditions = new HashSet<>();
+    private final Set<RuleEntity> preconditions = new HashSet<>();
     @ManyToMany
-    private final Set<StimulusEntity> effects = new HashSet<>();
+    private final Set<RuleEntity> effects = new HashSet<>();
 
     public Long getId() {
         return id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public Set<String> getTopics() {
@@ -52,27 +61,27 @@ public class StimulusEntity {
         this.length = length;
     }
 
-    public Set<StimulusEntity> getPreconditions() {
+    public Set<RuleEntity> getPreconditions() {
         return Collections.unmodifiableSet(preconditions);
     }
 
-    public void addPrecondition(final StimulusEntity precondition) {
+    public void addPrecondition(final RuleEntity precondition) {
         preconditions.add(precondition);
     }
 
-    public void removePrecondition(final StimulusEntity precondition) {
+    public void removePrecondition(final RuleEntity precondition) {
         preconditions.remove(precondition);
     }
 
-    public Set<StimulusEntity> getEffects() {
+    public Set<RuleEntity> getEffects() {
         return Collections.unmodifiableSet(effects);
     }
 
-    public void addEffect(final StimulusEntity effect) {
+    public void addEffect(final RuleEntity effect) {
         effects.add(effect);
     }
 
-    public void removeEffect(final StimulusEntity effect) {
+    public void removeEffect(final RuleEntity effect) {
         effects.remove(effect);
     }
 }
