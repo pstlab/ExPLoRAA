@@ -339,6 +339,21 @@ function unfollow_teacher(teacher_id) {
     });
 }
 
+function show_create_lesson() {
+    const models_list = $('#new-lesson-model');
+    models_list.empty();
+    for (const [id, model] of Object.entries(user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+        models_list.append($('<option>', { value: id, text: model.name }));
+
+    const students_list = $('#new-lesson-students-list');
+    const student_row_template = $('#new-lesson-student-row');
+    students_list.empty();
+    for (const [id, student] of Object.entries(user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
+        create_new_lesson_student_row(students_list, student_row_template, id, student);
+
+    $('#new-lesson-modal').modal('show');
+}
+
 function new_model() {
     const form = new FormData();
     form.append('name', $('#new-template-name').val());
@@ -372,6 +387,10 @@ function delete_model(model_id) {
         } else
             alert(response.statusText);
     });
+}
+
+function new_lesson() {
+
 }
 
 function create_stimulus_row(stimuli_list, template, stimulus) {
@@ -465,6 +484,16 @@ function create_student_row(students_list, template, id, student) {
         $('#student-profile-hist').prop('checked', profile.hist);
         $('#student-profile-tech').prop('checked', profile.tech);
     });
+}
+
+function create_new_lesson_student_row(students_list, template, id, student) {
+    const student_row = template[0].content.cloneNode(true);
+    const row_content = student_row.querySelector('.list-group-item');
+    row_content.childNodes[0].id += id;
+    row_content.childNodes[0].setAttribute('student_id', id);
+    row_content.childNodes[1].htmlFor += id;
+    row_content.childNodes[1].append(student.lastName + ', ' + student.firstName);
+    students_list.append(student_row);
 }
 
 function create_model_row(models_list, template, id, model) {

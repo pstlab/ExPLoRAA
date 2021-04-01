@@ -95,7 +95,7 @@
                             <h6>Lezioni insegnate</h6>
                         </div>
                         <div class="col d-flex justify-content-end">
-                            <a role="button" class="btn btn-sm btn-secondary" onclick="new_lesson()"><i
+                            <a role="button" class="btn btn-sm btn-secondary" onclick="show_create_lesson()"><i
                                     class="bi bi-folder-plus"></i></a>
                         </div>
                     </div>
@@ -507,8 +507,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <div class="list-group list-group-flush overflow-auto" id="teachers-list">
-                    </div>
+                    <div class="list-group list-group-flush overflow-auto" id="teachers-list"></div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
@@ -532,6 +531,35 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
                         onclick="new_model()">Crea</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="new-lesson-modal" tabindex="-1" aria-labelledby="new-lesson-modal-label"
+        aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="new-lesson-modal-label">Nuova lezione</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-floating my-1">
+                        <select class="form-select" id="new-lesson-model" aria-label="Modello di lezione"></select>
+                        <label for="new-lesson-model">Modello</label>
+                    </div>
+                    <div class="form-floating my-1">
+                        <input type="text" class="form-control" id="new-lesson-name" placeholder="Nome">
+                        <label for="new-lesson-name" class="col-form-label">Nome</label>
+                    </div>
+                    <hr />
+                    <h6>Studenti</h6>
+                    <div class="list-group list-group-flush overflow-auto" id="new-lesson-students-list"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
+                        onclick="new_lesson()">Crea</button>
                 </div>
             </div>
         </div>
@@ -586,6 +614,12 @@
             <div class="col d-flex justify-content-start align-items-center"><span class="bi me-2"
                     id="online-student-"></span></div>
         </div>
+    </template>
+
+    <template id="new-lesson-student-row">
+        <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center"><input
+                class="me-2" id="new-lesson-student-" type="checkbox" student_id=""><label
+                for="new-lesson-student-"></label></div>
     </template>
 
     <template id="model-row">
