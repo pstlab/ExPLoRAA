@@ -11,6 +11,7 @@ import javax.persistence.EntityManager;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JsonNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,12 @@ public class LessonController {
         model.addTeacher(teacher_entity);
         em.persist(model);
 
+        try {
+            JsonNode wiki = App.WCB_CLIENT.wiki(name, "1");
+            System.out.println(wiki.toPrettyString());
+        } catch (JsonProcessingException ex) {
+            LOG.error("Cannot invoke WCB ", ex);
+        }
         WebRuleEntity stimulus = new WebRuleEntity();
         stimulus.setName(name);
         em.persist(stimulus);

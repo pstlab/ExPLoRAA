@@ -6,6 +6,7 @@ import static io.javalin.apibuilder.ApiBuilder.path;
 import static io.javalin.apibuilder.ApiBuilder.post;
 import static io.javalin.core.security.SecurityUtil.roles;
 
+import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.InvalidKeySpecException;
@@ -14,6 +15,7 @@ import java.util.Base64;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +25,8 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -34,6 +38,7 @@ import io.javalin.core.security.Role;
 import io.javalin.http.Context;
 import io.javalin.http.Handler;
 import io.javalin.http.UnauthorizedResponse;
+import io.javalin.plugin.json.JavalinJackson;
 import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.api.Message;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
@@ -42,6 +47,7 @@ import it.cnr.istc.pst.exploraa.db.UserEntity;
 public class App {
 
     static final Logger LOG = LoggerFactory.getLogger(App.class);
+    static final Properties PROPERTIES = new Properties();
     static final EntityManagerFactory EMF = Persistence.createEntityManagerFactory("ExPLoRAA_PU");
     static final ObjectMapper MAPPER = new ObjectMapper();
     private static final SecureRandom RAND = new SecureRandom();
@@ -49,8 +55,23 @@ public class App {
     private static final int ITERATIONS = 5;
     private static final int KEY_LENGTH = 512;
     private static final String ALGORITHM = "PBKDF2WithHmacSHA512";
+    static WCB WCB_CLIENT;
 
     public static void main(final String[] args) {
+        LOG.info("Current library path: {}", System.getProperty("java.library.path"));
+
+        MAPPER.setVisibility(PropertyAccessor.FIELD, Visibility.ANY);
+        JavalinJackson.configure(MAPPER);
+
+        try {
+            PROPERTIES.load(App.class.getClassLoader().getResourceAsStream("config.properties"));
+        } catch (final IOException ex) {
+            LOG.error("Cannot load config file..", ex);
+        }
+
+        LOG.info("Connecting to the WCB provider..");
+        WCB_CLIENT = new WCB();
+
         final Javalin app = Javalin.create(config -> {
             config.addStaticFiles("/public");
             config.accessManager((final Handler handler, final Context ctx, final Set<Role> permittedRoles) -> {
