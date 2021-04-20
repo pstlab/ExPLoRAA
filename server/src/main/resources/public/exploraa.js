@@ -6,11 +6,14 @@ const config = {
 const online_icon = 'bi-check-circle';
 const offline_icon = 'bi-circle';
 let user;
+let user_model;
 let ws;
 const stimuli = [];
 let current_student;
 let current_model;
 let current_rule;
+
+$.get('user_model.json', function (data) { user_model = data; });
 
 $(window).on('load', function () {
     const email = localStorage.getItem('email');
@@ -66,19 +69,10 @@ function signin() {
     const password = $('#signin-password').val();
     const first_name = $('#signin-first-name').val();
     const last_name = $('#signin-last-name').val();
-    const profile = {
-        antro: false,
-        art: false,
-        biog: false,
-        biol: false,
-        phil: false,
-        geo: false,
-        math: false,
-        sci: false,
-        soc: false,
-        hist: false,
-        tech: false
-    };
+    const profile = {};
+    user_model.interests.forEach(element => {
+        profile[element.id] = false;
+    });
     const form = new FormData();
     form.append('email', email);
     form.append('password', password);
@@ -117,18 +111,11 @@ function delete_user() {
 function update_user() {
     user.firstName = $('#profile-first-name').val();
     user.lastName = $('#profile-last-name').val();
+
     const profile = {};
-    profile.antro = $('#profile-antro').prop('checked');
-    profile.art = $('#profile-art').prop('checked');
-    profile.biog = $('#profile-biog').prop('checked');
-    profile.biol = $('#profile-biol').prop('checked');
-    profile.phil = $('#profile-phil').prop('checked');
-    profile.geo = $('#profile-geo').prop('checked');
-    profile.math = $('#profile-math').prop('checked');
-    profile.sci = $('#profile-sci').prop('checked');
-    profile.soc = $('#profile-soc').prop('checked');
-    profile.hist = $('#profile-hist').prop('checked');
-    profile.tech = $('#profile-tech').prop('checked');
+    user_model.interests.forEach(element => {
+        profile[element.id] = $('#user-interest-' + to_id(element.id)).prop('checked');
+    });
     user.profile = JSON.stringify(profile);
     fetch('http://' + config.host + ':' + config.service_port + '/user/' + user.id, {
         method: 'post',
@@ -149,21 +136,21 @@ function setUser(usr) {
     $.get('body_user.html', function (data) {
         $('#exploraa-body').append(data);
         $('#account-menu').text(user.firstName);
+
         $('#profile-email').val(user.email);
         $('#profile-first-name').val(user.firstName);
         $('#profile-last-name').val(user.lastName);
+
+        const profile_form = $('#profile-form');
+        const user_interest = $('#user-interest-row');
+        user_model.interests.forEach(element => {
+            create_user_interest_row(profile_form, user_interest, element.id, element);
+        });
+
         const profile = JSON.parse(user.profile);
-        $('#profile-antro').prop('checked', profile.antro);
-        $('#profile-art').prop('checked', profile.art);
-        $('#profile-biog').prop('checked', profile.biog);
-        $('#profile-biol').prop('checked', profile.biol);
-        $('#profile-phil').prop('checked', profile.phil);
-        $('#profile-geo').prop('checked', profile.geo);
-        $('#profile-math').prop('checked', profile.math);
-        $('#profile-sci').prop('checked', profile.sci);
-        $('#profile-soc').prop('checked', profile.soc);
-        $('#profile-hist').prop('checked', profile.hist);
-        $('#profile-tech').prop('checked', profile.tech);
+        Object.entries(profile).forEach(([key, value]) => {
+            $('#user-interest-' + to_id(key)).prop('checked', value);
+        });
 
         // we set the stimuli..
         stimuli.length = 0;
@@ -393,6 +380,17 @@ function new_lesson() {
 
 }
 
+function create_user_interest_row(interests_list, template, id, interest) {
+    const interest_row = template[0].content.cloneNode(true);
+    const row_content = interest_row.querySelector('.form-check');
+    const input = row_content.querySelector('input');
+    input.id += to_id(id);
+    const label = row_content.querySelector('label');
+    label.htmlFor = input.id;
+    label.append(interest.name);
+    interests_list.append(interest_row);
+}
+
 function create_stimulus_row(stimuli_list, template, stimulus) {
     const stimulus_row = template[0].content.cloneNode(true);
     const row_content = stimulus_row.querySelector('.list-group-item');
@@ -571,3 +569,5 @@ function create_suggestion_row(template, id, suggestion) {
     divs[0].append(suggestion.name);
     return suggestion_row;
 }
+
+function to_id(id) { return id.replace('%27', '').replace(':', '-'); }

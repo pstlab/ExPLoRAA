@@ -407,7 +407,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form>
+                    <form id="profile-form">
                         <div class="form-floating my-1">
                             <input type="text" class="form-control" id="profile-email" placeholder="Email">
                             <label for="profile-email" class="col-form-label">Email</label>
@@ -421,51 +421,6 @@
                             <label for="profile-last-name" class="col-form-label">Cognome</label>
                         </div>
                         <hr>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-antro">
-                            <label for="profile-antro" class="form-check-label">Antropologia, psicologia e vita
-                                quotidiana</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-art">
-                            <label for="profile-art" class="form-check-label">Arte</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-biog">
-                            <label for="profile-biog" class="form-check-label">Biografie</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-biol">
-                            <label for="profile-biol" class="form-check-label">Biologia e scienze mediche</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-phil">
-                            <label for="profile-phil" class="form-check-label">Filosofia e religione</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-geo">
-                            <label for="profile-geo" class="form-check-label">Geografia</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-math">
-                            <label for="profile-math" class="form-check-label">Matematica</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-sci">
-                            <label for="profile-sci" class="form-check-label">Scienze fisiche</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-soc">
-                            <label for="profile-soc" class="form-check-label">Società e scienze sociali</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-hist">
-                            <label for="profile-hist" class="form-check-label">Storia</label>
-                        </div>
-                        <div class="form-check form-switch">
-                            <input type="checkbox" class="form-check-input" id="profile-tech">
-                            <label for="profile-tech" class="form-check-label">Tecnologia</label>
-                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -565,6 +520,13 @@
         </div>
     </div>
 
+    <template id="user-interest-row">
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="user-interest-">
+            <label for="user-interest-" class="form-check-label"></label>
+        </div>
+    </template>
+
     <template id="stimulus-row">
         <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
             id="stimulus-">
@@ -616,6 +578,13 @@
         </div>
     </template>
 
+    <template id="student-interest-row">
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="student-interest-" disabled>
+            <label for="student-interest-" class="form-check-label"></label>
+        </div>
+    </template>
+
     <template id="new-lesson-student-row">
         <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center"><input
                 class="me-2" id="new-lesson-student-" type="checkbox" student_id=""><label
@@ -628,6 +597,13 @@
             <div class="col d-flex justify-content-start align-items-center"></div>
             <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary"><i
                         class="bi bi-folder-minus"></i></a></div>
+        </div>
+    </template>
+
+    <template id="topic-row">
+        <div class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" id="topic-">
+            <label for="topic-" class="form-check-label"></label>
         </div>
     </template>
 
