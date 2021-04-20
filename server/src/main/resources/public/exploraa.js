@@ -101,7 +101,7 @@ export function update_user() {
 
     const profile = {};
     context.user_model.interests.forEach(element => {
-        profile[element.id] = $('#user-interest-' + to_id(element.id)).prop('checked');
+        profile[element.id] = $('#user-interest-' + context.to_id(element.id)).prop('checked');
     });
     context.user.profile = JSON.stringify(profile);
     fetch('http://' + config.host + ':' + config.service_port + '/user/' + context.user.id, {
@@ -136,7 +136,7 @@ function setUser(usr) {
 
         const profile = JSON.parse(context.user.profile);
         Object.entries(profile).forEach(([key, value]) => {
-            $('#user-interest-' + to_id(key)).prop('checked', value);
+            $('#user-interest-' + context.to_id(key)).prop('checked', value);
         });
 
         $('#learn').load('learn.html', () => {
@@ -146,6 +146,7 @@ function setUser(usr) {
         });
 
         $('#teach').load('teach.html', () => {
+            teach.create_student_interests();
             teach.set_teaching_lessons();
             teach.set_students();
         });
@@ -193,11 +194,9 @@ function create_user_interest_row(interests_list, template, id, interest) {
     const interest_row = template[0].content.cloneNode(true);
     const row_content = interest_row.querySelector('.form-check');
     const input = row_content.querySelector('input');
-    input.id += to_id(id);
+    input.id += context.to_id(id);
     const label = row_content.querySelector('label');
     label.htmlFor = input.id;
     label.append(interest.name);
     interests_list.append(interest_row);
 }
-
-function to_id(id) { return id.replace('%27', '').replace(':', '-'); }

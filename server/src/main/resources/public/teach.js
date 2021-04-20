@@ -1,7 +1,7 @@
 import * as config from './config.js'
 import * as context from './context.js'
 
-export let current_student = undefined;
+let current_student = undefined;
 
 export function set_teaching_lessons() {
     const t_lessons_list = $('#t-lessons-list');
@@ -12,6 +12,14 @@ export function set_teaching_lessons() {
 
 export function new_teaching_lesson(lesson) {
     create_teaching_lesson_row($('#t-lessons-list'), $('#teaching-lesson-row'), lesson.id, lesson);
+}
+
+export function create_student_interests() {
+    const profile_form = $('#student-form');
+    const user_interest = $('#student-interest-row');
+    context.user_model.interests.forEach(element => {
+        create_student_interest_row(profile_form, user_interest, element.id, element);
+    });
 }
 
 export function set_students() {
@@ -41,18 +49,10 @@ export function set_online(student_id, online) {
 export function student_profile_changed(student_id, json_profile) {
     context.user.students[student_id].profile = json_profile;
     if (current_student == student_id) {
-        const c_profile = JSON.parse(json_profile);
-        $('#student-profile-antro').prop('checked', c_profile.antro);
-        $('#student-profile-art').prop('checked', c_profile.art);
-        $('#student-profile-biog').prop('checked', c_profile.biog);
-        $('#student-profile-biol').prop('checked', c_profile.biol);
-        $('#student-profile-phil').prop('checked', c_profile.phil);
-        $('#student-profile-geo').prop('checked', c_profile.geo);
-        $('#student-profile-math').prop('checked', c_profile.math);
-        $('#student-profile-sci').prop('checked', c_profile.sci);
-        $('#student-profile-soc').prop('checked', c_profile.soc);
-        $('#student-profile-hist').prop('checked', c_profile.hist);
-        $('#student-profile-tech').prop('checked', c_profile.tech);
+        const profile = JSON.parse(json_profile);
+        Object.entries(profile).forEach(([key, value]) => {
+            $('#student-interest-' + context.to_id(key)).prop('checked', value);
+        });
     }
 }
 
@@ -100,17 +100,21 @@ function create_student_row(students_list, template, id, student) {
         $('#student-email').val(student.email);
         $('#student-first-name').val(student.firstName);
         $('#student-last-name').val(student.lastName);
+
         const profile = JSON.parse(student.profile);
-        $('#student-profile-antro').prop('checked', profile.antro);
-        $('#student-profile-art').prop('checked', profile.art);
-        $('#student-profile-biog').prop('checked', profile.biog);
-        $('#student-profile-biol').prop('checked', profile.biol);
-        $('#student-profile-phil').prop('checked', profile.phil);
-        $('#student-profile-geo').prop('checked', profile.geo);
-        $('#student-profile-math').prop('checked', profile.math);
-        $('#student-profile-sci').prop('checked', profile.sci);
-        $('#student-profile-soc').prop('checked', profile.soc);
-        $('#student-profile-hist').prop('checked', profile.hist);
-        $('#student-profile-tech').prop('checked', profile.tech);
+        Object.entries(profile).forEach(([key, value]) => {
+            $('#student-interest-' + context.to_id(key)).prop('checked', value);
+        });
     });
+}
+
+function create_student_interest_row(interests_list, template, id, interest) {
+    const interest_row = template[0].content.cloneNode(true);
+    const row_content = interest_row.querySelector('.form-check');
+    const input = row_content.querySelector('input');
+    input.id += context.to_id(id);
+    const label = row_content.querySelector('label');
+    label.htmlFor = input.id;
+    label.append(interest.name);
+    interests_list.append(interest_row);
 }
