@@ -1,0 +1,158 @@
+<div class="row h-100 row-cols-2">
+    <div class="col-sm-3">
+        <div class="row align-items-center">
+            <div class="col d-flex justify-content-start">
+                <h6>Lezioni insegnate</h6>
+            </div>
+            <div class="col d-flex justify-content-end">
+                <a role="button" class="btn btn-sm btn-secondary" onclick="show_create_lesson()"><i
+                        class="bi bi-folder-plus"></i></a>
+            </div>
+        </div>
+        <div class="row h-75">
+            <div class="list-group list-group-flush overflow-auto" id="t-lessons-list" role="tablist">
+            </div>
+        </div>
+        <hr />
+        <div class="row">
+            <div class="col d-flex justify-content-start">
+                <h6>Studenti</h6>
+            </div>
+        </div>
+        <div class="row h-25">
+            <div class="list-group list-group-flush overflow-auto" id="students-list" role="tablist"> </div>
+        </div>
+    </div>
+    <div class="col-sm">
+        <div class="row h-100">
+            <div class="col tab-content" id="teach-content">
+                <div class="row tab-pane fade body-panel h-100" id="student" role="tabpanel">
+                    <form>
+                        <div class="form-floating my-1">
+                            <input type="text" class="form-control" id="student-email" placeholder="Email" disabled>
+                            <label for="student-email" class="col-form-label">Email</label>
+                        </div>
+                        <div class="form-floating my-1">
+                            <input type="text" class="form-control" id="student-first-name" placeholder="Nome" disabled>
+                            <label for="student-first-name" class="col-form-label">Nome</label>
+                        </div>
+                        <div class="form-floating my-1">
+                            <input type="text" class="form-control" id="student-last-name" placeholder="Cognome"
+                                disabled>
+                            <label for="student-last-name" class="col-form-label">Cognome</label>
+                        </div>
+                        <hr>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-antro" disabled>
+                            <label for="student-profile-antro" class="form-check-label">Antropologia,
+                                psicologia
+                                e
+                                vita
+                                quotidiana</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-art" disabled>
+                            <label for="student-profile-art" class="form-check-label">Arte</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-biog" disabled>
+                            <label for="student-profile-biog" class="form-check-label">Biografie</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-biol" disabled>
+                            <label for="student-profile-biol" class="form-check-label">Biologia e
+                                scienze
+                                mediche</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-phil" disabled>
+                            <label for="student-profile-phil" class="form-check-label">Filosofia e
+                                religione</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-geo" disabled>
+                            <label for="student-profile-geo" class="form-check-label">Geografia</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-math" disabled>
+                            <label for="student-profile-math" class="form-check-label">Matematica</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-sci" disabled>
+                            <label for="student-profile-sci" class="form-check-label">Scienze
+                                fisiche</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-soc" disabled>
+                            <label for="student-profile-soc" class="form-check-label">Società e scienze
+                                sociali</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-hist" disabled>
+                            <label for="student-profile-hist" class="form-check-label">Storia</label>
+                        </div>
+                        <div class="form-check form-switch">
+                            <input type="checkbox" class="form-check-input" id="student-profile-tech" disabled>
+                            <label for="student-profile-tech" class="form-check-label">Tecnologia</label>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="new-lesson-modal" tabindex="-1" aria-labelledby="new-lesson-modal-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="new-lesson-modal-label">Nuova lezione</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-floating my-1">
+                    <select class="form-select" id="new-lesson-model" aria-label="Modello di lezione"></select>
+                    <label for="new-lesson-model">Modello</label>
+                </div>
+                <div class="form-floating my-1">
+                    <input type="text" class="form-control" id="new-lesson-name" placeholder="Nome">
+                    <label for="new-lesson-name" class="col-form-label">Nome</label>
+                </div>
+                <hr />
+                <h6>Studenti</h6>
+                <div class="list-group list-group-flush overflow-auto" id="new-lesson-students-list"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
+                    onclick="new_lesson()">Crea</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<template id="new-lesson-student-row">
+    <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center"><input
+            class="me-2" id="new-lesson-student-" type="checkbox" student_id=""><label
+            for="new-lesson-student-"></label></div>
+</template>
+
+<template id="teaching-lesson-row">
+    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="lesson-">
+        <div class="col d-flex justify-content-start align-items-center"></div>
+    </div>
+</template>
+
+<template id="student-row">
+    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="student-"
+        type="button" data-bs-toggle="tab" data-bs-target="#student">
+        <div class="col d-flex justify-content-start align-items-center"><span class="bi me-2"
+                id="online-student-"></span></div>
+    </div>
+</template>
+
+<template id="student-interest-row">
+    <div class="form-check form-switch">
+        <input type="checkbox" class="form-check-input" id="student-interest-" disabled>
+        <label for="student-interest-" class="form-check-label"></label>
+    </div>
+</template>

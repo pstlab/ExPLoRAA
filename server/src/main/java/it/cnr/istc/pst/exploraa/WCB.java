@@ -25,6 +25,7 @@ public class WCB {
     }
 
     public JsonNode wiki(final String page, final String mode) throws JsonProcessingException {
+        LOG.info("analyzing page {}", page);
         Response response = target.path("wiki").queryParam("page", page).queryParam("m", mode)
                 .request(MediaType.APPLICATION_JSON).get();
         return App.MAPPER.readTree(response.readEntity(String.class));
