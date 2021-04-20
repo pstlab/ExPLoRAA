@@ -5,8 +5,13 @@
                 <h6>Lezioni insegnate</h6>
             </div>
             <div class="col d-flex justify-content-end">
-                <a role="button" class="btn btn-sm btn-secondary" onclick="show_create_lesson()"><i
+                <a role="button" class="btn btn-sm btn-secondary" id="show-create-new-lesson"><i
                         class="bi bi-folder-plus"></i></a>
+                <script type="module">
+                    import * as teach from './teach.js'
+
+                    document.querySelector('#show-create-new-lesson').addEventListener('click', teach.show_create_new_lesson);
+                </script>
             </div>
         </div>
         <div class="row h-75">

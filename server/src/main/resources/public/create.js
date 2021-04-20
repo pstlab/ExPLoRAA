@@ -1,55 +1,53 @@
-export class Create {
+import * as config from './config.js'
+import * as context from './context.js'
 
-    constructor() {
-        this.current_model = undefined;
-        this.current_rule = undefined;
-    }
+export let current_model;
+export let current_rule;
 
-    set_models(models) {
-        const models_list = $('#models-list');
-        const model_row_template = $('#model-row');
-        for (const [id, model] of Object.entries(models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
-            create_model_row(models_list, model_row_template, id, model);
-    }
+export function set_models(models) {
+    const models_list = $('#models-list');
+    const model_row_template = $('#model-row');
+    for (const [id, model] of Object.entries(models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+        create_model_row(models_list, model_row_template, id, model);
+}
 
-    new_model(model) {
-        create_model_row($('#models-list'), $('#model-row'), model.id, model);
-    }
+export function new_model(model) {
+    create_model_row($('#models-list'), $('#model-row'), model.id, model);
+}
 
-    new_model() {
-        const form = new FormData();
-        form.append('name', $('#new-template-name').val());
-        form.append('teacher_id', user.id);
-        fetch('http://' + config.host + ':' + config.service_port + '/model', {
-            method: 'post',
-            headers: { 'Authorization': 'Basic ' + user.id },
-            body: form
-        }).then(response => {
-            if (response.ok) {
-                $('#new-template-name').val('');
-                response.json().then(model => {
-                    user.models[model.id] = model;
-                    create_model_row($('#models-list'), $('#model-row'), model.id, model);
-                });
-            } else
-                alert(response.statusText);
-        });
-    }
+export function create_new_model() {
+    const form = new FormData();
+    form.append('name', $('#new-template-name').val());
+    form.append('teacher_id', context.user.id);
+    fetch('http://' + config.host + ':' + config.service_port + '/model', {
+        method: 'post',
+        headers: { 'Authorization': 'Basic ' + context.user.id },
+        body: form
+    }).then(response => {
+        if (response.ok) {
+            $('#new-template-name').val('');
+            response.json().then(model => {
+                context.user.models[model.id] = model;
+                create_model_row($('#models-list'), $('#model-row'), model.id, model);
+            });
+        } else
+            alert(response.statusText);
+    });
+}
 
-    delete_model(model_id) {
-        fetch('http://' + config.host + ':' + config.service_port + '/model/' + model_id, {
-            method: 'delete',
-            headers: { 'Authorization': 'Basic ' + user.id }
-        }).then(response => {
-            if (response.ok) {
-                delete user.models[model_id];
-                $('#model-' + model_id).remove();
-                if (current_model == model_id)
-                    $('#model').removeClass('active');
-            } else
-                alert(response.statusText);
-        });
-    }
+export function delete_model(model_id) {
+    fetch('http://' + config.host + ':' + config.service_port + '/model/' + model_id, {
+        method: 'delete',
+        headers: { 'Authorization': 'Basic ' + context.user.id }
+    }).then(response => {
+        if (response.ok) {
+            delete context.user.models[model_id];
+            $('#model-' + model_id).remove();
+            if (current_model == model_id)
+                $('#model').removeClass('active');
+        } else
+            alert(response.statusText);
+    });
 }
 
 function create_model_row(models_list, template, id, model) {
