@@ -4,6 +4,14 @@ import * as context from './context.js'
 export let current_model;
 export let current_rule;
 
+export function create_topics() {
+    const profile_form = $('#topics-list');
+    const user_interest = $('#topic-row');
+    context.user_model.interests.forEach(element => {
+        create_topic_row(profile_form, user_interest, element.id, element);
+    });
+}
+
 export function set_models() {
     const models_list = $('#models-list');
     const model_row_template = $('#model-row');
@@ -124,4 +132,15 @@ function create_suggestion_row(template, id, suggestion) {
     const divs = row_content.querySelectorAll('div');
     divs[0].append(suggestion.name);
     return suggestion_row;
+}
+
+function create_topic_row(topics_list, template, id, topic) {
+    const interest_row = template[0].content.cloneNode(true);
+    const row_content = interest_row.querySelector('.form-check');
+    const input = row_content.querySelector('input');
+    input.id += context.to_id(id);
+    const label = row_content.querySelector('label');
+    label.htmlFor = input.id;
+    label.append(topic.name);
+    topics_list.append(interest_row);
 }

@@ -152,6 +152,7 @@ function setUser(usr) {
         });
 
         $('#create').load('create.html', () => {
+            create.create_topics()
             create.set_models();
         });
 
