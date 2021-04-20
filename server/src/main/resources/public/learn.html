@@ -70,7 +70,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
-                    onclick="follow_lessons()">Segui</button>
+                    id="follow-selected-lessons">Segui</button>
+                <script type="module">
+                    import * as learn from './learn.js'
+
+                    document.querySelector('#follow-selected-lessons').addEventListener('click', learn.follow_selected_lessons);
+                </script>
             </div>
         </div>
     </div>
@@ -89,7 +94,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
-                    onclick="follow_teachers()">Segui</button>
+                    id="follow-selected-teachers">Segui</button>
+                <script type="module">
+                    import * as learn from './learn.js'
+
+                    document.querySelector('#follow-selected-teachers').addEventListener('click', learn.follow_selected_teachers);
+                </script>
             </div>
         </div>
     </div>

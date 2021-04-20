@@ -52,6 +52,10 @@ export function show_lessons_to_follow() {
     });
 }
 
+export function follow_selected_lessons() {
+    alert('not implemented yet..');
+}
+
 export function show_teachers_to_follow() {
     const teachers_list = $('#teachers-list');
     const teacher_row_template = $('#follow-new-teacher-row');
@@ -98,7 +102,7 @@ export function follow_selected_teachers() {
 
 export function set_online(teacher_id, online) {
     context.user.teachers[teacher_id].online = online;
-    $('#online-teacher-' + teacher_id).removeClass(online_icon + ' ' + offline_icon).addClass(online ? config.online_icon : config.offline_icon);
+    $('#online-teacher-' + teacher_id).removeClass(config.online_icon + ' ' + config.offline_icon).addClass(online ? config.online_icon : config.offline_icon);
 }
 
 function unfollow_teacher(teacher_id) {
@@ -123,6 +127,16 @@ function create_stimulus_row(stimuli_list, template, stimulus) {
     stimuli_list.append(stimulus_row);
 }
 
+function create_follow_new_teacher_row(teachers_list, template, id, teacher) {
+    const teacher_row = template[0].content.cloneNode(true);
+    const row_content = teacher_row.querySelector('.list-group-item');
+    row_content.childNodes[0].id += id;
+    row_content.childNodes[0].setAttribute('teacher_id', id);
+    row_content.childNodes[1].htmlFor += id;
+    row_content.childNodes[1].append(teacher.lastName + ', ' + teacher.firstName);
+    teachers_list.append(teacher_row);
+}
+
 function create_following_teacher_row(teachers_list, template, id, teacher) {
     const teacher_row = template[0].content.cloneNode(true);
     const row_content = teacher_row.querySelector('.list-group-item');
@@ -130,7 +144,7 @@ function create_following_teacher_row(teachers_list, template, id, teacher) {
     const divs = row_content.querySelectorAll('div');
     var online_span = divs[0].childNodes[0];
     online_span.id += id;
-    online_span.classList.add(teacher.online ? online_icon : offline_icon);
+    online_span.classList.add(teacher.online ? config.online_icon : config.offline_icon);
     divs[0].append(teacher.lastName + ', ' + teacher.firstName);
     divs[1].childNodes[0].onclick = function () { unfollow_teacher(id); };
     teachers_list.append(teacher_row);

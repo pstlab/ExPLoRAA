@@ -79,7 +79,12 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                    <button type="button" class="btn btn-primary" onclick="login()">Accedi</button>
+                    <button type="button" class="btn btn-primary" id="log-in">Accedi</button>
+                    <script type="module">
+                        import * as exploraa from './exploraa.js'
+
+                        document.querySelector('#log-in').addEventListener('click', exploraa.login);
+                    </script>
                 </div>
             </div>
         </div>
@@ -109,7 +114,12 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Chiudi</button>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="signin()">Registrati</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="sign-in">Registrati</button>
+                    <script type="module">
+                        import * as exploraa from './exploraa.js'
+
+                        document.querySelector('#sign-in').addEventListener('click', exploraa.signin);
+                    </script>
                 </div>
             </div>
         </div>

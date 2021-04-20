@@ -139,14 +139,20 @@ function setUser(usr) {
             $('#user-interest-' + to_id(key)).prop('checked', value);
         });
 
-        learn.set_following_teachers();
-        learn.set_following_lessons();
-        learn.set_stimuli();
+        $('#learn').load('learn.html', () => {
+            learn.set_following_teachers();
+            learn.set_following_lessons();
+            learn.set_stimuli();
+        });
 
-        teach.set_teaching_lessons();
-        teach.set_students();
+        $('#teach').load('teach.html', () => {
+            teach.set_teaching_lessons();
+            teach.set_students();
+        });
 
-        create.set_models();
+        $('#create').load('create.html', () => {
+            create.set_models();
+        });
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + context.user.id, 'exploraa-ws');
         ws.onmessage = msg => {

@@ -35,7 +35,7 @@ export function remove_student(student_id) {
 
 export function set_online(student_id, online) {
     context.user.students[student_id].online = online;
-    $('#online-student-' + student_id).removeClass(online_icon + ' ' + offline_icon).addClass(online ? config.online_icon : config.offline_icon);
+    $('#online-student-' + student_id).removeClass(config.online_icon + ' ' + config.offline_icon).addClass(online ? config.online_icon : config.offline_icon);
 }
 
 export function student_profile_changed(student_id, json_profile) {
@@ -72,7 +72,7 @@ export function show_create_new_lesson() {
 }
 
 export function create_new_lesson() {
-
+    alert('not implemented yet..');
 }
 
 function create_teaching_lesson_row(lessons_list, template, id, lesson) {
@@ -91,7 +91,7 @@ function create_student_row(students_list, template, id, student) {
     const divs = row_content.querySelectorAll('div');
     var online_span = divs[0].childNodes[0];
     online_span.id += id;
-    online_span.classList.add(student.online ? online_icon : offline_icon);
+    online_span.classList.add(student.online ? config.online_icon : config.offline_icon);
     divs[0].append(student.lastName + ', ' + student.firstName);
     students_list.append(student_row);
 

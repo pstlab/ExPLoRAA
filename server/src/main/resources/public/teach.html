@@ -129,7 +129,12 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
-                    onclick="new_lesson()">Crea</button>
+                    id="create-new-lesson">Crea</button>
+                <script type="module">
+                    import * as teach from './teach.js'
+
+                    document.querySelector('#create-new-lesson').addEventListener('click', teach.create_new_lesson);
+                </script>
             </div>
         </div>
     </div>

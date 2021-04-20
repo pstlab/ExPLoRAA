@@ -29,7 +29,12 @@
                         <a class="dropdown-item" href="#" data-bs-toggle="modal"
                             data-bs-target="#profile-modal">Profilo</a>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="#" onclick="logout()">Esci</a>
+                        <a class="dropdown-item" href="#" id="logout-user">Esci</a>
+                        <script type="module">
+                            import * as exploraa from './exploraa.js'
+
+                            document.querySelector('#logout-user').addEventListener('click', exploraa.logout);
+                        </script>
                     </div>
                 </div>
             </ul>
@@ -37,23 +42,11 @@
     </nav>
 
     <div class="tab-content" style="position: absolute; top: 65px; bottom: 85px; left: 0; right: 0;">
-        <div class="tab-pane fade show active body-panel h-100 p-4" id="learn" role="tabpanel">
-            <script type="text/javascript">
-                $(function () { $('#learn').load('learn.html'); });
-            </script>
-        </div>
+        <div class="tab-pane fade show active body-panel h-100 p-4" id="learn" role="tabpanel"></div>
 
-        <div class="tab-pane fade body-panel h-100 p-4" id="teach" role="tabpanel">
-            <script type="text/javascript">
-                $(function () { $('#teach').load('teach.html'); });
-            </script>
-        </div>
+        <div class="tab-pane fade body-panel h-100 p-4" id="teach" role="tabpanel"></div>
 
-        <div class="tab-pane fade body-panel h-100 p-4" id="create" role="tabpanel">
-            <script type="text/javascript">
-                $(function () { $('#create').load('create.html'); });
-            </script>
-        </div>
+        <div class="tab-pane fade body-panel h-100 p-4" id="create" role="tabpanel"></div>
     </div>
 
     <div class="modal fade" id="profile-modal" tabindex="-1" aria-labelledby="profile-modal-label" aria-hidden="true">
@@ -83,8 +76,14 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Chiudi</button>
                     <button type="button" class="btn btn-sm btn-danger" data-bs-dismiss="modal"
-                        onclick="delete_user()">Cancella</button>
-                    <button type="button" class="btn btn-sm btn-primary" onclick="update_user()">Aggiorna</button>
+                        id="delete-user">Cancella</button>
+                    <button type="button" class="btn btn-sm btn-primary" id="update-user">Aggiorna</button>
+                    <script type="module">
+                        import * as exploraa from './exploraa.js'
+
+                        document.querySelector('#delete-user').addEventListener('click', exploraa.delete_user);
+                        document.querySelector('#update-user').addEventListener('click', exploraa.update_user);
+                    </script>
                 </div>
             </div>
         </div>
