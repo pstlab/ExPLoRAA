@@ -1,12 +1,10 @@
 import * as config from './config.js'
 import * as context from './context.js'
 
-export const stimuli = []
-
 export function set_stimuli() {
     const stimuli_list = $('#stimuli-list');
     const stimulus_row_template = $('#stimulus-row');
-    for (const stimulus of stimuli.sort((a, b) => a[1].time > b[1].time))
+    for (const stimulus of context.stimuli.sort((a, b) => a[1].time > b[1].time))
         create_stimulus_row(stimuli_list, stimulus_row_template, stimulus);
 }
 
@@ -14,10 +12,10 @@ export function new_stimulus(stimulus) {
     create_following_lesson_row($('#stimuli-list'), $('#stimulus-row'), stimulus.id, stimulus);
 }
 
-export function set_following_teachers(teachers) {
+export function set_following_teachers() {
     const teachers_list = $('#f-teachers-list');
     const teacher_row_template = $('#following-teacher-row');
-    for (const [id, teacher] of Object.entries(teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
+    for (const [id, teacher] of Object.entries(context.user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
         create_following_teacher_row(teachers_list, teacher_row_template, id, teacher);
 }
 
@@ -25,10 +23,10 @@ export function new_following_teacher(teacher) {
     create_following_teacher_row($('#f-teachers-list'), $('#following-teacher-row'), teacher.id, teacher);
 }
 
-export function set_following_lessons(lessons) {
+export function set_following_lessons() {
     const f_lessons_list = $('#f-lessons-list');
     const f_lesson_row_template = $('#following-lesson-row');
-    for (const [id, lesson] of Object.entries(lessons).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+    for (const [id, lesson] of Object.entries(context.user.followingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name)))
         create_following_lesson_row(f_lessons_list, f_lesson_row_template, id, lesson);
 }
 
@@ -98,6 +96,11 @@ export function follow_selected_teachers() {
     });
 }
 
+export function set_online(teacher_id, online) {
+    context.user.teachers[teacher_id].online = online;
+    $('#online-teacher-' + teacher_id).removeClass(online_icon + ' ' + offline_icon).addClass(online ? config.online_icon : config.offline_icon);
+}
+
 function unfollow_teacher(teacher_id) {
     fetch('http://' + config.host + ':' + config.service_port + '/user/unfollow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
         method: 'post',
@@ -141,5 +144,5 @@ function create_following_lesson_row(lessons_list, template, id, lesson) {
     divs[0].append(lesson.name);
     lessons_list.append(lesson_row);
     for (const stimulus of lesson.stimuli)
-        stimuli.push(stimulus);
+        context.stimuli.push(stimulus);
 }

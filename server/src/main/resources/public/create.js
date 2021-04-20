@@ -4,10 +4,10 @@ import * as context from './context.js'
 export let current_model;
 export let current_rule;
 
-export function set_models(models) {
+export function set_models() {
     const models_list = $('#models-list');
     const model_row_template = $('#model-row');
-    for (const [id, model] of Object.entries(models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
+    for (const [id, model] of Object.entries(context.user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
         create_model_row(models_list, model_row_template, id, model);
 }
 
@@ -35,7 +35,7 @@ export function create_new_model() {
     });
 }
 
-export function delete_model(model_id) {
+function delete_model(model_id) {
     fetch('http://' + config.host + ':' + config.service_port + '/model/' + model_id, {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + context.user.id }

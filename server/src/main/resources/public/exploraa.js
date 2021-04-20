@@ -139,28 +139,24 @@ function setUser(usr) {
             $('#user-interest-' + to_id(key)).prop('checked', value);
         });
 
-        learn.set_following_teachers(context.user.teachers);
-        learn.set_following_lessons(context.user.followingLessons);
+        learn.set_following_teachers();
+        learn.set_following_lessons();
         learn.set_stimuli();
 
-        teach.set_teaching_lessons(context.user.teachingLessons);
-        teach.set_students(context.user.students);
+        teach.set_teaching_lessons();
+        teach.set_students();
 
-        create.set_models(context.user.models);
+        create.set_models();
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + context.user.id, 'exploraa-ws');
         ws.onmessage = msg => {
             const c_msg = JSON.parse(msg.data);
             switch (c_msg.type) {
                 case 'online':
-                    if (c_msg.user in context.user.students) {
-                        context.user.students[c_msg.user].online = c_msg.online;
-                        $('#online-student-' + c_msg.user).removeClass(online_icon + ' ' + offline_icon).addClass(c_msg.online ? online_icon : offline_icon);
-                    }
-                    if (c_msg.user in context.user.teachers) {
-                        context.user.teachers[c_msg.user].online = c_msg.online;
-                        $('#online-teacher-' + c_msg.user).removeClass(online_icon + ' ' + offline_icon).addClass(c_msg.online ? online_icon : offline_icon);
-                    }
+                    if (c_msg.user in context.user.students)
+                        teach.set_online(c_msg.user, c_msg.online);
+                    if (c_msg.user in context.user.teachers)
+                        learn.set_online(c_msg.user, c_msg.online);
                     break;
                 case 'follower':
                     if (c_msg.added) {
@@ -169,20 +165,14 @@ function setUser(usr) {
                             headers: { 'Authorization': 'Basic ' + context.user.id }
                         }).then(response => {
                             if (response.ok) {
-                                response.json().then(student => {
-                                    context.user.students[student.id] = student;
-                                    teach.new_student(student);
-                                });
+                                response.json().then(student => { teach.new_student(student); });
                             } else
                                 alert(response.statusText);
                         });
-                    } else {
-                        delete context.user.students[c_msg.student];
+                    } else
                         teach.remove_student(c_msg.student);
-                    }
                     break;
                 case 'profile-update':
-                    context.user.students[c_msg.user].profile = c_msg.profile;
                     teach.student_profile_changed(c_msg.user, c_msg.profile);
                     break;
                 default:
