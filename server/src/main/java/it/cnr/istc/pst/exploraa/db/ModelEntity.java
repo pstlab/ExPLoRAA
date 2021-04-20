@@ -21,7 +21,7 @@ public class ModelEntity {
     @ManyToMany
     private final Collection<UserEntity> teachers = new ArrayList<>();
     @OneToMany(orphanRemoval = true)
-    private final Collection<RuleEntity> stimuli = new ArrayList<>();
+    private final Collection<RuleEntity> rules = new ArrayList<>();
 
     public Long getId() {
         return id;
@@ -47,15 +47,15 @@ public class ModelEntity {
         teachers.remove(teacher);
     }
 
-    public Collection<RuleEntity> getStimuli() {
-        return Collections.unmodifiableCollection(stimuli);
+    public Collection<RuleEntity> getRules() {
+        return Collections.unmodifiableCollection(rules);
     }
 
-    public void addStimulus(final RuleEntity stimulus) {
-        stimuli.add(stimulus);
+    public void addRule(final RuleEntity rule) {
+        rules.add(rule);
     }
 
-    public void removeStimulus(final RuleEntity stimulus) {
-        stimuli.remove(stimulus);
+    public void removeRule(final RuleEntity rule) {
+        rules.remove(rule);
     }
 }

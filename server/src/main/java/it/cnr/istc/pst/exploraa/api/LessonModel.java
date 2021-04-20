@@ -47,16 +47,19 @@ public class LessonModel {
         private final Set<String> topics;
         private final Long length;
         private final Set<Long> preconditions;
+        private final Set<String> suggestions;
 
         @JsonCreator
         public Rule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                 @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
-                @JsonProperty("preconditions") final Set<Long> preconditions) {
+                @JsonProperty("preconditions") final Set<Long> preconditions,
+                @JsonProperty("suggestions") final Set<String> suggestions) {
             this.id = id;
             this.name = name;
             this.topics = topics;
             this.length = length;
             this.preconditions = preconditions;
+            this.suggestions = suggestions;
         }
 
         public long getId() {
@@ -83,6 +86,12 @@ public class LessonModel {
             return Collections.unmodifiableSet(preconditions);
         }
 
+        public Set<String> getSuggestions() {
+            if (suggestions == null)
+                return null;
+            return Collections.unmodifiableSet(suggestions);
+        }
+
         public static class WebRule extends Rule {
 
             private final String url;
@@ -90,8 +99,8 @@ public class LessonModel {
             public WebRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                     @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
                     @JsonProperty("preconditions") final Set<Long> preconditions,
-                    @JsonProperty("url") final String url) {
-                super(id, name, topics, length, preconditions);
+                    @JsonProperty("suggestions") final Set<String> suggestions, @JsonProperty("url") final String url) {
+                super(id, name, topics, length, preconditions, suggestions);
                 this.url = url;
             }
 

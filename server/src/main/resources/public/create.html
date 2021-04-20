@@ -53,14 +53,14 @@
                                     </div>
                                     <hr>
                                     <div class="row h-75">
-                                        <div class="col topics-list">
+                                        <div class="col" id="topics-list">
                                             <h6>Argomenti trattati:</h6>
                                         </div>
                                     </div>
                                     <hr>
                                     <div class="form-floating">
                                         <input type="number" class="form-control" id="rule-length" placeholder="Nome">
-                                        <label for="rule-length">Lunghezza</label>
+                                        <label for="rule-length">Durata</label>
                                     </div>
                                     <hr>
                                     <div class="row align-items-center">
@@ -69,7 +69,12 @@
                                         </div>
                                         <div class="col d-flex justify-content-end">
                                             <a role="button" class="btn btn-sm btn-secondary"
-                                                onclick="new_precondition()"><i class="bi bi-folder-plus"></i></a>
+                                                id="create-new-precondition"><i class="bi bi-folder-plus"></i></a>
+                                            <script type="module">
+                                                import * as create from './create.js'
+
+                                                document.querySelector('#create-new-precondition').addEventListener('click', create.create_new_precondition);
+                                            </script>
                                         </div>
                                     </div>
                                     <div class="row h-25">
@@ -86,8 +91,13 @@
                                 <h6>Regole</h6>
                             </div>
                             <div class="col d-flex justify-content-end">
-                                <a role="button" class="btn btn-sm btn-secondary" onclick="new_rule()"><i
+                                <a role="button" class="btn btn-sm btn-secondary" id="create-new-rule"><i
                                         class="bi bi-folder-plus"></i></a>
+                                <script type="module">
+                                    import * as create from './create.js'
+
+                                    document.querySelector('#create-new-rule').addEventListener('click', create.create_new_rule);
+                                </script>
                             </div>
                         </div>
                         <div class="row h-75">
@@ -150,9 +160,11 @@
     </div>
 </template>
 
-<template id="stimulus-precondition">
-    <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center"><input
-            id="precondition-" type="checkbox" precondition_id=""><label for="precondition-"></label></div>
+<template id="suggested-precondition-row">
+    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+        id="suggested-precondition-">
+        <div class="col d-flex justify-content-start align-items-center"></div>
+    </div>
 </template>
 
 <template id="rule-row">
@@ -162,7 +174,7 @@
     </div>
 </template>
 
-<template id="suggestion-template">
+<template id="suggestion-row">
     <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
         id="suggestion-">
         <div class="col d-flex justify-content-start align-items-center"></div>

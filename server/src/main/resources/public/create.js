@@ -5,10 +5,10 @@ export let current_model;
 export let current_rule;
 
 export function create_topics() {
-    const profile_form = $('#topics-list');
-    const user_interest = $('#topic-row');
+    const topics_list = $('#topics-list');
+    const topic_row_template = $('#topic-row');
     context.user_model.interests.forEach(element => {
-        create_topic_row(profile_form, user_interest, element.id, element);
+        create_topic_row(topics_list, topic_row_template, element.id, element);
     });
 }
 
@@ -56,6 +56,14 @@ function delete_model(model_id) {
         } else
             alert(response.statusText);
     });
+}
+
+export function create_new_rule() {
+    alert('not implemented yet..');
+}
+
+export function create_new_precondition() {
+    alert('not implemented yet..');
 }
 
 function create_model_row(models_list, template, id, model) {
@@ -121,17 +129,20 @@ function create_rule_row(rules_list, template, id, rule) {
             default:
                 break;
         }
-        $('#rule-length').val(rule.length);
-    });
-}
 
-function create_suggestion_row(template, id, suggestion) {
-    const suggestion_row = template[0].content.cloneNode(true);
-    const row_content = suggestion_row.querySelector('.list-group-item');
-    row_content.id += id;
-    const divs = row_content.querySelectorAll('div');
-    divs[0].append(suggestion.name);
-    return suggestion_row;
+        context.user_model.interests.forEach(interest => {
+            $('#topic-' + context.to_id(interest.id)).prop('checked', rule.topics.includes(interest.id));
+        });
+
+        $('#rule-length').val(rule.length);
+
+        const suggestions_list = $('#preconditions-list');
+        suggestions_list.empty();
+        const suggestion_row_template = $('#suggested-precondition-row');
+        rule.suggestions.forEach(suggestion => {
+            create_suggested_precondition_row(suggestions_list, suggestion_row_template, suggestion);
+        });
+    });
 }
 
 function create_topic_row(topics_list, template, id, topic) {
@@ -143,4 +154,22 @@ function create_topic_row(topics_list, template, id, topic) {
     label.htmlFor = input.id;
     label.append(topic.name);
     topics_list.append(interest_row);
+}
+
+function create_suggested_precondition_row(suggestions_list, template, suggestion) {
+    const stimulus_row = template[0].content.cloneNode(true);
+    const row_content = stimulus_row.querySelector('.list-group-item');
+    row_content.id += suggestion;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(suggestion);
+    suggestions_list.append(stimulus_row);
+}
+
+function create_suggested_rule_row(suggestions_list, template, suggestion) {
+    const stimulus_row = template[0].content.cloneNode(true);
+    const row_content = stimulus_row.querySelector('.list-group-item');
+    row_content.id += suggestion;
+    const divs = row_content.querySelectorAll('div');
+    divs[0].append(suggestion);
+    suggestions_list.append(stimulus_row);
 }

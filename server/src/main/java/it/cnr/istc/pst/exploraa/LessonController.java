@@ -84,13 +84,21 @@ public class LessonController {
         try {
             JsonNode wiki = App.WCB_CLIENT.wiki(name, "1");
             System.out.println(wiki.toPrettyString());
+
+            WebRuleEntity stimulus = new WebRuleEntity();
+            stimulus.setName(name);
+            for (JsonNode cat : wiki.get("categories")) {
+                stimulus.addTopic(cat.asText());
+            }
+            stimulus.setLength(wiki.get("length").asLong());
+            for (JsonNode pre : wiki.get("preconditions")) {
+                stimulus.addSuggestion(pre.asText());
+            }
+            em.persist(stimulus);
+            model.addRule(stimulus);
         } catch (JsonProcessingException ex) {
             LOG.error("Cannot invoke WCB ", ex);
         }
-        WebRuleEntity stimulus = new WebRuleEntity();
-        stimulus.setName(name);
-        em.persist(stimulus);
-        model.addStimulus(stimulus);
 
         em.getTransaction().commit();
 
@@ -274,7 +282,7 @@ public class LessonController {
 
     static LessonModel toModel(final ModelEntity entity) {
         return new LessonModel(entity.getId(), entity.getName(),
-                entity.getStimuli().stream().map(stimulus -> toRule(stimulus))
+                entity.getRules().stream().map(stimulus -> toRule(stimulus))
                         .collect(Collectors.toMap(stimulus -> stimulus.getId(), stimulus -> stimulus)));
     }
 
@@ -284,7 +292,7 @@ public class LessonController {
             return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
                     entity.getLength(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
-                    web_rule_entity.getUrl());
+                    entity.getSuggestions(), web_rule_entity.getUrl());
         }
         return null;
     }

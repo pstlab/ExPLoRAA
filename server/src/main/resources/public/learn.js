@@ -66,7 +66,7 @@ export function show_teachers_to_follow() {
     }).then(response => {
         if (response.ok) {
             response.json().then(data => {
-                data.sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)).forEach(teacher => create_follow_new_teacher_row(teachers_list, teacher_row_template, teacher.id, teacher));
+                data.sort((a, b) => (a.lastName + a.firstName).localeCompare(b.lastName + b.firstName)).forEach(teacher => create_follow_new_teacher_row(teachers_list, teacher_row_template, teacher.id, teacher));
                 $('#show-teachers-modal').modal('show');
             });
         } else

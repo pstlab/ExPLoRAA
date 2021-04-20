@@ -28,6 +28,8 @@ public class RuleEntity {
     private final Set<RuleEntity> preconditions = new HashSet<>();
     @ManyToMany
     private final Set<RuleEntity> effects = new HashSet<>();
+    @ElementCollection
+    private final Set<String> suggestions = new HashSet<>();
 
     public Long getId() {
         return id;
@@ -83,5 +85,17 @@ public class RuleEntity {
 
     public void removeEffect(final RuleEntity effect) {
         effects.remove(effect);
+    }
+
+    public Set<String> getSuggestions() {
+        return Collections.unmodifiableSet(suggestions);
+    }
+
+    public void addSuggestion(final String suggestion) {
+        suggestions.add(suggestion);
+    }
+
+    public void removeSuggestion(final String suggestion) {
+        suggestions.remove(suggestion);
     }
 }
