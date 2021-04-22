@@ -39,7 +39,8 @@ public class LessonModel {
     }
 
     @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "type")
-    @JsonSubTypes({ @Type(value = Rule.WebRule.class, name = "web") })
+    @JsonSubTypes({ @Type(value = Rule.TextRule.class, name = "text"), @Type(value = Rule.WebRule.class, name = "web"),
+            @Type(value = Rule.WikiRule.class, name = "wiki") })
     public static abstract class Rule {
 
         private final long id;
@@ -92,11 +93,46 @@ public class LessonModel {
             return Collections.unmodifiableSet(suggestions);
         }
 
+        public static class TextRule extends Rule {
+
+            private final String text;
+
+            public TextRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
+                    @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
+                    @JsonProperty("preconditions") final Set<Long> preconditions,
+                    @JsonProperty("suggestions") final Set<String> suggestions,
+                    @JsonProperty("text") final String text) {
+                super(id, name, topics, length, preconditions, suggestions);
+                this.text = text;
+            }
+
+            public String getText() {
+                return text;
+            }
+        }
+
         public static class WebRule extends Rule {
 
             private final String url;
 
             public WebRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
+                    @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
+                    @JsonProperty("preconditions") final Set<Long> preconditions,
+                    @JsonProperty("suggestions") final Set<String> suggestions, @JsonProperty("url") final String url) {
+                super(id, name, topics, length, preconditions, suggestions);
+                this.url = url;
+            }
+
+            public String getUrl() {
+                return url;
+            }
+        }
+
+        public static class WikiRule extends Rule {
+
+            private final String url;
+
+            public WikiRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                     @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
                     @JsonProperty("preconditions") final Set<Long> preconditions,
                     @JsonProperty("suggestions") final Set<String> suggestions, @JsonProperty("url") final String url) {

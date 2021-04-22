@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import io.javalin.http.ConflictResponse;
 import io.javalin.http.Context;
 import io.javalin.http.ForbiddenResponse;
+import io.javalin.http.InternalServerErrorResponse;
 import io.javalin.http.NotFoundResponse;
 import io.javalin.websocket.WsContext;
 import it.cnr.istc.pst.exploraa.App.ExplRole;
@@ -204,8 +205,9 @@ public class UserController {
                             .send(App.MAPPER.writeValueAsString(new Message.ProfileUpdate(user_id, user.getProfile())));
                 }
             }
-        } catch (final JsonProcessingException e) {
-            LOG.error(e.getMessage(), e);
+        } catch (final JsonProcessingException ex) {
+            LOG.error(ex.getMessage(), ex);
+            throw new InternalServerErrorResponse(ex.getMessage());
         }
 
         ctx.status(204);
@@ -228,8 +230,9 @@ public class UserController {
                 try {
                     ONLINE.get(l.getTeacher().getId()).send(
                             App.MAPPER.writeValueAsString(new Message.UnfollowLesson(user_entity.getId(), l.getId())));
-                } catch (JsonProcessingException e) {
-                    LOG.error(e.getMessage(), e);
+                } catch (JsonProcessingException ex) {
+                    LOG.error(ex.getMessage(), ex);
+                    throw new InternalServerErrorResponse(ex.getMessage());
                 }
             }
         });
@@ -240,8 +243,9 @@ public class UserController {
                     // we notify the student that a lesson cannot be followed anymore..
                     try {
                         ONLINE.get(s.getId()).send(App.MAPPER.writeValueAsString(new Message.RemoveLesson(l.getId())));
-                    } catch (JsonProcessingException e) {
-                        LOG.error(e.getMessage(), e);
+                    } catch (JsonProcessingException ex) {
+                        LOG.error(ex.getMessage(), ex);
+                        throw new InternalServerErrorResponse(ex.getMessage());
                     }
                 }
             });
@@ -275,8 +279,9 @@ public class UserController {
                             .send(App.MAPPER.writeValueAsString(new Message.Follower(user_id, false)));
                 }
             }
-        } catch (final JsonProcessingException e) {
-            LOG.error(e.getMessage(), e);
+        } catch (final JsonProcessingException ex) {
+            LOG.error(ex.getMessage(), ex);
+            throw new InternalServerErrorResponse(ex.getMessage());
         }
 
         ctx.status(204);
@@ -304,8 +309,9 @@ public class UserController {
             try {
                 LOG.info("communicating the following to teacher #{}..", teacher_id);
                 ONLINE.get(teacher_id).send(App.MAPPER.writeValueAsString(new Message.Follower(student_id, true)));
-            } catch (final JsonProcessingException e) {
-                LOG.error(e.getMessage(), e);
+            } catch (final JsonProcessingException ex) {
+                LOG.error(ex.getMessage(), ex);
+                throw new InternalServerErrorResponse(ex.getMessage());
             }
 
         ctx.status(204);
@@ -333,8 +339,9 @@ public class UserController {
             try {
                 LOG.info("communicating the unfollowing to teacher #{}..", teacher_id);
                 ONLINE.get(teacher_id).send(App.MAPPER.writeValueAsString(new Message.Follower(student_id, false)));
-            } catch (final JsonProcessingException e) {
-                LOG.error(e.getMessage(), e);
+            } catch (final JsonProcessingException ex) {
+                LOG.error(ex.getMessage(), ex);
+                throw new InternalServerErrorResponse(ex.getMessage());
             }
 
         ctx.status(204);

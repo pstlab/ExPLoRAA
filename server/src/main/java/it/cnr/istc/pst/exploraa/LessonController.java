@@ -26,8 +26,10 @@ import it.cnr.istc.pst.exploraa.api.User;
 import it.cnr.istc.pst.exploraa.db.LessonEntity;
 import it.cnr.istc.pst.exploraa.db.ModelEntity;
 import it.cnr.istc.pst.exploraa.db.RuleEntity;
+import it.cnr.istc.pst.exploraa.db.TextRuleEntity;
 import it.cnr.istc.pst.exploraa.db.UserEntity;
 import it.cnr.istc.pst.exploraa.db.WebRuleEntity;
+import it.cnr.istc.pst.exploraa.db.WikiRuleEntity;
 
 public class LessonController {
 
@@ -81,25 +83,6 @@ public class LessonController {
         model.addTeacher(teacher_entity);
         em.persist(model);
 
-        try {
-            JsonNode wiki = App.WCB_CLIENT.wiki(name, "1");
-            System.out.println(wiki.toPrettyString());
-
-            WebRuleEntity stimulus = new WebRuleEntity();
-            stimulus.setName(name);
-            for (JsonNode cat : wiki.get("categories")) {
-                stimulus.addTopic(cat.asText());
-            }
-            stimulus.setLength(wiki.get("length").asLong());
-            for (JsonNode pre : wiki.get("preconditions")) {
-                stimulus.addSuggestion(pre.asText());
-            }
-            em.persist(stimulus);
-            model.addRule(stimulus);
-        } catch (JsonProcessingException ex) {
-            LOG.error("Cannot invoke WCB ", ex);
-        }
-
         em.getTransaction().commit();
 
         ctx.json(toModel(model));
@@ -129,6 +112,99 @@ public class LessonController {
         em.getTransaction().begin();
         model_entity.getTeachers().stream().forEach(t -> t.removeModel(model_entity));
         em.remove(model_entity);
+        em.getTransaction().commit();
+
+        ctx.status(204);
+        em.close();
+    }
+
+    static void createRule(final Context ctx) {
+        final long model_id = Long.parseLong(ctx.formParam("model_id"));
+        final String name = ctx.formParam("name");
+        final String type = ctx.formParam("type");
+
+        final EntityManager em = App.EMF.createEntityManager();
+        final ModelEntity model_entity = em.find(ModelEntity.class, model_id);
+        if (model_entity == null)
+            throw new NotFoundResponse();
+
+        em.getTransaction().begin();
+        RuleEntity rule_entity = null;
+        switch (type) {
+        case "text":
+            rule_entity = new TextRuleEntity();
+            ((TextRuleEntity) rule_entity).setText(ctx.formParam("text"));
+            break;
+        case "web":
+            rule_entity = new WebRuleEntity();
+            ((WebRuleEntity) rule_entity).setUrl(ctx.formParam("url"));
+            break;
+        case "wiki":
+            rule_entity = new WebRuleEntity();
+
+            try {
+                JsonNode wiki = App.WCB_CLIENT.wiki(name, "1");
+                ((WebRuleEntity) rule_entity).setUrl(wiki.get("url").asText());
+                for (JsonNode cat : wiki.get("categories")) {
+                    rule_entity.addTopic(cat.asText());
+                }
+                rule_entity.setLength(wiki.get("length").asLong());
+                for (JsonNode pre : wiki.get("preconditions")) {
+                    rule_entity.addSuggestion(pre.asText());
+                }
+            } catch (JsonProcessingException ex) {
+                LOG.error("Cannot invoke WCB ", ex);
+                throw new InternalServerErrorResponse(ex.getMessage());
+            }
+            break;
+        default:
+            break;
+        }
+        rule_entity.setName(name);
+        em.persist(rule_entity);
+        model_entity.addRule(rule_entity);
+        em.getTransaction().commit();
+
+        ctx.json(toRule(rule_entity));
+        em.close();
+    }
+
+    static void updateRule(final Context ctx) {
+        try {
+            final long rule_id = Long.parseLong(ctx.pathParam("id"));
+            final long length = Long.parseLong(ctx.formParam("length"));
+            final String[] topics = App.MAPPER.readValue(ctx.formParam("topics"), String[].class);
+
+            LOG.info("updating rule #{}..", rule_id);
+            final EntityManager em = App.EMF.createEntityManager();
+            final RuleEntity rule_entity = em.find(RuleEntity.class, rule_id);
+            if (rule_entity == null)
+                throw new NotFoundResponse();
+
+            em.getTransaction().begin();
+            rule_entity.setLength(length);
+            for (String topic : topics) {
+                rule_entity.addTopic(topic);
+            }
+            em.getTransaction().commit();
+
+            ctx.status(204);
+            em.close();
+        } catch (JsonProcessingException ex) {
+            LOG.error(ex.getMessage(), ex);
+            throw new InternalServerErrorResponse(ex.getMessage());
+        }
+    }
+
+    static void deleteRule(final Context ctx) {
+        final long rule_id = Long.parseLong(ctx.pathParam("id"));
+        LOG.info("deleting rule #{}..", rule_id);
+        final EntityManager em = App.EMF.createEntityManager();
+        final RuleEntity rule_entity = em.find(RuleEntity.class, rule_id);
+        if (rule_entity == null)
+            throw new NotFoundResponse();
+
+        em.remove(rule_entity);
         em.getTransaction().commit();
 
         ctx.status(204);
@@ -204,8 +280,9 @@ public class LessonController {
                 try {
                     UserController.ONLINE.get(s.getId())
                             .send(App.MAPPER.writeValueAsString(new Message.RemoveLesson(lesson_id)));
-                } catch (JsonProcessingException e) {
-                    LOG.error(e.getMessage(), e);
+                } catch (JsonProcessingException ex) {
+                    LOG.error(ex.getMessage(), ex);
+                    throw new InternalServerErrorResponse(ex.getMessage());
                 }
             }
         });
@@ -225,8 +302,8 @@ public class LessonController {
                     });
             LOG.info("user #{} is following lesson #{} with interests {}..", student_id, lesson_id, interests);
             ctx.status(204);
-        } catch (final JsonProcessingException e) {
-            throw new InternalServerErrorResponse(e.getMessage());
+        } catch (final JsonProcessingException ex) {
+            throw new InternalServerErrorResponse(ex.getMessage());
         }
     }
 
@@ -287,12 +364,24 @@ public class LessonController {
     }
 
     static LessonModel.Rule toRule(final RuleEntity entity) {
-        if (entity instanceof WebRuleEntity) {
+        if (entity instanceof TextRuleEntity) {
+            final TextRuleEntity text_rule_entity = (TextRuleEntity) entity;
+            return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
+                    entity.getLength(),
+                    entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
+                    entity.getSuggestions(), text_rule_entity.getText());
+        } else if (entity instanceof WebRuleEntity) {
             final WebRuleEntity web_rule_entity = (WebRuleEntity) entity;
             return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
                     entity.getLength(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
                     entity.getSuggestions(), web_rule_entity.getUrl());
+        } else if (entity instanceof WikiRuleEntity) {
+            final WikiRuleEntity wiki_rule_entity = (WikiRuleEntity) entity;
+            return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
+                    entity.getLength(),
+                    entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
+                    entity.getSuggestions(), wiki_rule_entity.getUrl());
         }
         return null;
     }

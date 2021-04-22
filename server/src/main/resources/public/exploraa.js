@@ -130,7 +130,7 @@ function setUser(usr) {
 
         const profile_form = $('#profile-form');
         const user_interest = $('#user-interest-row');
-        context.user_model.interests.forEach(element => {
+        context.user_model.interests.sort((a, b) => a.name.localeCompare(b.name)).forEach(element => {
             create_user_interest_row(profile_form, user_interest, element.id, element);
         });
 
@@ -140,20 +140,15 @@ function setUser(usr) {
         });
 
         $('#learn').load('learn.html', () => {
-            learn.set_following_teachers();
-            learn.set_following_lessons();
-            learn.set_stimuli();
+            learn.init();
         });
 
         $('#teach').load('teach.html', () => {
-            teach.create_student_interests();
-            teach.set_teaching_lessons();
-            teach.set_students();
+            teach.init();
         });
 
         $('#create').load('create.html', () => {
-            create.create_topics()
-            create.set_models();
+            create.init();
         });
 
         ws = new WebSocket('ws://' + config.host + ':' + config.service_port + '/communication/?id=' + context.user.id, 'exploraa-ws');

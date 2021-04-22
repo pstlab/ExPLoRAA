@@ -1,6 +1,6 @@
 <div class="h-100" id="body-user">
     <nav class="navbar navbar-expand-sm navbar-light bg-light">
-        <div class="container">
+        <div class="container-fluid">
             <a class="navbar-brand" href="#">
                 <img src="/exploraa.png" width="30" height="30" class="d-inline-block align-top" alt="">
                 ExPLoRAA
@@ -57,9 +57,9 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <form id="profile-form">
+                    <form>
                         <div class="form-floating my-1">
-                            <input type="text" class="form-control" id="profile-email" placeholder="Email">
+                            <input type="email" class="form-control" id="profile-email" placeholder="Email">
                             <label for="profile-email" class="col-form-label">Email</label>
                         </div>
                         <div class="form-floating my-1">
@@ -71,6 +71,8 @@
                             <label for="profile-last-name" class="col-form-label">Cognome</label>
                         </div>
                         <hr>
+                        <h6>Interessi:</h6>
+                        <div id="profile-form" style="max-height:210px;overflow:auto;"></div>
                     </form>
                 </div>
                 <div class="modal-footer">

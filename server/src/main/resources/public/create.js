@@ -4,15 +4,36 @@ import * as context from './context.js'
 export let current_model;
 export let current_rule;
 
-export function create_topics() {
+export function init() {
+    create_topics()
+    set_models();
+
+    $('#new-rule-type').on('change', function (e) {
+        switch (this.value) {
+            case '1':
+                $('#new-rule-url-div').addClass('d-none');
+                break;
+            case '2':
+                $('#new-rule-url-div').removeClass('d-none');
+                break;
+            case '3':
+                $('#new-rule-url-div').addClass('d-none');
+                break;
+            default:
+                break;
+        }
+    });
+}
+
+function create_topics() {
     const topics_list = $('#topics-list');
     const topic_row_template = $('#topic-row');
-    context.user_model.interests.forEach(element => {
+    context.user_model.interests.sort((a, b) => a.name.localeCompare(b.name)).forEach(element => {
         create_topic_row(topics_list, topic_row_template, element.id, element);
     });
 }
 
-export function set_models() {
+function set_models() {
     const models_list = $('#models-list');
     const model_row_template = $('#model-row');
     for (const [id, model] of Object.entries(context.user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
@@ -59,7 +80,37 @@ function delete_model(model_id) {
 }
 
 export function create_new_rule() {
-    alert('not implemented yet..');
+    const form = new FormData();
+    form.append('model_id', current_model);
+    form.append('name', $('#new-rule-name').val());
+    switch ($('#new-rule-type').val()) {
+        case '1':
+            form.append('type', 'text');
+            break;
+        case '2':
+            form.append('type', 'web');
+            break;
+        case '3':
+            form.append('type', 'wiki');
+            break;
+        default:
+            break;
+    }
+    fetch('http://' + config.host + ':' + config.service_port + '/rule', {
+        method: 'post',
+        headers: { 'Authorization': 'Basic ' + context.user.id },
+        body: form
+    }).then(response => {
+        if (response.ok) {
+            $('#new-rule-name').val('');
+            $('#new-rule-type').val('');
+            response.json().then(rule => {
+                context.user.models[current_model].rules[rule.id] = rule;
+                create_rule_row($('#rules-list'), $('#rule-row'), rule.id, rule);
+            });
+        } else
+            alert(response.statusText);
+    });
 }
 
 export function create_new_precondition() {
@@ -111,6 +162,9 @@ function create_rule_row(rules_list, template, id, rule) {
                 case '2':
                     $('#rule-url-div').removeClass('d-none');
                     break;
+                case '3':
+                    $('#rule-url-div').removeClass('d-none');
+                    break;
                 default:
                     break;
             }
@@ -123,6 +177,11 @@ function create_rule_row(rules_list, template, id, rule) {
                 break;
             case 'web':
                 $('#rule-type').val(2);
+                $('#rule-url-div').removeClass('d-none');
+                $('#rule-url').val(rule.url);
+                break;
+            case 'wiki':
+                $('#rule-type').val(3);
                 $('#rule-url-div').removeClass('d-none');
                 $('#rule-url').val(rule.url);
                 break;

@@ -39,21 +39,23 @@
                                         </div>
                                         <div class="col-sm-2">
                                             <div class="form-floating">
-                                                <select class="form-select" id="rule-type" aria-label="Tipo di regola">
+                                                <select class="form-select" id="rule-type"
+                                                    aria-label="Tipo di obiettivo">
                                                     <option value="1">Testo</option>
-                                                    <option value="2">Pagina web</option>
+                                                    <option value="2">Pagina Web</option>
+                                                    <option value="3">Pagina Wikipedia</option>
                                                 </select>
                                                 <label for="rule-type">Tipo</label>
                                             </div>
                                         </div>
                                     </div>
                                     <div class="form-floating my-1 d-none" id='rule-url-div'>
-                                        <input type="url" class="form-control" id="rule-url" placeholder="Nome">
+                                        <input type="url" class="form-control" id="rule-url" placeholder="URL">
                                         <label for="rule-url">URL</label>
                                     </div>
                                     <hr>
                                     <div class="row h-75">
-                                        <div class="col" id="topics-list">
+                                        <div class="col" id="topics-list" style="max-height:160px;overflow:auto;">
                                             <h6>Argomenti trattati:</h6>
                                         </div>
                                     </div>
@@ -78,7 +80,8 @@
                                         </div>
                                     </div>
                                     <div class="row h-25">
-                                        <div class="list-group list-group-flush overflow-auto" id="preconditions-list">
+                                        <div class="list-group list-group-flush overflow-auto" id="preconditions-list"
+                                            style="max-height:210px;overflow:auto;">
                                         </div>
                                     </div>
                                 </form>
@@ -91,13 +94,8 @@
                                 <h6>Obiettivi di apprendimento</h6>
                             </div>
                             <div class="col d-flex justify-content-end">
-                                <a role="button" class="btn btn-sm btn-secondary" id="create-new-rule"><i
-                                        class="bi bi-folder-plus"></i></a>
-                                <script type="module">
-                                    import * as create from './create.js'
-
-                                    document.querySelector('#create-new-rule').addEventListener('click', create.create_new_rule);
-                                </script>
+                                <a role="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal"
+                                    data-bs-target="#new-rule-modal"><i class="bi bi-folder-plus"></i></a>
                             </div>
                         </div>
                         <div class="row h-75">
@@ -125,11 +123,11 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title" id="new-model-modal-label">Nuovo modello</h5>
+                <h5 class="modal-title" id="new-model-modal-label">Nuovo argomento</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <input class="form-control" type="text" placeholder="Nome modello" id="new-template-name">
+                <input class="form-control" type="text" placeholder="Nome argomento" id="new-template-name">
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
@@ -138,6 +136,50 @@
                     import * as create from './create.js'
 
                     document.querySelector('#create-new-model').addEventListener('click', create.create_new_model);
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="new-rule-modal" tabindex="-1" aria-labelledby="new-rule-modal-label" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="new-rule-modal-label">Nuovo obiettivo</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row row-cols-2 my-1">
+                    <div class="col-sm">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="new-rule-name" placeholder="Nome">
+                            <label for="new-rule-name">Nome</label>
+                        </div>
+                    </div>
+                    <div class="col-sm-4">
+                        <div class="form-floating">
+                            <select class="form-select" id="new-rule-type" aria-label="Tipo di obiettivo">
+                                <option value="1">Testo</option>
+                                <option value="2">Pagina Web</option>
+                                <option value="3">Pagina Wikipedia</option>
+                            </select>
+                            <label for="new-rule-type">Tipo</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-floating my-1 d-none" id='new-rule-url-div'>
+                    <input type="url" class="form-control" id="new-rule-url" placeholder="URL">
+                    <label for="new-rule-url">URL</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
+                    id="create-new-rule">Crea</button>
+                <script type="module">
+                    import * as create from './create.js'
+
+                    document.querySelector('#create-new-rule').addEventListener('click', create.create_new_rule);
                 </script>
             </div>
         </div>

@@ -3,7 +3,13 @@ import * as context from './context.js'
 
 let current_student = undefined;
 
-export function set_teaching_lessons() {
+export function init() {
+    create_student_interests();
+    set_teaching_lessons();
+    set_students();
+}
+
+function set_teaching_lessons() {
     const t_lessons_list = $('#t-lessons-list');
     const t_lesson_row_template = $('#teaching-lesson-row');
     for (const [id, lesson] of Object.entries(context.user.teachingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name)))
@@ -14,15 +20,15 @@ export function new_teaching_lesson(lesson) {
     create_teaching_lesson_row($('#t-lessons-list'), $('#teaching-lesson-row'), lesson.id, lesson);
 }
 
-export function create_student_interests() {
+function create_student_interests() {
     const profile_form = $('#student-form');
     const user_interest = $('#student-interest-row');
-    context.user_model.interests.forEach(element => {
+    context.user_model.interests.sort((a, b) => a.name.localeCompare(b.name)).forEach(element => {
         create_student_interest_row(profile_form, user_interest, element.id, element);
     });
 }
 
-export function set_students() {
+function set_students() {
     const students_list = $('#students-list');
     const student_row_template = $('#student-row');
     for (const [id, student] of Object.entries(context.user.students).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))

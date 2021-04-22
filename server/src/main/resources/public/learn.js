@@ -1,7 +1,13 @@
 import * as config from './config.js'
 import * as context from './context.js'
 
-export function set_stimuli() {
+export function init() {
+    set_following_teachers();
+    set_following_lessons();
+    set_stimuli();
+}
+
+function set_stimuli() {
     const stimuli_list = $('#stimuli-list');
     const stimulus_row_template = $('#stimulus-row');
     for (const stimulus of context.stimuli.sort((a, b) => a[1].time > b[1].time))
@@ -12,7 +18,7 @@ export function new_stimulus(stimulus) {
     create_following_lesson_row($('#stimuli-list'), $('#stimulus-row'), stimulus.id, stimulus);
 }
 
-export function set_following_teachers() {
+function set_following_teachers() {
     const teachers_list = $('#f-teachers-list');
     const teacher_row_template = $('#following-teacher-row');
     for (const [id, teacher] of Object.entries(context.user.teachers).sort((a, b) => (a[1].lastName + a[1].firstName).localeCompare(b[1].lastName + b[1].firstName)))
@@ -23,7 +29,7 @@ export function new_following_teacher(teacher) {
     create_following_teacher_row($('#f-teachers-list'), $('#following-teacher-row'), teacher.id, teacher);
 }
 
-export function set_following_lessons() {
+function set_following_lessons() {
     const f_lessons_list = $('#f-lessons-list');
     const f_lesson_row_template = $('#following-lesson-row');
     for (const [id, lesson] of Object.entries(context.user.followingLessons).sort((a, b) => a[1].name.localeCompare(b[1].name)))

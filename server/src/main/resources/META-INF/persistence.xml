@@ -5,7 +5,9 @@
         <class>it.cnr.istc.pst.exploraa.db.LessonEntity</class>
         <class>it.cnr.istc.pst.exploraa.db.ModelEntity</class>
         <class>it.cnr.istc.pst.exploraa.db.RuleEntity</class>
+        <class>it.cnr.istc.pst.exploraa.db.TextRuleEntity</class>
         <class>it.cnr.istc.pst.exploraa.db.WebRuleEntity</class>
+        <class>it.cnr.istc.pst.exploraa.db.WikiRuleEntity</class>
         <properties>
             <property name="javax.persistence.jdbc.driver" value="org.apache.derby.jdbc.EmbeddedDriver" />
             <property name="javax.persistence.jdbc.url" value="jdbc:derby:data;create=true" />

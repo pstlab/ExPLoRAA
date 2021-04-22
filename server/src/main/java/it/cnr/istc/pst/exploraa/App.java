@@ -142,6 +142,13 @@ public class App {
                     delete(LessonController::deleteModel, roles(ExplRole.Admin, ExplRole.User));
                 });
             });
+            path("rule", () -> {
+                post(LessonController::createRule, roles(ExplRole.Admin, ExplRole.User));
+                path(":id", () -> {
+                    post(LessonController::updateRule, roles(ExplRole.Admin, ExplRole.User));
+                    delete(LessonController::deleteRule, roles(ExplRole.Admin, ExplRole.User));
+                });
+            });
             path("lessons", () -> {
                 get(LessonController::getAllLessons, roles(ExplRole.Admin));
                 path(":id", () -> get(LessonController::getFollowableLessons, roles(ExplRole.Admin, ExplRole.User)));
