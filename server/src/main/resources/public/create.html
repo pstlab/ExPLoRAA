@@ -18,7 +18,7 @@
         <div class="tab-content h-100" id="create-content">
             <div class="tab-pane fade body-panel h-100" id="model" role="tabpanel">
                 <div class="row h-100 row-cols-2">
-                    <div class="col-sm overflow-auto">
+                    <div class="col-sm">
                         <div class="tab-content h-100" id="rule-content">
                             <div class="tab-pane fade body-panel h-100" id="rule" role="tabpanel">
                                 <form>
@@ -55,8 +55,8 @@
                                     </div>
                                     <hr>
                                     <div class="row h-75">
-                                        <div class="col" id="topics-list" style="max-height:160px;overflow:auto;">
-                                            <h6>Argomenti trattati:</h6>
+                                        <h6>Argomenti trattati:</h6>
+                                        <div class="col" id="topics-list" style="max-height:150px;overflow:auto;">
                                         </div>
                                     </div>
                                     <hr>
@@ -70,18 +70,14 @@
                                             <h6>Precondizioni:</h6>
                                         </div>
                                         <div class="col d-flex justify-content-end">
-                                            <a role="button" class="btn btn-sm btn-secondary"
-                                                id="create-new-precondition"><i class="bi bi-folder-plus"></i></a>
-                                            <script type="module">
-                                                import * as create from './create.js'
-
-                                                document.querySelector('#create-new-precondition').addEventListener('click', create.create_new_precondition);
-                                            </script>
+                                            <a role="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal"
+                                                data-bs-target="#new-precondition-modal"><i
+                                                    class="bi bi-folder-plus"></i></a>
                                         </div>
                                     </div>
                                     <div class="row h-25">
                                         <div class="list-group list-group-flush overflow-auto" id="preconditions-list"
-                                            style="max-height:210px;overflow:auto;">
+                                            style="max-height:200px;overflow:auto;">
                                         </div>
                                     </div>
                                 </form>
@@ -98,18 +94,8 @@
                                     data-bs-target="#new-rule-modal"><i class="bi bi-folder-plus"></i></a>
                             </div>
                         </div>
-                        <div class="row h-75">
+                        <div class="row h-100">
                             <div class="list-group list-group-flush overflow-auto" id="rules-list" role="tablist">
-                            </div>
-                        </div>
-                        <hr />
-                        <div class="row align-items-center">
-                            <div class="col d-flex justify-content-start">
-                                <h6>Suggerimenti</h6>
-                            </div>
-                        </div>
-                        <div class="row h-25">
-                            <div class="list-group list-group-flush overflow-auto" id="suggestions-list" role="tablist">
                             </div>
                         </div>
                     </div>
@@ -186,6 +172,48 @@
     </div>
 </div>
 
+<div class="modal fade" id="new-precondition-modal" tabindex="-1" aria-labelledby="new-precondition-modal-label"
+    aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="new-precondition-modal-label">Nuove precondizioni</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-floating">
+                    <select class="form-select" id="new-precondition-type" aria-label="Tipo di obiettivo">
+                        <option value="1">Suggerite</option>
+                        <option value="2">Esistenti</option>
+                        <option value="3">Nuovo obiettivo</option>
+                    </select>
+                    <label for="new-precondition-type">Tipo</label>
+                </div>
+
+                <div class="row h-25 my-1" id="suggested-preconditions-list-div">
+                    <div class="list-group list-group-flush overflow-auto" id="suggested-preconditions-list"
+                        style="max-height:260px;overflow:auto;">
+                    </div>
+                </div>
+                <div class="row h-25 my-1 d-none" id="existing-preconditions-list-div">
+                    <div class="list-group list-group-flush overflow-auto" id="existing-preconditions-list"
+                        style="max-height:260px;overflow:auto;">
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-sm btn-primary" data-bs-dismiss="modal"
+                    id="create-new-precondition">Crea</button>
+                <script type="module">
+                    import * as create from './create.js'
+
+                    document.querySelector('#create-new-precondition').addEventListener('click', create.create_new_precondition);
+                </script>
+            </div>
+        </div>
+    </div>
+</div>
+
 <template id="model-row">
     <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="model-"
         type="button" data-bs-toggle="tab" data-bs-target="#model">
@@ -203,22 +231,13 @@
 </template>
 
 <template id="suggested-precondition-row">
-    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-        id="suggested-precondition-">
-        <div class="col d-flex justify-content-start align-items-center"></div>
-    </div>
+    <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center"><input
+            class="me-2" id="suggestion-" type="checkbox" suggestion_id=""><label for="suggestion-"></label></div>
 </template>
 
 <template id="rule-row">
     <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="rule-"
         type="button" data-bs-toggle="tab" data-bs-target="#rule">
-        <div class="col d-flex justify-content-start align-items-center"></div>
-    </div>
-</template>
-
-<template id="suggestion-row">
-    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
-        id="suggestion-">
         <div class="col d-flex justify-content-start align-items-center"></div>
     </div>
 </template>
