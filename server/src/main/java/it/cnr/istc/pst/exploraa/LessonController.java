@@ -419,19 +419,19 @@ public class LessonController {
         if (entity instanceof TextRuleEntity) {
             final TextRuleEntity text_rule_entity = (TextRuleEntity) entity;
             return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
-                    entity.getLength(),
+                    entity.getLength(), entity.isTopDown(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
                     entity.getSuggestions(), text_rule_entity.getText());
         } else if (entity instanceof WebRuleEntity) {
             final WebRuleEntity web_rule_entity = (WebRuleEntity) entity;
             return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
-                    entity.getLength(),
+                    entity.getLength(), entity.isTopDown(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
                     entity.getSuggestions(), web_rule_entity.getUrl());
         } else if (entity instanceof WikiRuleEntity) {
             final WikiRuleEntity wiki_rule_entity = (WikiRuleEntity) entity;
             return new LessonModel.Rule.WikiRule(entity.getId(), entity.getName(), entity.getTopics(),
-                    entity.getLength(),
+                    entity.getLength(), entity.isTopDown(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
                     entity.getSuggestions(), wiki_rule_entity.getUrl());
         }

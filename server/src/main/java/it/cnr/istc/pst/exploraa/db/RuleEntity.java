@@ -21,6 +21,7 @@ public class RuleEntity {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private Long id;
     private String name;
+    private boolean top_down = true;
     @ElementCollection
     private final Set<String> topics = new HashSet<>();
     private Long length;
@@ -41,6 +42,14 @@ public class RuleEntity {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public boolean isTopDown() {
+        return top_down;
+    }
+
+    public void setTopDown(boolean top_down) {
+        this.top_down = top_down;
     }
 
     public Set<String> getTopics() {

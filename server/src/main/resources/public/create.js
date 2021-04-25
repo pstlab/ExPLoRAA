@@ -136,7 +136,7 @@ export function create_new_rule() {
             $('#new-rule-type').val('');
             response.json().then(rule => {
                 c_model.rules[rule.id] = rule;
-                set_rule_row_show_event(rule_row, rule);
+                refine_rule_row(rule_row, rule);
                 $('#existing-preconditions-list').append(create_existing_precondition_row($('#existing-precondition-row'), rule));
             });
         } else
@@ -167,7 +167,7 @@ export function create_new_preconditions() {
                         response.json().then(rule => {
                             c_model.rules[rule.id] = rule;
                             c_rule.preconditions.push(rule.id);
-                            set_rule_row_show_event(rule_row, rule);
+                            refine_rule_row(rule_row, rule);
                             if (c_rule == current_rule)
                                 $('#preconditions-list').append(create_precondition_row($('#precondition-row'), rule));
                             $('#existing-preconditions-list').append(create_existing_precondition_row($('#existing-precondition-row'), rule));
@@ -244,7 +244,7 @@ function set_model_row_show_event(model_row, model) {
         for (const [id, rule] of sorted_rules) {
             const rule_row = create_rule_row(rule_row_template, rule);
             rules_list.append(rule_row);
-            set_rule_row_show_event(rule_row, rule);
+            refine_rule_row(rule_row, rule);
         }
 
         // we set the possible preconditions..
@@ -266,7 +266,7 @@ function create_rule_row(template, rule) {
     return row_content;
 }
 
-function set_rule_row_show_event(rule_row, rule) {
+function refine_rule_row(rule_row, rule) {
     rule_row.id += rule.id;
     rule_row.querySelector('.spinner-border').remove();
 
@@ -313,6 +313,11 @@ function set_rule_row_show_event(rule_row, rule) {
             default:
                 break;
         }
+
+        if (rule.top_down)
+            $('#approach').val(1);
+        else
+            $('#approach').val(2);
 
         context.user_model.interests.forEach(interest => {
             $('#topic-' + context.to_id(interest.id)).prop('checked', rule.topics.includes(interest.id));

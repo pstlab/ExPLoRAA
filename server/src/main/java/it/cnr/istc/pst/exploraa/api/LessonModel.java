@@ -47,18 +47,21 @@ public class LessonModel {
         private final String name;
         private final Set<String> topics;
         private final Long length;
+        private final boolean top_down;
         private final Set<Long> preconditions;
         private final Set<String> suggestions;
 
         @JsonCreator
         public Rule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                 @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
+                @JsonProperty("top_down") final boolean top_down,
                 @JsonProperty("preconditions") final Set<Long> preconditions,
                 @JsonProperty("suggestions") final Set<String> suggestions) {
             this.id = id;
             this.name = name;
             this.topics = topics;
             this.length = length;
+            this.top_down = top_down;
             this.preconditions = preconditions;
             this.suggestions = suggestions;
         }
@@ -81,6 +84,10 @@ public class LessonModel {
             return length;
         }
 
+        public boolean isTopDown() {
+            return top_down;
+        }
+
         public Set<Long> getPreconditions() {
             if (preconditions == null)
                 return null;
@@ -99,10 +106,11 @@ public class LessonModel {
 
             public TextRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                     @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
+                    @JsonProperty("top_down") final boolean top_down,
                     @JsonProperty("preconditions") final Set<Long> preconditions,
                     @JsonProperty("suggestions") final Set<String> suggestions,
                     @JsonProperty("text") final String text) {
-                super(id, name, topics, length, preconditions, suggestions);
+                super(id, name, topics, length, top_down, preconditions, suggestions);
                 this.text = text;
             }
 
@@ -117,9 +125,10 @@ public class LessonModel {
 
             public WebRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                     @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
+                    @JsonProperty("top_down") final boolean top_down,
                     @JsonProperty("preconditions") final Set<Long> preconditions,
                     @JsonProperty("suggestions") final Set<String> suggestions, @JsonProperty("url") final String url) {
-                super(id, name, topics, length, preconditions, suggestions);
+                super(id, name, topics, length, top_down, preconditions, suggestions);
                 this.url = url;
             }
 
@@ -134,9 +143,10 @@ public class LessonModel {
 
             public WikiRule(@JsonProperty("id") final long id, @JsonProperty("name") final String name,
                     @JsonProperty("topics") final Set<String> topics, @JsonProperty("length") final Long length,
+                    @JsonProperty("top_down") final boolean top_down,
                     @JsonProperty("preconditions") final Set<Long> preconditions,
                     @JsonProperty("suggestions") final Set<String> suggestions, @JsonProperty("url") final String url) {
-                super(id, name, topics, length, preconditions, suggestions);
+                super(id, name, topics, length, top_down, preconditions, suggestions);
                 this.url = url;
             }
 
