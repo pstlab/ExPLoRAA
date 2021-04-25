@@ -55,12 +55,17 @@ function create_topics() {
 function set_models() {
     const models_list = $('#models-list');
     const model_row_template = $('#model-row');
-    for (const [id, model] of Object.entries(context.user.models).sort((a, b) => a[1].name.localeCompare(b[1].name)))
-        create_model_row(models_list, model_row_template, model);
+    for (const [id, model] of Object.entries(context.user.models).sort((a, b) => a[1].name.localeCompare(b[1].name))) {
+        const model_row = create_model_row(model_row_template, model);
+        models_list.append(model_row);
+        set_model_row_show_event(model_row, model);
+    }
 }
 
 export function new_model(model) {
-    create_model_row($('#models-list'), $('#model-row'), model);
+    const model_row = create_model_row($('#model-row'), model);
+    $('#models-list').append(model_row);
+    set_model_row_show_event(model_row, model);
 }
 
 export function create_new_model() {
@@ -76,7 +81,9 @@ export function create_new_model() {
             $('#new-template-name').val('');
             response.json().then(model => {
                 context.user.models[model.id] = model;
-                create_model_row($('#models-list'), $('#model-row'), model);
+                const model_row = create_model_row($('#model-row'), model);
+                $('#models-list').append(model_row);
+                set_model_row_show_event(model_row, model);
             });
         } else
             alert(response.statusText);
@@ -99,9 +106,10 @@ function delete_model(model_id) {
 }
 
 export function create_new_rule() {
+    const c_model = current_model;
     const rule_name = $('#new-rule-name').val();
     const form = new FormData();
-    form.append('model_id', current_model.id);
+    form.append('model_id', c_model.id);
     form.append('name', rule_name);
     switch ($('#new-rule-type').val()) {
         case '1':
@@ -127,7 +135,7 @@ export function create_new_rule() {
             $('#new-rule-name').val('');
             $('#new-rule-type').val('');
             response.json().then(rule => {
-                current_model.rules[rule.id] = rule;
+                c_model.rules[rule.id] = rule;
                 set_rule_row_show_event(rule_row, rule);
                 $('#existing-preconditions-list').append(create_existing_precondition_row($('#existing-precondition-row'), rule));
             });
@@ -137,13 +145,15 @@ export function create_new_rule() {
 }
 
 export function create_new_preconditions() {
+    const c_model = current_model;
+    const c_rule = current_rule;
     switch ($('#new-precondition-type').val()) {
         case '1':
             $('#suggested-preconditions-list').find('input:checked').each(function () {
                 const form = new FormData();
-                form.append('model_id', current_model.id);
-                form.append('effect_id', current_rule.id);
-                form.append('type', current_rule.type);
+                form.append('model_id', c_model.id);
+                form.append('effect_id', c_rule.id);
+                form.append('type', c_rule.type);
                 form.append('name', this.suggestion_id);
 
                 const rule_row = create_rule_row($('#rule-row'), { name: this.suggestion_id });
@@ -155,9 +165,11 @@ export function create_new_preconditions() {
                 }).then(response => {
                     if (response.ok) {
                         response.json().then(rule => {
-                            current_rule.preconditions.push(rule);
+                            c_model.rules[rule.id] = rule;
+                            c_rule.preconditions.push(rule.id);
                             set_rule_row_show_event(rule_row, rule);
-                            $('#preconditions-list').append(create_precondition_row($('#precondition-row'), rule));
+                            if (c_rule == current_rule)
+                                $('#preconditions-list').append(create_precondition_row($('#precondition-row'), rule));
                             $('#existing-preconditions-list').append(create_existing_precondition_row($('#existing-precondition-row'), rule));
                         });
                     } else
@@ -168,8 +180,8 @@ export function create_new_preconditions() {
         case '2':
             $('#existing-preconditions-list').find('input:checked').each(function () {
                 const form = new FormData();
-                form.append('condition_id', precondition_id);
-                form.append('effect_id', current_rule.id);
+                form.append('condition_id', this.rule_id);
+                form.append('effect_id', c_rule.id);
 
                 fetch('http://' + config.host + ':' + config.service_port + '/precondition', {
                     method: 'post',
@@ -177,10 +189,9 @@ export function create_new_preconditions() {
                     body: form
                 }).then(response => {
                     if (response.ok) {
-                        response.json().then(rule => {
-                            current_model.rules[rule.id] = rule;
-                            $('#preconditions-list').append(create_precondition_row($('#precondition-row'), rule));
-                        });
+                        c_rule.preconditions.push(this.rule_id);
+                        if (c_rule == current_rule)
+                            $('#preconditions-list').append(create_precondition_row($('#precondition-row'), c_model.rules[this.rule_id]));
                     } else
                         alert(response.statusText);
                 });
@@ -194,31 +205,34 @@ export function create_new_preconditions() {
 }
 
 function delete_precondition(precondition_id) {
+    const c_rule = current_rule;
     const form = new FormData();
     form.append('condition_id', precondition_id);
-    form.append('effect_id', current_rule.id);
+    form.append('effect_id', c_rule.id);
     fetch('http://' + config.host + ':' + config.service_port + '/precondition', {
         method: 'delete',
         headers: { 'Authorization': 'Basic ' + context.user.id },
         body: form
     }).then(response => {
         if (response.ok) {
-            delete current_rule.preconditions[precondition_id];
+            delete c_rule.preconditions[precondition_id];
             $('#precondition-' + precondition_id).remove();
         } else
             alert(response.statusText);
     });
 }
 
-function create_model_row(models_list, template, model) {
+function create_model_row(template, model) {
     const model_row = template[0].content.cloneNode(true);
     const row_content = model_row.querySelector('.list-group-item');
     row_content.id += model.id;
     const divs = row_content.querySelectorAll('div');
     divs[0].append(model.name);
     divs[1].childNodes[0].onclick = function () { delete_model(model.id); };
-    models_list.append(model_row);
+    return model_row;
+}
 
+function set_model_row_show_event(model_row, model) {
     $('#model-' + model.id).on('show.bs.tab', function (event) {
         current_model = model;
 
@@ -347,7 +361,7 @@ function create_existing_precondition_row(template, rule) {
     const row_content = suggestion_row.querySelector('.list-group-item');
     const input = row_content.querySelector('input');
     input.id += rule.id;
-    input.rule_id += rule.id;
+    input.rule_id = rule.id;
     const label = row_content.querySelector('label');
     label.append(rule.name);
     label.htmlFor = input.id;
