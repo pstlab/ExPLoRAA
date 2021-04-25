@@ -261,14 +261,17 @@ function set_model_row_show_event(model_row, model) {
 function create_rule_row(template, rule) {
     const rule_row = template[0].content.cloneNode(true);
     const row_content = rule_row.querySelector('.list-group-item');
-    const divs = row_content.querySelectorAll('div');
-    divs[0].append(rule.name);
+    const a = row_content.querySelector('a');
+    a.append(rule.name);
     return row_content;
 }
 
 function set_rule_row_show_event(rule_row, rule) {
     rule_row.id += rule.id;
     rule_row.querySelector('.spinner-border').remove();
+
+    if (rule.type == 'web' || rule.type == 'wiki')
+        rule_row.querySelector('a').href = rule.url;
 
     $('#rule-' + rule.id).on('show.bs.tab', function (event) {
         current_rule = rule;
