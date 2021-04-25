@@ -48,7 +48,7 @@ function create_topics() {
     const topics_list = $('#topics-list');
     const topic_row_template = $('#topic-row');
     context.user_model.interests.sort((a, b) => a.name.localeCompare(b.name)).forEach(interest => {
-        create_topic_row(topics_list, topic_row_template, interest);
+        topics_list.append(create_topic_row(topic_row_template, interest));
     });
 }
 
@@ -99,9 +99,10 @@ function delete_model(model_id) {
 }
 
 export function create_new_rule() {
+    const rule_name = $('#new-rule-name').val();
     const form = new FormData();
     form.append('model_id', current_model.id);
-    form.append('name', $('#new-rule-name').val());
+    form.append('name', rule_name);
     switch ($('#new-rule-type').val()) {
         case '1':
             form.append('type', 'text');
@@ -115,6 +116,8 @@ export function create_new_rule() {
         default:
             break;
     }
+    const rule_row = create_rule_row($('#rule-row'), { name: rule_name });
+    $('#rules-list').append(rule_row);
     fetch('http://' + config.host + ':' + config.service_port + '/rule', {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + context.user.id },
@@ -125,8 +128,8 @@ export function create_new_rule() {
             $('#new-rule-type').val('');
             response.json().then(rule => {
                 current_model.rules[rule.id] = rule;
-                create_rule_row($('#rules-list'), $('#rule-row'), rule);
-                create_existing_precondition_row($('#existing-preconditions-list'), $('#existing-precondition-row'), rule);
+                set_rule_row_show_event(rule_row, rule);
+                $('#existing-preconditions-list').append(create_existing_precondition_row($('#existing-precondition-row'), rule));
             });
         } else
             alert(response.statusText);
@@ -143,6 +146,8 @@ export function create_new_preconditions() {
                 form.append('type', current_rule.type);
                 form.append('name', this.suggestion_id);
 
+                const rule_row = create_rule_row($('#rule-row'), { name: this.suggestion_id });
+                $('#rules-list').append(rule_row);
                 fetch('http://' + config.host + ':' + config.service_port + '/rule', {
                     method: 'post',
                     headers: { 'Authorization': 'Basic ' + context.user.id },
@@ -151,9 +156,9 @@ export function create_new_preconditions() {
                     if (response.ok) {
                         response.json().then(rule => {
                             current_rule.preconditions.push(rule);
-                            create_precondition_row($('#preconditions-list'), $('#precondition-row'), rule);
-                            create_rule_row($('#rules-list'), $('#rule-row'), rule);
-                            create_existing_precondition_row($('#existing-preconditions-list'), $('#existing-precondition-row'), rule);
+                            set_rule_row_show_event(rule_row, rule);
+                            $('#preconditions-list').append(create_precondition_row($('#precondition-row'), rule));
+                            $('#existing-preconditions-list').append(create_existing_precondition_row($('#existing-precondition-row'), rule));
                         });
                     } else
                         alert(response.statusText);
@@ -174,7 +179,7 @@ export function create_new_preconditions() {
                     if (response.ok) {
                         response.json().then(rule => {
                             current_model.rules[rule.id] = rule;
-                            create_precondition_row($('#preconditions-list'), $('#precondition-row'), rule);
+                            $('#preconditions-list').append(create_precondition_row($('#precondition-row'), rule));
                         });
                     } else
                         alert(response.statusText);
@@ -222,27 +227,34 @@ function create_model_row(models_list, template, model) {
         const rules_list = $('#rules-list');
         rules_list.empty();
         const rule_row_template = $('#rule-row');
-        for (const [id, rule] of sorted_rules)
-            create_rule_row(rules_list, rule_row_template, rule);
+        for (const [id, rule] of sorted_rules) {
+            const rule_row = create_rule_row(rule_row_template, rule);
+            rules_list.append(rule_row);
+            set_rule_row_show_event(rule_row, rule);
+        }
 
         // we set the possible preconditions..
         const existing_preconditions_list = $('#existing-preconditions-list');
         existing_preconditions_list.empty();
         const existing_precondition_row_template = $('#existing-precondition-row');
         for (const [id, rule] of sorted_rules)
-            create_existing_precondition_row(existing_preconditions_list, existing_precondition_row_template, rule);
+            existing_preconditions_list.append(create_existing_precondition_row(existing_precondition_row_template, rule));
 
         $('#rule').removeClass('active');
     });
 }
 
-function create_rule_row(rules_list, template, rule) {
+function create_rule_row(template, rule) {
     const rule_row = template[0].content.cloneNode(true);
     const row_content = rule_row.querySelector('.list-group-item');
-    row_content.id += rule.id;
     const divs = row_content.querySelectorAll('div');
     divs[0].append(rule.name);
-    rules_list.append(rule_row);
+    return row_content;
+}
+
+function set_rule_row_show_event(rule_row, rule) {
+    rule_row.id += rule.id;
+    rule_row.querySelector('.spinner-border').remove();
 
     $('#rule-' + rule.id).on('show.bs.tab', function (event) {
         current_rule = rule;
@@ -295,19 +307,19 @@ function create_rule_row(rules_list, template, rule) {
         suggested_preconditions_list.empty();
         const suggestion_row_template = $('#suggested-precondition-row');
         rule.suggestions.forEach(suggestion => {
-            create_suggested_precondition_row(suggested_preconditions_list, suggestion_row_template, suggestion);
+            suggested_preconditions_list.append(create_suggested_precondition_row(suggestion_row_template, suggestion));
         });
 
         const preconditions_list = $('#preconditions-list');
         preconditions_list.empty();
         const precondition_row_template = $('#precondition-row');
         rule.preconditions.forEach(precondition_id => {
-            create_precondition_row(preconditions_list, precondition_row_template, current_model.rules[precondition_id]);
+            preconditions_list.append(create_precondition_row(precondition_row_template, current_model.rules[precondition_id]));
         });
     });
 }
 
-function create_topic_row(topics_list, template, topic) {
+function create_topic_row(template, topic) {
     const interest_row = template[0].content.cloneNode(true);
     const row_content = interest_row.querySelector('.form-check');
     const input = row_content.querySelector('input');
@@ -315,10 +327,10 @@ function create_topic_row(topics_list, template, topic) {
     const label = row_content.querySelector('label');
     label.htmlFor = input.id;
     label.append(topic.name);
-    topics_list.append(interest_row);
+    return interest_row;
 }
 
-function create_suggested_precondition_row(suggestions_list, template, suggestion) {
+function create_suggested_precondition_row(template, suggestion) {
     const suggestion_row = template[0].content.cloneNode(true);
     const row_content = suggestion_row.querySelector('.list-group-item');
     const input = row_content.querySelector('input');
@@ -327,10 +339,10 @@ function create_suggested_precondition_row(suggestions_list, template, suggestio
     const label = row_content.querySelector('label');
     label.append(suggestion);
     label.htmlFor = input.id;
-    suggestions_list.append(suggestion_row);
+    return suggestion_row;
 }
 
-function create_existing_precondition_row(suggestions_list, template, rule) {
+function create_existing_precondition_row(template, rule) {
     const suggestion_row = template[0].content.cloneNode(true);
     const row_content = suggestion_row.querySelector('.list-group-item');
     const input = row_content.querySelector('input');
@@ -339,15 +351,15 @@ function create_existing_precondition_row(suggestions_list, template, rule) {
     const label = row_content.querySelector('label');
     label.append(rule.name);
     label.htmlFor = input.id;
-    suggestions_list.append(suggestion_row);
+    return suggestion_row;
 }
 
-function create_precondition_row(preconditions_list, template, precondition) {
+function create_precondition_row(template, precondition) {
     const precondition_row = template[0].content.cloneNode(true);
     const row_content = precondition_row.querySelector('.list-group-item');
     row_content.id += precondition.id;
     const divs = row_content.querySelectorAll('div');
     divs[0].append(precondition.name);
     divs[1].childNodes[0].onclick = function () { delete_precondition(precondition.id); };
-    preconditions_list.append(precondition_row);
+    return precondition_row;
 }

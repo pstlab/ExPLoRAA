@@ -56,7 +56,9 @@
                                     <hr>
                                     <div class="row h-75">
                                         <h6>Tematiche di interesse:</h6>
-                                        <div class="list-group row flex-row" id="topics-list" style="max-height:150px;overflow:auto;">
+                                        <div class="col" style="max-height:150px;overflow:auto;">
+                                            <div class="list-group row flex-row mx-1" id="topics-list">
+                                            </div>
                                         </div>
                                     </div>
                                     <hr>
@@ -254,6 +256,7 @@
 <template id="rule-row">
     <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" id="rule-"
         type="button" data-bs-toggle="tab" data-bs-target="#rule">
+        <span class="spinner-border spinner-border-sm text-secondary me-2" role="status" aria-hidden="true"></span>
         <div class="col d-flex justify-content-start align-items-center"></div>
     </div>
 </template>
