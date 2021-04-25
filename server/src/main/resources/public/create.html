@@ -55,8 +55,8 @@
                                     </div>
                                     <hr>
                                     <div class="row h-75">
-                                        <h6>Argomenti trattati:</h6>
-                                        <div class="col" id="topics-list" style="max-height:150px;overflow:auto;">
+                                        <h6>Tematiche di interesse:</h6>
+                                        <div class="list-group row flex-row" id="topics-list" style="max-height:150px;overflow:auto;">
                                         </div>
                                     </div>
                                     <hr>
@@ -67,7 +67,7 @@
                                     <hr>
                                     <div class="row align-items-center">
                                         <div class="col d-flex justify-content-start">
-                                            <h6>Precondizioni:</h6>
+                                            <h6>Argomenti correlati:</h6>
                                         </div>
                                         <div class="col d-flex justify-content-end">
                                             <a role="button" class="btn btn-sm btn-secondary" data-bs-toggle="modal"
@@ -207,7 +207,7 @@
                 <script type="module">
                     import * as create from './create.js'
 
-                    document.querySelector('#create-new-precondition').addEventListener('click', create.create_new_precondition);
+                    document.querySelector('#create-new-precondition').addEventListener('click', create.create_new_preconditions);
                 </script>
             </div>
         </div>
@@ -224,15 +224,31 @@
 </template>
 
 <template id="topic-row">
-    <div class="form-check form-switch">
+    <div class="form-check form-switch col-4">
         <input type="checkbox" class="form-check-input" id="topic-">
         <label for="topic-" class="form-check-label"></label>
     </div>
 </template>
 
+<template id="precondition-row">
+    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center"
+        id="precondition-">
+        <div class="col d-flex justify-content-start align-items-center"></div>
+        <div class="col d-flex justify-content-end"><a role="button" class="btn btn-sm btn-secondary"><i
+                    class="bi bi-folder-minus"></i></a></div>
+    </div>
+</template>
+
 <template id="suggested-precondition-row">
-    <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center"><input
-            class="me-2" id="suggestion-" type="checkbox" suggestion_id=""><label for="suggestion-"></label></div>
+    <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center">
+        <input class="me-2" id="su-prec-" type="checkbox" suggestion_id=""><label for="su-prec-"></label>
+    </div>
+</template>
+
+<template id="existing-precondition-row">
+    <div class="list-group-item list-group-item-action custom-control custom-checkbox align-items-center">
+        <input class="me-2" id="ex-pre-" type="checkbox" rule_id=""><label for="ex-pre-"></label>
+    </div>
 </template>
 
 <template id="rule-row">

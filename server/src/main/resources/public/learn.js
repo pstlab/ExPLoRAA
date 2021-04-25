@@ -82,13 +82,12 @@ export function show_teachers_to_follow() {
 
 export function follow_selected_teachers() {
     $('#teachers-list').find('input:checked').each(function () {
-        const teacher_id = this.getAttribute('teacher_id');
-        fetch('http://' + config.host + ':' + config.service_port + '/user/follow/?student_id=' + context.user.id + '&teacher_id=' + teacher_id, {
+        fetch('http://' + config.host + ':' + config.service_port + '/user/follow/?student_id=' + context.user.id + '&teacher_id=' + this.teacher_id, {
             method: 'post',
             headers: { 'Authorization': 'Basic ' + context.user.id }
         }).then(response => {
             if (response.ok) {
-                fetch('http://' + config.host + ':' + config.service_port + '/teacher/' + teacher_id, {
+                fetch('http://' + config.host + ':' + config.service_port + '/teacher/' + this.teacher_id, {
                     method: 'get',
                     headers: { 'Authorization': 'Basic ' + context.user.id }
                 }).then(response => {
@@ -112,7 +111,7 @@ export function set_online(teacher_id, online) {
 }
 
 function unfollow_teacher(teacher_id) {
-    fetch('http://' + config.host + ':' + config.service_port + '/user/unfollow/?student_id=' + user.id + '&teacher_id=' + teacher_id, {
+    fetch('http://' + config.host + ':' + config.service_port + '/user/unfollow/?student_id=' + context.user.id + '&teacher_id=' + teacher_id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + context.user.id }
     }).then(response => {
@@ -136,10 +135,12 @@ function create_stimulus_row(stimuli_list, template, stimulus) {
 function create_follow_new_teacher_row(teachers_list, template, id, teacher) {
     const teacher_row = template[0].content.cloneNode(true);
     const row_content = teacher_row.querySelector('.list-group-item');
-    row_content.childNodes[0].id += id;
-    row_content.childNodes[0].setAttribute('teacher_id', id);
-    row_content.childNodes[1].htmlFor += id;
-    row_content.childNodes[1].append(teacher.lastName + ', ' + teacher.firstName);
+    const input = row_content.querySelector('input');
+    input.id += teacher.id;
+    input.teacher_id = teacher.id;
+    const label = row_content.querySelector('label');
+    label.append(teacher.lastName + ', ' + teacher.firstName);
+    label.htmlFor = input.id;
     teachers_list.append(teacher_row);
 }
 

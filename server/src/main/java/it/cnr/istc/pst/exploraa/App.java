@@ -149,6 +149,10 @@ public class App {
                     delete(LessonController::deleteRule, roles(ExplRole.Admin, ExplRole.User));
                 });
             });
+            path("precondition", () -> {
+                post(LessonController::createPrecondition, roles(ExplRole.Admin, ExplRole.User));
+                delete(LessonController::deletePrecondition, roles(ExplRole.Admin, ExplRole.User));
+            });
             path("lessons", () -> {
                 get(LessonController::getAllLessons, roles(ExplRole.Admin));
                 path(":id", () -> get(LessonController::getFollowableLessons, roles(ExplRole.Admin, ExplRole.User)));

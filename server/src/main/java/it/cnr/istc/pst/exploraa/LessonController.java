@@ -122,6 +122,7 @@ public class LessonController {
         final long model_id = Long.parseLong(ctx.formParam("model_id"));
         final String name = ctx.formParam("name");
         final String type = ctx.formParam("type");
+        final String effect_id = ctx.formParam("effect_id");
 
         final EntityManager em = App.EMF.createEntityManager();
         final ModelEntity model_entity = em.find(ModelEntity.class, model_id);
@@ -140,18 +141,16 @@ public class LessonController {
             ((WebRuleEntity) rule_entity).setUrl(ctx.formParam("url"));
             break;
         case "wiki":
-            rule_entity = new WebRuleEntity();
+            rule_entity = new WikiRuleEntity();
 
             try {
                 JsonNode wiki = App.WCB_CLIENT.wiki(name, "1");
-                ((WebRuleEntity) rule_entity).setUrl(wiki.get("url").asText());
-                for (JsonNode cat : wiki.get("categories")) {
+                ((WikiRuleEntity) rule_entity).setUrl(wiki.get("url").asText());
+                for (JsonNode cat : wiki.get("categories"))
                     rule_entity.addTopic(cat.asText());
-                }
                 rule_entity.setLength(wiki.get("length").asLong());
-                for (JsonNode pre : wiki.get("preconditions")) {
+                for (JsonNode pre : wiki.get("preconditions"))
                     rule_entity.addSuggestion(pre.asText());
-                }
             } catch (JsonProcessingException ex) {
                 LOG.error("Cannot invoke WCB ", ex);
                 throw new InternalServerErrorResponse(ex.getMessage());
@@ -160,6 +159,15 @@ public class LessonController {
         default:
             break;
         }
+
+        if (effect_id != null) {
+            final RuleEntity effect_entity = em.find(RuleEntity.class, Long.parseLong(effect_id));
+            if (effect_entity == null)
+                throw new NotFoundResponse();
+            rule_entity.addEffect(effect_entity);
+            effect_entity.addPrecondition(rule_entity);
+        }
+
         rule_entity.setName(name);
         em.persist(rule_entity);
         model_entity.addRule(rule_entity);
@@ -204,7 +212,51 @@ public class LessonController {
         if (rule_entity == null)
             throw new NotFoundResponse();
 
+        em.getTransaction().begin();
         em.remove(rule_entity);
+        em.getTransaction().commit();
+
+        ctx.status(204);
+        em.close();
+    }
+
+    static void createPrecondition(final Context ctx) {
+        final long condition_id = Long.parseLong(ctx.formParam("condition_id"));
+        final long effect_id = Long.parseLong(ctx.formParam("effect_id"));
+
+        final EntityManager em = App.EMF.createEntityManager();
+        final RuleEntity condition_entity = em.find(RuleEntity.class, condition_id);
+        if (condition_entity == null)
+            throw new NotFoundResponse();
+        final RuleEntity effect_entity = em.find(RuleEntity.class, effect_id);
+        if (effect_entity == null)
+            throw new NotFoundResponse();
+
+        em.getTransaction().begin();
+        condition_entity.addEffect(effect_entity);
+        effect_entity.addPrecondition(condition_entity);
+        em.getTransaction().commit();
+
+        ctx.status(204);
+        em.close();
+    }
+
+    static void deletePrecondition(final Context ctx) {
+        final long condition_id = Long.parseLong(ctx.formParam("condition_id"));
+        final long effect_id = Long.parseLong(ctx.formParam("effect_id"));
+
+        LOG.info("deleting precondition #{} from effect #{}..", new Object[] { condition_id, effect_id });
+        final EntityManager em = App.EMF.createEntityManager();
+        final RuleEntity condition_entity = em.find(RuleEntity.class, condition_id);
+        if (condition_entity == null)
+            throw new NotFoundResponse();
+        final RuleEntity effect_entity = em.find(RuleEntity.class, effect_id);
+        if (effect_entity == null)
+            throw new NotFoundResponse();
+
+        em.getTransaction().begin();
+        condition_entity.removeEffect(effect_entity);
+        effect_entity.removePrecondition(condition_entity);
         em.getTransaction().commit();
 
         ctx.status(204);
@@ -378,7 +430,7 @@ public class LessonController {
                     entity.getSuggestions(), web_rule_entity.getUrl());
         } else if (entity instanceof WikiRuleEntity) {
             final WikiRuleEntity wiki_rule_entity = (WikiRuleEntity) entity;
-            return new LessonModel.Rule.WebRule(entity.getId(), entity.getName(), entity.getTopics(),
+            return new LessonModel.Rule.WikiRule(entity.getId(), entity.getName(), entity.getTopics(),
                     entity.getLength(),
                     entity.getPreconditions().stream().map(pre -> pre.getId()).collect(Collectors.toSet()),
                     entity.getSuggestions(), wiki_rule_entity.getUrl());
