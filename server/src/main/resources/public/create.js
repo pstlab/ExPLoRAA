@@ -117,6 +117,7 @@ export function create_new_rule() {
             break;
         case '2':
             form.append('type', 'web');
+            form.append('url', $('#new-rule-url').val());
             break;
         case '3':
             form.append('type', 'wiki');
@@ -134,6 +135,7 @@ export function create_new_rule() {
         if (response.ok) {
             $('#new-rule-name').val('');
             $('#new-rule-type').val('');
+            $('#new-rule-url').val('');
             response.json().then(rule => {
                 c_model.rules[rule.id] = rule;
                 refine_rule_row(rule_row, rule);
@@ -382,7 +384,10 @@ function create_precondition_row(template, precondition) {
     const row_content = precondition_row.querySelector('.list-group-item');
     row_content.id += precondition.id;
     const divs = row_content.querySelectorAll('div');
-    divs[0].append(precondition.name);
+    const a = divs[0].querySelector('a')
+    if (precondition.type == 'web' || precondition.type == 'wiki')
+        a.href = precondition.url;
+    a.append(precondition.name);
     divs[1].childNodes[0].onclick = function () { delete_precondition(precondition.id); };
     return precondition_row;
 }
