@@ -107,7 +107,7 @@ export function update_user() {
     fetch('http://' + config.host + ':' + config.service_port + '/user/' + context.user.id, {
         method: 'post',
         headers: { 'Authorization': 'Basic ' + context.user.id },
-        body: JSON.stringify(context.user)
+        body: JSON.stringify({ firstName: context.user.firstName, lastName: context.user.lastName, profile: context.user.profile })
     }).then(response => {
         if (response.ok) {
             $('#account-menu').text(context.user.firstName);

@@ -75,7 +75,10 @@
                         </div>
                         <hr>
                         <h6>Interessi:</h6>
-                        <div id="profile-form" style="max-height:210px;overflow:auto;"></div>
+                        <div class="col" style="max-height:210px;overflow:auto;">
+                            <div class="list-group row flex-row mx-1" id="profile-form">
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -96,7 +99,7 @@
 </div>
 
 <template id="user-interest-row">
-    <div class="form-check form-switch">
+    <div class="form-check form-switch col-6">
         <input type="checkbox" class="form-check-input" id="user-interest-">
         <label for="user-interest-" class="form-check-label"></label>
     </div>

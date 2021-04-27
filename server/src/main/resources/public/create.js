@@ -273,6 +273,7 @@ function refine_rule_row(rule_row, rule) {
     if (rule.type == 'web' || rule.type == 'wiki')
         rule_row.querySelector('a').href = rule.url;
 
+    $('#rule-' + rule.id).removeClass('disabled');
     $('#rule-' + rule.id).on('show.bs.tab', function (event) {
         current_rule = rule;
 
