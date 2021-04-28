@@ -47,6 +47,10 @@
                             <label for="student-last-name" class="col-form-label">Cognome</label>
                         </div>
                         <hr>
+                        <div class="col" style="overflow:auto;">
+                            <div class="list-group row flex-row mx-1" id="student-interests-list">
+                            </div>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -108,7 +112,7 @@
 </template>
 
 <template id="student-interest-row">
-    <div class="form-check form-switch">
+    <div class="form-check form-switch col-4">
         <input type="checkbox" class="form-check-input" id="student-interest-" disabled>
         <label for="student-interest-" class="form-check-label"></label>
     </div>

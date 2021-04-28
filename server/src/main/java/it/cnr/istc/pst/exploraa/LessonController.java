@@ -267,8 +267,15 @@ public class LessonController {
         final String name = ctx.formParam("name");
         final long teacher_id = Long.parseLong(ctx.formParam("teacher_id"));
         final long model_id = Long.parseLong(ctx.formParam("model_id"));
-        final String[] students_ids = ctx.formParam("students_ids").split(";");
-        final String[] goals_ids = ctx.formParam("goals_ids").split(";");
+        long[] students_ids = null;
+        long[] goals_ids = null;
+        try {
+            students_ids = App.MAPPER.readValue(ctx.formParam("students_ids"), long[].class);
+            goals_ids = App.MAPPER.readValue(ctx.formParam("goals_ids"), long[].class);
+        } catch (JsonProcessingException ex) {
+            LOG.error(ex.getMessage(), ex);
+            throw new InternalServerErrorResponse(ex.getMessage());
+        }
 
         LOG.info("creating new lesson {}..", name);
         final LessonEntity lesson_entity = new LessonEntity();
@@ -286,13 +293,13 @@ public class LessonController {
         teacher_entity.addTeachingLesson(lesson_entity);
 
         for (int i = 0; i < students_ids.length; i++) {
-            final UserEntity student_entity = em.find(UserEntity.class, Long.parseLong(students_ids[i]));
+            final UserEntity student_entity = em.find(UserEntity.class, students_ids[i]);
             lesson_entity.addStudent(student_entity);
             student_entity.addFollowingLesson(lesson_entity);
         }
 
         for (int i = 0; i < goals_ids.length; i++)
-            lesson_entity.addGoal(em.find(RuleEntity.class, Long.parseLong(goals_ids[i])));
+            lesson_entity.addGoal(em.find(RuleEntity.class, goals_ids[i]));
 
         em.persist(lesson_entity);
         em.getTransaction().commit();

@@ -231,7 +231,7 @@ function create_model_row(template, model) {
     const divs = row_content.querySelectorAll('div');
     divs[0].append(model.name);
     divs[1].childNodes[0].onclick = function () { delete_model(model.id); };
-    return model_row;
+    return row_content;
 }
 
 function set_model_row_show_event(model_row, model) {
@@ -352,7 +352,7 @@ function create_topic_row(template, topic) {
     const label = row_content.querySelector('label');
     label.htmlFor = input.id;
     label.append(topic.name);
-    return interest_row;
+    return row_content;
 }
 
 function create_suggested_precondition_row(template, suggestion) {
@@ -364,7 +364,7 @@ function create_suggested_precondition_row(template, suggestion) {
     const label = row_content.querySelector('label');
     label.append(suggestion);
     label.htmlFor = input.id;
-    return suggestion_row;
+    return row_content;
 }
 
 function create_existing_precondition_row(template, rule) {
@@ -376,7 +376,7 @@ function create_existing_precondition_row(template, rule) {
     const label = row_content.querySelector('label');
     label.append(rule.name);
     label.htmlFor = input.id;
-    return suggestion_row;
+    return row_content;
 }
 
 function create_precondition_row(template, precondition) {
@@ -389,5 +389,5 @@ function create_precondition_row(template, precondition) {
         a.href = precondition.url;
     a.append(precondition.name);
     divs[1].childNodes[0].onclick = function () { delete_precondition(precondition.id); };
-    return precondition_row;
+    return row_content;
 }
